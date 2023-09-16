@@ -15,8 +15,8 @@ Replicates the quick delete functionality of the #tagName(x) in YAML or properti
 - Works best with [Tag Summary](https://github.com/macrojd/tag-summary) and [Colored Tags](https://github.com/pfrankov/obsidian-colored-tags) plugins. 
 
 **To Do:**
-- [] Optimizations 
-- [] Bug: mobile tapping deletes tag and upens tag search.
-- [] Rollover turns the tag background red.
-- [] Delete tags from queried notes. 
-- [] More functionalites.
+- [ ] Optimizations 
+- [ ] Bug: mobile tapping deletes tag and upens tag search.
+- [ ] Rollover turns the tag background red.
+- [ ] Delete tags from queried notes. 
+- [ ] More functionalites.
