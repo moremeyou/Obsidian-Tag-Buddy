@@ -16,7 +16,8 @@ Replicates the quick delete functionality of the #tagName(x) in YAML or properti
 
 **To Do:**
 - [ ] Optimizations 
-- [ ] Bug: mobile tapping deletes tag and upens tag search.
-- [ ] Rollover turns the tag background red.
-- [ ] Delete tags from queried notes. 
+- [ ] Bug: mobile tapping deletes tag AND opens tag search
+- [ ] Rollover turns the tag background red
+- [ ] Delete tags from embedded notes. 
+- [ ] Delete tags from queried embedded notes (via Tag Summary). 
 - [ ] More functionalites.
