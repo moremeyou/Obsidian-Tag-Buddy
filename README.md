@@ -12,7 +12,7 @@ Replicates the quick delete functionality of the #tagName(x) in YAML or properti
 - For now, only use this with tags in the current note. 
 - For now, the functionality only works in reading mode. 
 - Switch to editing to undo any deletions. 
-- Works best with Tag Summary(https://github.com/macrojd/tag-summary) and [Colored Tags](https://github.com/pfrankov/obsidian-colored-tags) plugins. 
+- Works best with [Tag Summary](https://github.com/macrojd/tag-summary) and [Colored Tags](https://github.com/pfrankov/obsidian-colored-tags) plugins. 
 
 **To Do:**
 - Optimizations 
