@@ -1,0 +1,11 @@
+
+/* Style for tags */
+.tag {
+  position: relative;
+  transition: background-color 0.2s; /* Add a transition for smooth color change */
+}
+
+/* Change the background color to red on hover */
+.tag:hover {
+  background-color: red; !important;
+}

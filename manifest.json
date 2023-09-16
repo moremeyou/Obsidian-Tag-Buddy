@@ -1,0 +1,11 @@
+{
+	"id": "TagBuddy",
+	"name": "Tag Buddy",
+	"version": "0.0.1",
+	"minAppVersion": "0.15.0",
+	"description": "A collection of functionalities for tags in Obsidian.",
+	"author": "David Fasullo",
+	"authorUrl": "http://www.moremeyou.com",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}
