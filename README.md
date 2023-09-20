@@ -4,7 +4,7 @@ A collection of tag functionalities for Obsidian.
 #### Use 1: Quick delete tag in-line
 Replicates the quick delete functionality of the #tagName(x) in YAML or properties panel. Hold ctrl/cmd+click to preserve the native functionality (tag search).
 
-#### Use 2:** Remove child tags in-line
+#### Use 2: Remove child tags in-line
 If a tag has children, Use 1 will progressively remove them before removing the tag completely.
 
 #### Use 3: Convert tag to text
