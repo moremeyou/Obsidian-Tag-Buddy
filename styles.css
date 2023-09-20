@@ -1,8 +1,11 @@
-/*
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* Style for tags */
+.tag {
+  position: relative;
+  transition: background-color 0.2s; /* Add a transition for smooth color change */
+}
 
-If your plugin does not need CSS, delete this file.
-
-*/
+/* Change the background color to red on hover */
+.tag:hover {
+  background-color: red; !important;
+}
