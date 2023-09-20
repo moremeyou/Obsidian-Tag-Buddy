@@ -80,7 +80,7 @@ export default class TagBuddy extends Plugin {
 
 
 			//console.log(`In current file? ${isTagInActiveNote?'yes':'no'}`);
-
+			// convert tag to an in-line tag summary below this line? or create a line break?
 			if (file) {
 				const fileContent = await this.app.vault.read(file);
 				// Count occurrences of the tag
@@ -92,28 +92,19 @@ export default class TagBuddy extends Plugin {
 					startIndex = fileContent.indexOf(tag, startIndex + 1); 
 				}
 
-				/*console.log(`Occurrence index: ${occurrenceIndex}`);
-				console.log(`File: ${file.basename}`);
-				console.log(`Total occurrences: ${occurrences}`); 
-				console.log(`Starting index: ${startIndex}`);*/
-
-				//console.log(event.metaKey + ' | ' + event.altKey);
-				// convert tag to an in-line tag summary below this line? or create a line break?
+				//console.log(`Occurrence index: ${occurrenceIndex}`);
+				//console.log(`File: ${file.basename}`);
+				//console.log(`Total occurrences: ${occurrences}`); 
+				//console.log(`Starting index: ${startIndex}`);
 
 				if (startIndex !== -1) {
 					const contentBeforeTag = fileContent.substring(0, startIndex);
 					const contentAfterTag = fileContent.substring(startIndex);
 					let newContent = '';
-					//const newContent = contentBeforeTag + 'WORKED ' + contentAfterTag;
 					if (event.altKey) {
-						//console.log('altkeyu');
-						//newContent = fileContent.substring(0, startIndex+1) + fileContent.substring(startIndex + tag.length);
 						newContent = fileContent.substring(0, startIndex) + tag.substring(1) + fileContent.substring(startIndex + tag.length);
 					} else if ((event.metaKey && !this.settings.removeOnClick) || (!event.metaKey && this.settings.removeOnClick)) {
-						//console.log(event.ctrlKey + ' | ' + this.settings.removeOnClick);
-						//console.log(!event.ctrlKey && !this.settings.removeOnClick);
-						//console.log(event.ctrlKey && this.settings.removeOnClick);
-						//newContent = fileContent.substring(0, startIndex) + fileContent.substring(startIndex + tag.length);
+						
 						newContent = fileContent.substring(0, startIndex - (startIndex>0 && fileContent[startIndex-2]===' '?2:1)) + fileContent.substring(startIndex + tag.length);
 					} else {
 						return;
@@ -130,13 +121,25 @@ export default class TagBuddy extends Plugin {
 					});
 				}
 			}
+
+			await this.app.vault.modify(file, newContent);
+
+			this.app.workspace.iterateLeaves(leaf => {
+				const markdownView = leaf.view as MarkdownView;
+				if (markdownView.file && markdownView.file.path === file.path) {
+					const editor = markdownView.sourceMode.cmEditor;
+					editor.setValue(newContent);
+				}
+			}
+
+			)
 				
 			if (!isTagInActiveNote) { 
 				setTimeout(async () => {
 					//app.workspace.activeLeaf.rebuildView();
 					//app.workspace.getActiveViewOfType(MarkdownView)?.previewMode.rerender(true);
 					//view.previewMode.rerender(true);
-					app.workspace.activeLeaf.rebuildView()
+					this.app.workspace.activeLeaf.rebuildView()
 				}, 1)};
 			}
 		}, true); // (this.settings.removeOnClick || this.settings.optToRemove)?true:false);
@@ -164,31 +167,6 @@ export default class TagBuddy extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
 }
 
-
-/*class TBSettingTab extends PluginSettingTab {
-	plugin: TagBuddy;
-
-	constructor(app: App, plugin: TagBuddy) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
-}*/
