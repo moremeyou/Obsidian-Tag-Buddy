@@ -1,7 +1,7 @@
 {
-	"name": "TagBuddy",
+	"name": "obsidian-tag-buddy",
 	"version": "0.0.1",
-	"description": "A collection of functionalities for tags in Obsidian.",
+	"description": "A collection of tag functionalities for Obsidian.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
