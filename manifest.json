@@ -1,11 +1,11 @@
 {
-	"id": "TagBuddy",
+	"id": "tag-buddy",
 	"name": "Tag Buddy",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "A collection of functionalities for tags in Obsidian.",
-	"author": "David Fasullo",
-	"authorUrl": "http://www.moremeyou.com",
-	"fundingUrl": "",
+	"description": "A collection of tag functionalities for Obsidian.",
+	"author": "Obsidian",
+	"authorUrl": "https://obsidian.md",
+	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false
 }
