@@ -2,7 +2,7 @@
 A collection of tag functionalities for Obsidian. 
 
 **BETA WARNING**
-- For now, you need the modified tag-summary plugin (also on git) to use this plugin. 
+- For now, you need the [modified tag-summary plugin](https://github.com/moremeyou/tag-summary/tree/Tag-Summary-Mod) to use this plugin. 
 - Multiple safety checks are implemented, but please backup your vault before using.
 
 #### Use 1: Quick delete tag in-line
