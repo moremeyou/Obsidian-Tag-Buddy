@@ -1,6 +1,6 @@
 {
 	"name": "TagBuddy",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"description": "A collection of functionalities for tags in Obsidian.",
 	"main": "main.js",
 	"scripts": {

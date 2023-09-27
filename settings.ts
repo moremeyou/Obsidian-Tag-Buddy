@@ -38,12 +38,23 @@ export class TBSettingsTab extends PluginSettingTab {
         );
         new Setting(containerEl)
         .setName("Remove child tags first")
-        .setDesc("ON: Use SHIFT+CLICK. OFF: performs native functionality")
+        .setDesc("OFF: Use SHIFT+CLICK to remove child tags fitst.")
         .addToggle((toggle) =>
             toggle
-            .setValue(this.plugin.settings.optToConvert)
+            .setValue(this.plugin.settings.removeChildTagsFirst)
             .onChange(async (value) => {
-                this.plugin.settings.optToConvert = value;
+                this.plugin.settings.removeChildTagsFirst = value;
+                await this.plugin.saveSettings();
+            })
+        );
+        new Setting(containerEl)
+        .setName("Debug mode")
+        .setDesc("Output to console.")
+        .addToggle((toggle) =>
+            toggle
+            .setValue(this.plugin.settings.debugMode)
+            .onChange(async (value) => {
+                this.plugin.settings.debugMode = value;
                 await this.plugin.saveSettings();
             })
         );
