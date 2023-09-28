@@ -1,6 +1,5 @@
 import { TBSettingsTab } from "./settings";
-//import * as stringSimilarity from 'string-similarity';
-import { App, Editor, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, debounce, Editor, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 
 interface TBSettings {
@@ -14,7 +13,7 @@ const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	removeOnClick: true, // when true, cmd is needed when clicking to remove the tag
 	removeChildTagsFirst: true, // use shift when false
 	optToConvert: true, // when false, clicking tag will do nothing
-	debugMode: true,
+	debugMode: false,
 }; 
 
 
@@ -27,171 +26,170 @@ export default class TagBuddy extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new TBSettingsTab(this.app, this));	
 		
-		console.log('Tag Buddy Plugin loaded at ' + new Date().toUTCString().substring(17));
+		console.log('Tag Buddy Plugin loaded on ' + (this.app.isMobile?'mobile at ':'desktop at ') + new Date().toUTCString().substring(17));
 
-    	//this.registerEvent(this.app.on('file-open', (event: EditorEvent) => { }));
-	    this.registerEvent(this.app.on('layout-change', (event: EditorEvent) => {
-			//console.log('Layout change.');
-			setTimeout(async () => {
-				this.processTags();
-			}, 100); }));
-	    //this.registerEvent(this.app.workspace.on('active-leaf-change', () => { }));
+		this.app.workspace.onLayoutReady(async () => {
+			
+			// this.reload(); // no need for this atm.
+			setTimeout(async () => { this.processTags(); }, 1000)
+			
+			// Don't need this event because we'll always need to switch between views to edit note and affect the tag indices.
+			this.registerEvent(this.app.workspace.on('editor-change', debounce(async () => { console.log('editor change'); this.processTags(); }, 3000, true)));
+			// Don't need this event because leaf changes don't effect the raw content.
+			// this.registerEvent( this.app.workspace.on('active-leaf-change', debounce(async () => { console.log('active leaf change'); this.processTags(); }, 300, true)) );
 
-		setTimeout(async () => { this.processTags(); }, 100)
+			// This event is best because we always need to switch modes to edit note or interact with tag (reading mode).
+			this.registerEvent( this.app.on('layout-change', (event: EditorEvent) => { 
+				setTimeout(async () => { 
+					console.log('layout change'); 
+					this.processTags(); 
+				}, 300); 
+			}));
+			
+			// There is a little redundancy here because we also get layout events when switching files
+			this.registerEvent(this.app.on('file-open', async (event: EditorEvent) => { 
+				setTimeout(async () => { 
+					console.log('file open'); 
+					this.processTags(); 
+				}, 1000); 
+			}));
 
-		this.registerDomEvent(document, 'click', this.onClickEvent.bind(this), true);
+			if (!this.app.isMobile) {
 
+				// This event handles all the interactions on desktop
+				this.registerDomEvent(document, 'click', this.onClickEvent.bind(this), true);
 
-		//////////////// CUSTOM TAG-SUMMARY IMPLEMENTATION //////////////
-		// ORIGINAL CODE BY https://github.com/macrojd/tag-summary //////
-		/////////////////////////////////////////////////////////////////
+			} else { // Mobile interaction
 
-		// Create command to create a summary
-		this.addCommand({
-			id: "tag-summary-modal",
-			name: "Add Tag Summary",
-			editorCallback: (editor: Editor) => {
-				new SummaryModal(this.app, (include, exclude) => {
-					// Format code block to add summary
-					let summary = "```tag-summary\n";
+				// This event catches all taps on mobile because we have custom double-tap and press-hold events.
+				this.registerDomEvent(document, 'click', (e) => { 
+					if (e.target.classList.contains('tag')) e.stopPropagation();
+				}, true);
 
-					// Add the tags label with the tag selected by the user
-					summary += "tags: " + include + "\n";
+				new PressAndHoldHandler(this, document, this.onClickEvent.bind(this));
+				new DoubleTapHandler(this, document, this.onClickEvent.bind(this));
+			}	
+			
+		});
 
-					// Add the exclude label with the tags to exclude
-					if (exclude != "None") {
-						summary += "exclude: " + exclude + "\n";
-					}
-					summary += "```\n";
-					editor.replaceRange(summary, editor.getCursor());
-				}).open();
-			}, });
+		// All other reprocessing of tags is done after we do anything with them.
 
-		// Post processor
-		this.registerMarkdownCodeBlockProcessor("tag-summary", async (source, el, ctx) => {
-			// Initialize tag list
-			let tags: string[] = Array();
-			let include: string[] = Array();
-			let exclude: string[] = Array();
-
-			// Process rows inside codeblock
-			const rows = source.split("\n").filter((row) => row.length > 0);
-			rows.forEach((line) => {
-				// Check if the line specifies the tags (OR)
-				if (line.match(/^\s*tags:[\p{L}0-9_\-/# ]+$/gu)) {
-					const content = line.replace(/^\s*tags:/, "").trim();
-
-					// Get the list of valid tags and assign them to the tags variable
-					let list = content.split(/\s+/).map((tag) => tag.trim());
-					list = list.filter((tag) => {
-						if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
-							return true;
-						} else {
-							return false;
-						}
-					});
-					tags = list;
-				}
-				// Check if the line specifies the tags to include (AND)
-				if (line.match(/^\s*include:[\p{L}0-9_\-/# ]+$/gu)) {
-					const content = line.replace(/^\s*include:/, "").trim();
-
-					// Get the list of valid tags and assign them to the include variable
-					let list = content.split(/\s+/).map((tag) => tag.trim());
-					list = list.filter((tag) => {
-						if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
-							return true;
-						} else {
-							return false;
-						}
-					});
-					include = list;
-				}
-				// Check if the line specifies the tags to exclude (NOT)
-				if (line.match(/^\s*exclude:[\p{L}0-9_\-/# ]+$/gu)) {
-					const content = line.replace(/^\s*exclude:/, "").trim();
-
-					// Get the list of valid tags and assign them to the exclude variable
-					let list = content.split(/\s+/).map((tag) => tag.trim());
-					list = list.filter((tag) => {
-						if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
-							return true;
-						} else {
-							return false;
-						}
-					});
-					exclude = list;
-				}
-			});
-
-			// Create summary only if the user specified some tags
-			if (tags.length > 0 || include.length > 0) {
-				await this.createSummary(el, tags, include, exclude, ctx.sourcePath);
-			} else {
-				this.createEmptySummary(el);
-			} }); 
-
+		// Tag summary code block
+		this.registerMarkdownCodeBlockProcessor("tag-summary", this.summaryCodeBlockProcessor.bind(this));
 	}
 
-	async onClickEvent (event: MouseEvent) {
+	async onClickEvent (event) {
+
 		const target = event.target as HTMLElement;
 		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (this.settings.removeOnClick && event.metaKey) {
-			return;
-		} else if (event.altKey && !this.settings.optToConvert) {
+		
+		if (!view && target.matches('.tag')) { 
+			new Notice('Tag Buddy: Can\'t edit tag. Might be in an unsupported view type.');
 			return;
 		}
+
+		if (view) {
+			if (view.getMode() != 'preview') return;
+		} else {
+			return;
+		}
+		
+		if (!this.app.isMobile) {
+			if ((this.settings.removeOnClick && event.metaKey) || (!this.settings.removeOnClick && !event.metaKey)) { 
+				return; 
+			} else if (event.altKey && !this.settings.optToConvert) {  
+				return; 
+			}
+		} else {
+			// any conditions for when mobile?
+			// maybe after mobile settings: long press can do convert or remove/edit
+			// double tap can do remove/edit or search (via native click, without prop stop). if double-tap disabled, then native happens.
+		}
+		
+
 		if (view && target && target.matches('.tag')) {	
-			if (!(view.getMode() === 'preview')) {  
-				return;
-			}
-			//console.log(target);
-			
-			if (this.settings.removeOnClick) {
-				event.preventDefault();
+			// const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
+
+			if (this.settings.removeOnClick || (!this.settings.removeOnClick && event.metaKey)) {
 				event.stopPropagation();
+				event.preventDefault();
 			}
 
-			const clickedTag = event.target as HTMLElement;
-			const tag = target.innerText;
-			let element = target as HTMLElement;
+			const clickedTag = target.closest('.tag'); //event.target as HTMLElement;
+			const tag = clickedTag.innerText;
 
-			//const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
-			let tagIndex = target.getAttribute('md-index');
-			let tagFile = target.getAttribute('file-source');
+			let tagIndex = clickedTag.getAttribute('md-index');
+			let tagFile = clickedTag.getAttribute('file-source');
+
 			if (tagFile) {
+				// Try
 				this.editTag (event, tagIndex, tagFile);
 			} else {
+				// Try again
 				setTimeout(async () => {
-					//console.log('Delayed')
-					tagIndex = target.getAttribute('md-index');
-					tagFile = target.getAttribute('file-source');
-					//this.processTags();
-					this.editTag2 (event, tagIndex, tagFile);
-				}, 100)
+					tagIndex = clickedTag.getAttribute('md-index');
+					tagFile = clickedTag.getAttribute('file-source');
+					this.editTag (event, tagIndex, tagFile);
+				}, 100);
 			}
 
-			if (target.getAttribute('type') == 'plugin-summary') {
+			if (clickedTag.getAttribute('type') == 'plugin-summary') {
 				setTimeout(async () => {
-					//await app.workspace.activeLeaf.rebuildView();
-					this.refreshView();
-					// only needed if we use rerender above.
-					// this.app.workspace.getActiveViewOfType(MarkdownView).previewMode.applyScroll(scrollState);
-				}, 100)
+					
+					const summaryContainer = clickedTag.closest('.summary');
+					const tagsStr = summaryContainer.getAttribute('codeblock-tags');
+					const tags = tagsStr ? tagsStr.split(',') : [];
+
+					const tagsIncludeStr = summaryContainer.getAttribute('codeblock-tags-include');
+					const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
+
+					const tagsExcludeStr = summaryContainer.getAttribute('codeblock-tags-exclude');
+					const tagsExclude = tagsExcludeStr ? tagsExcludeStr.split(',') : [];
+
+					// Recreate summary after we've edited the file
+					this.createSummary(summaryContainer, tags, tagsInclude, tagsExclude);
+
+					setTimeout(async () => { this.processTags(); }, 200);
+
+					// this.refreshView(); // no need for this atm
+
+				}, 150);
 			} else {
-				setTimeout(async () => {
-					this.processTags();
-				}, 50)
+				setTimeout(async () => { this.processTags(); }, 50)
 			}	
-		} else if (view == null && target && target.matches('.tag')) {
-			new Notice('Tag Buddy error: Can\'t edit that tag. Might be in a special view type');
+		//} else if (view == null && target && target.matches('.tag')) {
+		} else if (!view && target.matches('.tag')) {
+			new Notice('Tag Buddy: Can\'t edit tag. Might be in an unsupported view type.');
 		}
 	}
 
-	async getMarkdownTags (file, fileContent) {
-		//console.log('Get markdown tags from: ' + file.name);
+	async processTags () {
 
-		//const fileContent = await app.vault.read(file)
+		if (this.settings.debugMode) console.log('Tag Buddy: Processing tags.');
+
+		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
+		//setTimeout(async () => { 
+		const activeNoteContainer = await this.app.workspace.activeLeaf.containerEl;
+		//const activeNoteContainer = await document.querySelector('.view-content');
+		//const activeNoteContainer = await document.querySelector('.markdown-reading-view');// this.app.workspace.activeLeaf.containerEl;
+		//}, 200)
+		//setTimeout(async () => { // All these timeouts were for testing. Issues seems to be resolved now.
+		const activeFile = await this.app.workspace.getActiveFile();
+		const fileContent = await app.vault.read(activeFile);
+		const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.summary .tag)');
+		//const activeFileTagElements = await activeNoteContainer.getElementsByClassName('cm-hashtag')
+		//console.log(Array.from(activeFileTagElements).length)
+		//console.log(Array.from(activeFileTagElements).map(element => element.innerText));
+
+
+		//setTimeout(async () => { console.log(activeFileTagElements)}, 1000)
+		const activeFileTags = await this.getMarkdownTags(activeFile, fileContent);
+		this.assignMarkdownTags(activeFileTags, activeFileTagElements, 0, 'active');
+		this.processEmbeds(activeNoteContainer);
+		//}, 500)
+	}
+	// To-do: test with yaml
+	async getMarkdownTags (file, fileContent) {
 		const tagPositions = [];
 		let match;
 
@@ -199,192 +197,137 @@ export default class TagBuddy extends Plugin {
 		let insideCodeBlock = false;
 
 		while ((match = regex.exec(fileContent)) !== null) {
-		    // Determine if the match is a code block delimiter
 		    if (match[0].trim() === "```") {
-		        insideCodeBlock = !insideCodeBlock; // Toggle the state
+		        insideCodeBlock = !insideCodeBlock; 
 		        continue;
 		    }
 		    
-		    if (insideCodeBlock) {
-		        // Skip this match since it is inside a code block
-		        continue;
-		    }
+		    if (insideCodeBlock) continue;
 
-		    // Remove leading white space from the match, if any
 		    const tag = match[0].trim();
 		    // Look ahead from the current match and see if it's followed by ]]
 		    if (fileContent.slice(match.index, match.index + tag.length + 2).endsWith("]]")) {
 		        continue; // Skip this match as it's part of a wikilink
 		    }
-
+		    //console.log(match.index)
 		    tagPositions.push({tag:tag, index:match.index, source:file.name}); 
-			//---->console.log(tagPositions[tagPositions.length-1]);
 		}
-		//console.log(tagPositions);
+		//console.log('markdown tag count: ' + tagPositions.length)
+
 		return tagPositions;
 	}
 
 	assignMarkdownTags (tagPositions, tagElements, startIndex, type) {
-		//const activeFileTags = await dom.querySelectorAll('.tag');
-		
-		//console.log('Assign markdown indices.');
 		let tagEl;
 		const tagElArray = Array.from(tagElements);
 		let tagElIndex = 0;
 		tagPositions.forEach((tagPos, index) => {
+
 			if (tagPositions[index].index >= startIndex) {
 				tagEl = tagElArray[tagElIndex] as HTMLElement;
-				//console.log(tagEl);
         		if (tagEl) {
         			tagEl.setAttribute('md-index', tagPositions[index].index);
         			tagEl.setAttribute('file-source', tagPositions[index].source);
         			tagEl.setAttribute('type', type);
         			tagElIndex++;
-        		}
-    		} //else {
-        		//console.error('No corresponding tag position found for', index, tagElement); 
-    		//}
-		});
-
-		/*tagElements.forEach((tagElement, index) => {
-			//console.log(tagPositions[index].source + ' | ' + tagElement.innerText);
-			//console.log(tagPositions[index].index + ' >= ' + startIndex + ': ' + (tagPositions[index].index >= startIndex));
-			if (tagPositions[index].index >= startIndex) {
-        		tagElement.setAttribute('md-index', tagPositions[index].index);
-        		tagElement.setAttribute('file-source', tagPositions[index].source);
-    		} //else {
-        		//console.error('No corresponding tag position found for', index, tagElement); 
-    		//}
-		});*/
-		//const tagElements = Array.from(activeFileTags).map(tag => tag.outerHTML);
-		//const tagElements = Array.from(activeFileTags); //.map(tag => tag.innerText);
-		//const tagElements = activeFileTags;
-		//console.log(tagElements); 
-
-		return Array.from(tagElements); 
-	}
-
-	async validateFilePath (filePath) {
-		const matchingFiles = await app.vault.getFiles().filter(file => file.name === filePath);
-		//console.log(filePath);
-		if (matchingFiles.length === 1) {
-			const filePath = matchingFiles[0].path;
-			const file = await this.app.vault.getAbstractFileByPath(filePath);
-			//console.log('Validate file: ' + embedFile.name);
-			return file;
-		} else if (matchingFiles.length > 1) {
-			new Notice('Multiple files found with the same name. Need to disambiguate. Can\'t safely edit tag.');
-			return null;
-			//console.warn('Multiple files found with the same name. Can\'t safely edit tag. Need to disambiguate.');
-		} else {
-			new Notice('No file found. Try again, or this tag might be in an unsupported embed type.');
-			//console.warn('No file found with. Try again, or this tag might be in an unsupported embed type.');
-			return null;
-		}
+        		} 
+    		} 
+		}); 
+		//console.log('tag element array length: ' + tagElArray.length);
+		return tagElArray; //Array.from(tagElements); 
 	}
 
 	async processEmbeds (dom) {
-
-		//console.log('Process embeds.');
  
 		const embeds = await dom.querySelectorAll('.summary, .markdown-embed');
 		let embededTagFiles = [];
 
-		// test nested emebeds and summaries... should be fine.
-
 		embeds.forEach(async (embed) => {
-
-			//  = await app.vault.read(activeFile);
-			//console.log(embed);
 			if (embed.classList.contains('summary')) {
-
-				// test nested block quotes
-				//console.log('Summary:');
-				let summaryBlocks = embed.querySelectorAll('blockquote'); // need to only get one level down of block quotes.
+				let summaryBlocks = embed.querySelectorAll('blockquote'); 
 
 				summaryBlocks.forEach(async (block, index) => {
-			
-					//console.log('Summary found.');
-					const linkElement = block.querySelector('a[data-href$=".md"]');
-					//console.log(block.getAttribute('file-source'));
-					
-
+					//const linkElement = block.querySelector('a[data-href$=".md"]');
 					const filePath = block.getAttribute('file-source'); // linkElement.getAttribute('data-href')
 					const file = this.app.vault.getAbstractFileByPath(filePath);
-					//console.log(filePath);
 
 					if (file) {
 						const fileContent = await app.vault.read(file);
-						//console.log('Block source file: ' + filePath);
 						const embededTagFile = await this.getMarkdownTags(file, fileContent)
 						embededTagFiles.push(embededTagFile);
-
+						
+						// Create a temporty element block so we can match match text only content of this element with it's source note
 						const tempBlock = block.cloneNode(true);
-
 						tempBlock.querySelector('br')?.remove();
 						tempBlock.querySelector('strong')?.remove(); 
-						//console.log(tempBlock);
 						const blockText = this.cleanString(tempBlock.innerText);
-					
+
 						const startIndex = this.cleanString(fileContent).indexOf(blockText);
 
 						this.assignMarkdownTags(embededTagFile, block.querySelectorAll('.tag'), startIndex, 'plugin-summary');
 					}
-				});
-				
+				});		
 
 			} else if (embed.classList.contains('markdown-embed')) {
 				 
 				const linkElement = embed.getAttribute('src'); //this.findAncestor(clickedTag, 'span')
-				//console.log(linkElement)
 				let filePath = embed.getAttribute('src');
 				const linkArray = filePath.split('#');
 				filePath = linkArray[0].trim() + '.md';
 				const file = await this.validateFilePath(filePath)
 				if (file) {
 					const fileContent = await app.vault.read(file);
-					//console.log('Embed source file: ' + filePath);
-
 					const embededTagFile = await this.getMarkdownTags(file, fileContent)
 					embededTagFiles.push(embededTagFile);
-
-
+					
 					const tempComponent = new TempComponent();
 					const tempContainerHTML = createEl("div");
+					
 					await MarkdownRenderer.renderMarkdown(fileContent, tempContainerHTML, file.path, tempComponent);
 					
-
 					const innerText = this.cleanString(embed.querySelector('.markdown-embed-content').innerText);
 					const startIndex = this.cleanString(tempContainerHTML.innerText).indexOf(innerText);
-
-					//console.log(startIndex);
-					//console.log(innerText);
-					//console.log('----------------');
-					//console.log(this.cleanString(tempContainerHTML.innerText));
-
+					
 					this.assignMarkdownTags(embededTagFile, embed.querySelectorAll('.tag'), startIndex, 'native-embed');
-					//console.log(fileContent)
 				}
 
 			} else {
-				new Notice('Tag embed type unknown.');
+				//new Notice('Tag Buddy: Tag embed in unsupported element.');
+				// Handle this issue on click.
 			}
-			//filePath = linkElement.getAttribute('data-href');
 			
 		});
 		return embededTagFiles;
-		// Can't find this tag in embedded is possible if the source file also has an embed. 
 	}
 
+	// Test with yaml!
+
 	async editTag (event, index, filePath) {
-		if (this.settings.debugMode) { console.log('Edit tag: ' + event.target.innerText + '\nIn file: ' + filePath); }
-		
+
+		//console.log(event.target)
+		//console.log(index);
+		if (this.settings.debugMode) console.log('Tag Buddy edit tag: ' + event.target.innerText + '\nIn file: ' + filePath);
+
 		if (filePath) {
-			const file = await this.validateFilePath(filePath);   //app.vault.getAbstractFileByPath(filePath);
-			const fileContent = await this.app.vault.read(file);
-			const fileContentBackup = fileContent;
-			const tag = event.target.innerText.trim();
-			
+
+			const file: TFile = await this.validateFilePath(filePath); //app.vault.getAbstractFileByPath(filePath);
+			let fileContent: String;
+			let fileContentBackup: String;
+			const tag: String = event.target.innerText.trim();
+
+			try {
+
+				fileContent = await this.app.vault.read(file);
+				fileContentBackup = fileContent;
+				
+
+			} catch (error) {
+
+				new Notice('Tag Buddy file read error\n' + error.message);
+				return;
+
+			}
+
 			// check if the file has only one tag left (and that's all thats left in the file)
 			let safeToEmptyFile = false;
 			const tagRegex = /^\s*#(\w+)\s*$/;
@@ -406,85 +349,263 @@ export default class TagBuddy extends Plugin {
 	
 			let newContent = '';
 
-			if (event.altKey) {
-				// just remove the hash
+			//if (this.settings.debugMode) {
+
+				// newContent = beforeTag + ' ⚠️---🫸' + tag + '🫷---⚠️ ' + afterTag;
+				//newContent = beforeTag + ' ⚠️---➡️' + tag + afterTag;
+
+			//} else
+
+			if (event.altKey || (event.type == 'touchstart')) { 
+
+				// Remove the hash only
+
 				const noHash = tag.substring(1);
 				newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + noHash + afterTag;
 				
-			} else if ((event.metaKey && !this.settings.removeOnClick) || (!event.metaKey && this.settings.removeOnClick)) {
+				if (this.app.isMobile) { new Notice ('Tag Buddy: ' + tag + ' converted to text.'); }
+				// Setting: make this a setting to show notices on mobile
+			
+			} else if ((event.type == 'touchend' ) || (event.metaKey && !this.settings.removeOnClick) || (!event.metaKey && this.settings.removeOnClick)) {
+
+				// Remove tag (or child first, if exists)
 
 				let parentTag = '';
 
-				// remove child tags first
 				if (tag.includes('/') && (this.settings.removeChildTagsFirst || (event.shiftKey && !this.settings.removeChildTagsFirst))) {
-					// Split the tag into its parts
+					
 					let parts = tag.split('/');
-
-					// Remove the last child
-					parts.pop();
-
-					// Reform the parentTag
+					const removedChild = parts.pop();
 					parentTag = parts.join('/');
-
-					// Update the new content with the parentTag
 					newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + parentTag + afterTag;
+
+					if (this.app.isMobile) { new Notice ('Tag Buddy: \'' + removedChild + '\' removed from parent tag.'); }
+				
 				} else {
 					newContent = beforeTag + afterTag;
+					if (this.app.isMobile) { new Notice ('Tag Buddy: ' + tag + ' removed.'); }
 				}
-			}
-
-			try {
-
-				// File safety checks.
-				if ((newContent == '' && !safeToEmptyFile) || this.contentChangedTooMuch(fileContentBackup, newContent, tag)) {
-					// check if there was only one tag in the file, if so, don't restore backup;
-					new Notice('Tag Buddy Error. File change error.');
+			} 
+				// File safety checks
+				if ((newContent == '' && !safeToEmptyFile) || this.contentChangedTooMuch(fileContentBackup, newContent, tag, 20)) {
+					// Check if there was only one tag in the file, if so, don't restore backup;
+					new Notice('Tag Buddy: File change error.');
 					newContent = fileContentBackup;
 				} else if (newContent == '' && safeToEmptyFile) {
-					new Notice('Tag Buddy says: Tag removed. The file is empty.');
+					new Notice('Tag Buddy: Tag removed. The file is empty.');
 				}
 
-				await this.app.vault.modify(file, newContent);
+				try {
+					
+					await this.app.vault.modify(file, newContent);
 
-			} catch (error) {
+					// When editing content in the active note, it's recommended to not use the modify because the folds and other state stuff is lost
+					// see this link: https://docs.obsidian.md/Plugins/Editor/Editor
 
-				new Notice('Tag Buddy error:\n' + error.message);
+				} catch (error) {
 
-			} 
-			
-			
+					try {
+
+						const backupFileName = String(file.name.substring(0, file.name.indexOf('.md')) + ' BACKUP.md');
+						vault.create('', backupFileName, fileContentBackup);
+
+						new Notice('Tag Buddy note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.');
+					
+					} catch (error) {
+
+						navigator.clipboard.writeText(fileContentBackup);
+						new Notice('Tag Buddy note editing error: ' + error.message + '\nNote content copied to clipboard.');
+
+					}
+				} 
 		} else {
-			new Notice('Tag Buddy error: Can\'t edit/remove that tag. Can\'t identify tag location.');
+			new Notice('Tag Buddy error: Can\'t identify tag location.');
 		}
 	}
 
-	async processTags () {
-		//console.log('Process tags');
-
-		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-		const activeNoteContainer = await document.querySelector('.markdown-reading-view');// this.app.workspace.activeLeaf.containerEl;
-		const activeFile = await this.app.workspace.getActiveFile();
-		const fileContent = await app.vault.read(activeFile);
-		const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.summary .tag)');
-
-		const activeFileTags = await this.getMarkdownTags(activeFile, fileContent);
-
-		this.assignMarkdownTags(activeFileTags, activeFileTagElements, 0, 'active')
-
- 		await this.processEmbeds(activeNoteContainer);
-
- 		// this is needed for the query blocks, I think. test when all otheer bugs done.
-		/*this.app.workspace.iterateLeaves(leaf => {
-			const markdownView = leaf.view as MarkdownView;
-			//if (markdownView.file && markdownView.file.path === file.path) {
-				const editor = markdownView.sourceMode.cmEditor;
-				editor.setValue(newContent);
-			//}
-		});*/
+	async readFiles(listFiles: TFile[]): Promise<[TFile, string][]> {
+		let list: [TFile, string][] = [];
+		for (let t = 0; t < listFiles.length; t += 1) {
+			const file = listFiles[t];
+			let content = await this.app.vault.cachedRead(file);
+			list.push([file, content]);
+		}
+		return list;
 	}
+
+	isValidText(listTags: string[], tags: string[], include: string[], exclude: string[]): boolean {
+		let valid = true;
+
+		// Check OR (tags)
+		if (tags.length > 0) {
+			valid = valid && tags.some((value) => listTags.includes(value));
+		}
+		// Check AND (include)
+		if (include.length > 0) {
+			valid = valid && include.every((value) => listTags.includes(value));
+		}
+		// Check NOT (exclude)
+		if (valid && exclude.length > 0) {
+			valid = !exclude.some((value) => listTags.includes(value));
+		}
+		return valid;		
+	}
+
+	async validateFilePath (filePath) {
+		const matchingFiles = await app.vault.getFiles().filter(file => file.name === filePath);
+		if (matchingFiles.length === 1) {
+			const filePath = matchingFiles[0].path;
+			const file = await this.app.vault.getAbstractFileByPath(filePath);
+			//console.log('Validate file: ' + embedFile.name);
+			return file;
+		} else if (matchingFiles.length > 1) {
+			new Notice('Tag Buddy: Multiple files found with the same name. Can\'t safely edit tag.');
+			return null;
+		} else {
+			new Notice('Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.');
+			return null;
+		}
+	}
+
+	contentChangedTooMuch(original, modified, tag, buffer = 5) {
+	  const expectedChange = tag.length; // including the '#' symbol
+	  const threshold = expectedChange + buffer; // allow for some minor unintended modifications
+	  const actualChange = Math.abs(original.length - modified.length);
+
+	  return actualChange > threshold;
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
+
+	cleanString(input) {
+		let cleanedStr;
+
+		// Check if input is a DOM element
+		if (input instanceof Element) {
+			//console.log('input is: Element');
+			cleanedStr = input.outerHTML.trim();
+		} else {
+			//console.log('input is: String');
+			cleanedStr = input.trim();
+		}
+
+		// Whitespace normalization
+		//cleanedStr = cleanedStr.replace(/\s+/g, ' ');
+
+		// Remove <br> elements
+		//cleanedStr = cleanedStr.replace(/<br>/g, ' ');
+
+		// Remove blockquote tags but keep their content
+		//cleanedStr = cleanedStr.replace(/<\/?blockquote>/g, '');
+
+		// Remove blockquote tags but keep their content
+		//cleanedStr = cleanedStr.replace(/<\/?div>/g, '');
+
+		// Remove spaces between tags
+		//cleanedStr = cleanedStr.replace(/>\s+</g, '><');
+
+		// Whitespace normalization
+		cleanedStr = cleanedStr.replace(/\s+/g, ' ');
+
+		// HTML entity decoding
+		const textArea = document.createElement('textarea');
+		textArea.innerHTML = cleanedStr;
+		cleanedStr = textArea.value.trim();
+
+		// Optional: convert to lowercase
+		// cleanedStr = cleanedStr.toLowerCase();
+
+		return cleanedStr;
+	}
+
+	async refreshView (){
+		//console.log('Refresh view.');
+		new Notice ('Refresh view.');
+		// if using rerender,
+		//const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
+		//await view.previewMode.rerender(true);
+
+		await app.workspace.activeLeaf.rebuildView();
+		// only needed if we use rerender above. do this on a timeout
+		//this.app.workspace.getActiveViewOfType(MarkdownView).previewMode.applyScroll(scrollState);
+	}
+
+	//////////////// CUSTOM TAG-SUMMARY IMPLEMENTATION //////////////
+	// ORIGINAL CODE BY https://github.com/macrojd/tag-summary //////
+	/////////////////////////////////////////////////////////////////
+	async summaryCodeBlockProcessor (source, el, ctx) {
+		// Initialize tag list
+		let tags: string[] = Array();
+		let include: string[] = Array();
+		let exclude: string[] = Array();
+
+		// Process rows inside codeblock
+		const rows = source.split("\n").filter((row) => row.length > 0);
+		rows.forEach((line) => {
+			// Check if the line specifies the tags (OR)
+			if (line.match(/^\s*tags:[\p{L}0-9_\-/# ]+$/gu)) {
+				const content = line.replace(/^\s*tags:/, "").trim();
+
+				// Get the list of valid tags and assign them to the tags variable
+				let list = content.split(/\s+/).map((tag) => tag.trim());
+				list = list.filter((tag) => {
+					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+						return true;
+					} else {
+						return false;
+					}
+				});
+				tags = list;
+			}
+			// Check if the line specifies the tags to include (AND)
+			if (line.match(/^\s*include:[\p{L}0-9_\-/# ]+$/gu)) {
+				const content = line.replace(/^\s*include:/, "").trim();
+
+				// Get the list of valid tags and assign them to the include variable
+				let list = content.split(/\s+/).map((tag) => tag.trim());
+				list = list.filter((tag) => {
+					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+						return true;
+					} else {
+						return false;
+					}
+				});
+				include = list;
+			}
+			// Check if the line specifies the tags to exclude (NOT)
+			if (line.match(/^\s*exclude:[\p{L}0-9_\-/# ]+$/gu)) {
+				const content = line.replace(/^\s*exclude:/, "").trim();
+
+				// Get the list of valid tags and assign them to the exclude variable
+				let list = content.split(/\s+/).map((tag) => tag.trim());
+				list = list.filter((tag) => {
+					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+						return true;
+					} else {
+						return false;
+					}
+				});
+				exclude = list;
+			}
+		});
+
+		// Create summary only if the user specified some tags
+		if (tags.length > 0 || include.length > 0) {
+			await this.createSummary(el, tags, include, exclude, ctx.sourcePath);
+		} else {
+			this.createEmptySummary(el);
+		} 
+	}; 
 
 	createEmptySummary(element: HTMLElement) {
 		const container = createEl("div");
+		container.setAttribute('class', 'summary');
 		container.createEl("span", {
 			attr: { style: 'color: var(--text-error) !important;' },
 			text: "There are no files with blocks that match the specified tags." 
@@ -493,6 +614,7 @@ export default class TagBuddy extends Plugin {
 	}
 
 	async createSummary(element: HTMLElement, tags: string[], include: string[], exclude: string[], filePath: string) {
+		
 		const activeFile = await this.app.workspace.getActiveFile();
 		const validTags = tags.concat(include); // All the tags selected by the user
 		const tempComponent = new TempComponent();
@@ -515,6 +637,7 @@ export default class TagBuddy extends Plugin {
         });
 
 		// Sort files alphabetically
+		// change to sort by last modified?
 		listFiles = listFiles.sort((file1, file2) => {
 			if (file1.path < file2.path) {
 				return -1;
@@ -531,13 +654,14 @@ export default class TagBuddy extends Plugin {
 		// Create summary
 		let summary: string = "";
 		listContents.forEach((item) => {
+
 			// Get files name
 			const fileName = item[0].name.replace(/.md$/g, "");
 			const filePath = item[0].path;
-
+			
 			// Do not add this item if it's in the same file we're creating the summary
-			// console.log(activeFile.name + ' : ' + item[0].name)
 			if (activeFile.name == item[0].name) {
+				//console.log('same file')
 				return;
 			}
 
@@ -547,18 +671,23 @@ export default class TagBuddy extends Plugin {
 
 			// Get list items
 			blocks.forEach((paragraph) => {
+				
 				// Check if the paragraph is another plugin
 				let valid = false;
 				let listTags = paragraph.match(/#[\p{L}0-9_\-/#]+/gu);
-
+				
 				if (listTags != null && listTags.length > 0) {
+					//console.log('paragraph.contains("```") : ' + paragraph.contains("```"))
 					if (!paragraph.contains("```")) {
+						//console.log(include)
 						valid = this.isValidText(listTags, tags, include, exclude);
+						//console.log(valid)
 					}
 				}
 
 				// Removed list paragraphs functionality
 				if (valid) {
+
 					// Add paragraphs and the items of a list
 					let listItems: string[] = Array();
 					let itemText = "";
@@ -658,114 +787,82 @@ export default class TagBuddy extends Plugin {
 		if (summary != "") {
 			// Original formatting method. Will remove.
 			// await MarkdownRenderer.renderMarkdown(summary, summaryContainer, this.app.workspace.getActiveFile()?.path, tempComponent);
+			summaryContainer.setAttribute('codeblock-tags', tags.join(','));
+			summaryContainer.setAttribute('codeblock-tags-include', ((include.length>0)?include.join(','):''));
+			summaryContainer.setAttribute('codeblock-tags-exclude', ((exclude.length>0)?exclude.join(','):''));
 			element.replaceWith(summaryContainer);
 		} else {
 			this.createEmptySummary(element);
 		}
 	}
-
-	// Read Files
-	async readFiles(listFiles: TFile[]): Promise<[TFile, string][]> {
-		let list: [TFile, string][] = [];
-		for (let t = 0; t < listFiles.length; t += 1) {
-			const file = listFiles[t];
-			let content = await this.app.vault.cachedRead(file);
-			list.push([file, content]);
-		}
-		return list;
-	}
-
-	// Check if tags are valid
-	isValidText(listTags: string[], tags: string[], include: string[], exclude: string[]): boolean {
-		let valid = true;
-
-		// Check OR (tags)
-		if (tags.length > 0) {
-			valid = valid && tags.some((value) => listTags.includes(value));
-		}
-		// Check AND (include)
-		if (include.length > 0) {
-			valid = valid && include.every((value) => listTags.includes(value));
-		}
-		// Check NOT (exclude)
-		if (valid && exclude.length > 0) {
-			valid = !exclude.some((value) => listTags.includes(value));
-		}
-		return valid;		
-	}
-
-	contentChangedTooMuch(original, modified, tag, buffer = 5) {
-	  const expectedChange = tag.length; // including the '#' symbol
-	  const threshold = expectedChange + buffer; // allow for some minor unintended modifications
-	  const actualChange = Math.abs(original.length - modified.length);
-
-	  return actualChange > threshold;
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-
-	cleanString(input) {
-		let cleanedStr;
-
-		// Check if input is a DOM element
-		if (input instanceof Element) {
-			//console.log('input is: Element');
-			cleanedStr = input.outerHTML.trim();
-		} else {
-			//console.log('input is: String');
-			cleanedStr = input.trim();
-		}
-
-		// Whitespace normalization
-		//cleanedStr = cleanedStr.replace(/\s+/g, ' ');
-
-		// Remove <br> elements
-		//cleanedStr = cleanedStr.replace(/<br>/g, ' ');
-
-		// Remove blockquote tags but keep their content
-		//cleanedStr = cleanedStr.replace(/<\/?blockquote>/g, '');
-
-		// Remove blockquote tags but keep their content
-		//cleanedStr = cleanedStr.replace(/<\/?div>/g, '');
-
-		// Remove spaces between tags
-		//cleanedStr = cleanedStr.replace(/>\s+</g, '><');
-
-		// Whitespace normalization
-		cleanedStr = cleanedStr.replace(/\s+/g, ' ');
-
-		// HTML entity decoding
-		const textArea = document.createElement('textarea');
-		textArea.innerHTML = cleanedStr;
-		cleanedStr = textArea.value.trim();
-
-		// Optional: convert to lowercase
-		// cleanedStr = cleanedStr.toLowerCase();
-
-		return cleanedStr;
-	}
-
-	async refreshView (){
-		//console.log('Refresh view.');
-		
-		// if using rerender,
-		//const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
-		//await view.previewMode.rerender(true);
-
-		await app.workspace.activeLeaf.rebuildView();
-		// only needed if we use rerender above. do this on a timeout
-		//this.app.workspace.getActiveViewOfType(MarkdownView).previewMode.applyScroll(scrollState);
-	}
+	/////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////
 
 }
 
 class TempComponent extends Component {
 	onload() {}
 	onunload() {}
+}
+
+class DoubleTapHandler {
+  constructor(plugin, element, callback) {
+    this.plugin = plugin; // Store the plugin instance
+    this.element = element;
+    this.callback = callback;
+    this.lastTap = 0;
+    //new Notice('double tap created')
+    this.plugin.registerDomEvent(this.element, 'touchend', this.handleTouchEnd.bind(this), true);
+  }
+
+  handleTouchEnd(event) {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - this.lastTap;
+    clearTimeout(this.timeout);
+    
+    if (tapLength < 500 && tapLength > 0) {
+      //event.preventDefault();
+      //event.stopPropagation();
+      //new Notice('double tap fired');
+      this.callback(event);
+    } else {
+      this.timeout = setTimeout(() => {
+        clearTimeout(this.timeout);
+      }, 500);
+    }
+    
+    this.lastTap = currentTime;
+  }
+}
+
+class PressAndHoldHandler {
+  constructor(plugin, element, callback, duration = 600) {
+    this.plugin = plugin;
+    this.element = element;
+    this.callback = callback;
+    this.duration = duration; // duration in milliseconds to consider as "hold"
+    this.timeout = null;
+
+    //new Notice ('pressAndHold created.')
+
+    this.plugin.registerDomEvent(this.element, 'touchstart', this.handleTouchStart.bind(this), true);
+    this.plugin.registerDomEvent(this.element, 'touchend', this.handleTouchEnd.bind(this), true);
+  }
+
+  handleTouchStart(event) {
+    //event.preventDefault();
+    //event.stopPropagation();
+    this.timeout = setTimeout(() => {
+    	//new Notice ('pressAndHold event fired.')
+      this.callback(event);
+      this.timeout = null;
+    }, this.duration);
+  }
+
+  handleTouchEnd(event) {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+  }
 }

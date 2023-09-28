@@ -1,17 +1,17 @@
 ## Obsidian Tag Buddy
-A collection of tag functionalities for Obsidian.
+Edit your tags without switching to edit mode! Tag Buddy is a collection of tag functionalities for Obsidian.
 
-#### Use 1: Remove tag in-line
-Quickly remove, edit or convert your tags in the active note, embeded note or generated tag-summary blocks. Hold ctrl/cmd+click to preserve the native functionality (tag search).
+#### Use 1: Remove tag in reading mode
+Quickly remove, edit or convert your tags in the active note, embeded note or generated tag summary blocks. Hold ctrl/cmd+click to preserve the native functionality (tag search).
 
-#### Use 2: Remove child tags in-line
-If a tag has children, Use 1 will progressively remove them before removing the tag completely.
+#### Use 2: Remove child tags
+If a tag has children, Use 1 will progressively remove the deepest child first.
 
 #### Use 3: Convert tag to text
-OPT/ALT+CLICK removes the hash from the tag text.  
+OPT/ALT+CLICK removes the hash (converts the tag to text).
 
-#### Use 4: Remove/edit/convert tags in generated tag summary blocks
-Tags are editable in the active note, embeded notes AND when rendered using a tag-summary code block. Use this syntax:
+#### Use 4: Render a summary of any tags. Tags rendered in this summary are also editable.
+Tags are editable in the active note, natively embeded notes AND when rendered using a tag summary code block. Use this syntax:
 ````markdown
 ```tag-summary
 tags: #tag1 #tag2 // search for notes with blocks that have these tags
@@ -19,34 +19,43 @@ include: #tag3 #tag4 // summaries for tag1 or tag2 must also include tag3 and ta
 exclude: #tag5 // but not have tag5
 ```
 ````
+Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the original code behind the summaries.
 
-#### How I use?
-Why is this useful to me? I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review on-demand. In this workflow, tapping or removing a tag saves a few clicks, and with future updates, a few more. 
+#### Why is this useful to me? 
+I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review on-demand. With this plugin, I dont have to switch to editing mode to quickly process a tagged note. I will make a video of demo'ing this workflow.
 
 #### Settings
-- Require CMD/WIN+CLICK to edit or delete a tag (default: off)
+- Require CMD/WIN+CLICK to edit or remove a tag (default: off)
 - Convert tag to text (remove hash) with ALT/OPT+CLICK (default: on)
 - Remove child tags first (default: on). OFF: Use SHIFT+CLICK. 
 
 ## Notes
+- ** BETA WARNING ** Plugin is stable, but not fully tested yet.
 - ALWAYS BACKUP YOUR VAULT BEFORE USING NEW PLUGINS THAT EDIT YOUR NOTES.
-- This plugin is for reading mode only. No plans to make it work in editing mode.
-- Switch to editing mode to undo any deletions. **Deletions are permanent when applied to embeded or tag summaries.**
-- I have incorporated custom functionalities from the [Tag Summary Plugin](https://github.com/moremeyou/tag-summary/tree/Tag-Summary-Mod).  
+- Tag interaction is for reading mode only. No plans to make it work in editing mode.
+- Switch to editing mode to undo any edits in the active note. **Deletions are permanent in embeds, for now.**
 
 ## To Do:
 - [x] Optimizations 
-- [ ] More optimizations
-- [x] Test functionalities in other view types (canvas, tables, etc)
+- [x] Test functionalities in other view types (canvas, tables, etc). Errors handled!
 - [x] Settings to customize removal and convert (alt+click removes #, cmd+click native search)
-- [ ] Bug: mobile tapping deletes tag AND opens tag search
+- [x] Bug: mobile tapping deletes tag AND opens tag search
 - [x] Remove child tags before parent
-- [x] Dynamic editing: Delete tags from Tag Summary (requires my modifed Tag Summary plugin)
-- [x] Integrate parts of Tag Summary into this plugin
-- [x] Dynamic editing support for embeds
-- [ ] Consider Button and QuickAdd Plugin hook
-- [ ] Right-click to add tag-summary in-line or in new note
-- [x] Debug mode
+- [x] More optimizations
+- [x] Full mobile support (double tap to remove/edit, hold to convert)
+- [x] Deep editing: Remove/edit tags in embeded notes and from rendered code block tag summary
+- [x] Integrate parts of [Tag Summary Plugin](https://github.com/macrojd/tag-summary) into this plugin
+- [ ] Setting to disable notices on mobile
+- [ ] Restore native tag search functionality on single tap on mobile. Might be a toggle between to double and holds.
+- [ ] Investigate the limit on rendered tag elements
+- [ ] Even more optimizations and refactoring as per Obsidian plugin guidelines.
+- [ ] More tests with YAML
+- [ ] Possible undo/redo without switching to edit mode?
+- [ ] Possible undo/redo changes to embeded or generated content? 
+- [ ] Consider Button and QuickAdd Plugin hooks
+- [ ] Right-click or extra-long press to add tag summary in-line or in new note
+- [ ] Debug mode
+- [ ] Video demo of my workflow using this plugin. "Super-powered creative inbox: Capture, curate and process your ideas"
 
 ## Disclaimer
-This plugin modifies your notes. There are multiple safety precautions implemented, like checking if more than the tag has been changed. If so, the file is not modified. This plugin comes with no guarantee of any kind, and neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk.
+This plugin modifies your notes. There are multiple safety precautions implemented, like checking if more than the clicked tag was changed. If so, the file is not modified. That said, this plugin comes with no guarantee of any kind, and neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk.
