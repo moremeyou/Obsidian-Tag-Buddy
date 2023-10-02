@@ -1,7 +1,7 @@
 {
 	"id": "tag-buddy",
 	"name": "Tag Buddy",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"minAppVersion": "1.0.0",
 	"description": "A collection of reading-mode tag functionalities for Obsidian.",
 	"author": "Obsidian",

@@ -1,6 +1,6 @@
 {
 	"name": "TagBuddy",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "A collection of functionalities for tags in Obsidian.",
 	"main": "main.js",
 	"scripts": {
@@ -13,10 +13,11 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
+		"@typescript-eslint/eslint-plugin": "^6.7.3",
+		"@typescript-eslint/parser": "^6.7.3",
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.17.3",
+		"eslint": "^8.50.0",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
