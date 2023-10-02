@@ -21,7 +21,6 @@ const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	debugMode: false,
 }; 
 
-
 export default class TagBuddy extends Plugin {  
 	settings: TBSettings;
 
