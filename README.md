@@ -23,15 +23,17 @@ exclude: #tag5 // but not have tag5
 ````
 Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the original code behind the summaries.
 
-#### Why is this useful to me? 
+### Why is this useful to me? 
 I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review on-demand. With this plugin, I dont have to switch to editing mode to quickly process a tagged note. I will make a video of demo'ing this workflow.
 
-#### Settings
-- Require CMD/WIN+CLICK to edit or remove a tag (default: off)
-- Convert tag to text (remove hash) with ALT/OPT+CLICK (default: on)
-- Remove child tags first (default: on). OFF: Use SHIFT+CLICK. 
+### Settings
+- Override native tag seatch. Toggle off to use cmd+click to remove tag, restoring native tag search.
+- Convert to tag text with opt+click. Toggle off to use opt+click to perform native tag search.
+- Remove child tags first. Toggle off to use shift+click to remove child tags fitst. 
+- Override native mobile tag search. Toggle on to restore mobile native tag search on tap. Tag removal will then use press+hold.
+- Show mobile noticed. Toggle off to hide notices when editing or removing a tag.
 
-## Notes
+### Notes
 - ** BETA WARNING ** Plugin is stable, but not fully tested.
 - ALWAYS BACKUP YOUR VAULT BEFORE USING NEW PLUGINS THAT EDIT YOUR NOTES.
 - Tag interaction is for reading mode only. No plans to make it work in editing mode.
