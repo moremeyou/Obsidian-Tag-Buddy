@@ -6,13 +6,18 @@ interface TBSettings {
 	removeOnClick: boolean; // ctrl
 	removeChildTagsFirst; // 
 	optToConvert: boolean; //alt
+	mobileTagSearch: boolean; 
+	mobileNotices: boolean; 
 	debugMode: boolean;
 }
+
 
 const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	removeOnClick: true, // when true, cmd is needed when clicking to remove the tag
 	removeChildTagsFirst: true, // use shift when false
 	optToConvert: true, // when false, clicking tag will do nothing
+	mobileTagSearch: false, // toggle on use double tap for search. press+hold will then remove.
+	mobileNotices: true,
 	debugMode: false,
 }; 
 
@@ -34,14 +39,15 @@ export default class TagBuddy extends Plugin {
 			setTimeout(async () => { this.processTags(); }, 1000)
 			
 			// Don't need this event because we'll always need to switch between views to edit note and affect the tag indices.
-			this.registerEvent(this.app.workspace.on('editor-change', debounce(async () => { console.log('editor change'); this.processTags(); }, 3000, true)));
+			// this.registerEvent(this.app.workspace.on('editor-change', debounce(async () => { console.log('editor change'); this.processTags(); }, 3000, true)));
 			// Don't need this event because leaf changes don't effect the raw content.
 			// this.registerEvent( this.app.workspace.on('active-leaf-change', debounce(async () => { console.log('active leaf change'); this.processTags(); }, 300, true)) );
-
+			// But one of these might be useful when we click tags in other plugins like repeat or checklist
 			// This event is best because we always need to switch modes to edit note or interact with tag (reading mode).
+			
 			this.registerEvent( this.app.on('layout-change', (event: EditorEvent) => { 
 				setTimeout(async () => { 
-					console.log('layout change'); 
+					// console.log('layout change'); 
 					this.processTags(); 
 				}, 300); 
 			}));
@@ -49,7 +55,7 @@ export default class TagBuddy extends Plugin {
 			// There is a little redundancy here because we also get layout events when switching files
 			this.registerEvent(this.app.on('file-open', async (event: EditorEvent) => { 
 				setTimeout(async () => { 
-					console.log('file open'); 
+					// console.log('file open'); 
 					this.processTags(); 
 				}, 1000); 
 			}));
@@ -63,7 +69,11 @@ export default class TagBuddy extends Plugin {
 
 				// This event catches all taps on mobile because we have custom double-tap and press-hold events.
 				this.registerDomEvent(document, 'click', (e) => { 
-					if (e.target.classList.contains('tag')) e.stopPropagation();
+					const isTag = e.target.classList.contains('tag');
+					if (isTag && !this.settings.mobileTagSearch) {
+						//new Notice ('stop prop')
+						e.stopPropagation();
+					}
 				}, true);
 
 				new PressAndHoldHandler(this, document, this.onClickEvent.bind(this));
@@ -72,27 +82,36 @@ export default class TagBuddy extends Plugin {
 			
 		});
 
-		// All other reprocessing of tags is done after we do anything with them.
-
 		// Tag summary code block
 		this.registerMarkdownCodeBlockProcessor("tag-summary", this.summaryCodeBlockProcessor.bind(this));
 	}
 
 	async onClickEvent (event) {
+		
+		// If tag has no context properties, then try to figure out where it is?
+		// Or maybe there's a way to have obsidian add the properties globally.
+		//new Notice ('Tag Buddy event type: ' + event.type);
 
 		const target = event.target as HTMLElement;
 		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
-		
+
+		// This condition it in case we click on a tag in another plugin like repeat or checklist
+		// can't edit tags in these cases. For now.
 		if (!view && target.matches('.tag')) { 
-			new Notice('Tag Buddy: Can\'t edit tag. Might be in an unsupported view type.');
+			new Notice('Tag Buddy: Can\'t edit tag. Unsupported view type. Try again within that note.');
 			return;
 		}
 
-		if (view) {
+		if (view) { 
 			if (view.getMode() != 'preview') return;
 		} else {
-			return;
+			//if (document.contains('repeat-embedded_note'))
 		}
+				//|| (Array.from(embed.querySelectorAll('.repeat-embedded_note')).length <= 0)) return;
+			//repeat-embedded_note markdown-embed
+		//} else {
+		//	return;
+		//}
 		
 		if (!this.app.isMobile) {
 			if ((this.settings.removeOnClick && event.metaKey) || (!this.settings.removeOnClick && !event.metaKey)) { 
@@ -101,13 +120,20 @@ export default class TagBuddy extends Plugin {
 				return; 
 			}
 		} else {
-			// any conditions for when mobile?
+			// new Notice('mobile tag search is ' + this.settings.mobileTagSearch)
+			// new Notice ('Tag Buddy event type: ' + event.type);
+			if (this.settings.mobileTagSearch && event.type == 'touchend') {
+				// if we get this far, this is a double tap
+				return;
+			}
+
 			// maybe after mobile settings: long press can do convert or remove/edit
 			// double tap can do remove/edit or search (via native click, without prop stop). if double-tap disabled, then native happens.
 		}
 		
 
-		if (view && target && target.matches('.tag')) {	
+		//if (view && target && target.matches('.tag')) {	
+		if (target && target.matches('.tag')) {	
 			// const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
 
 			if (this.settings.removeOnClick || (!this.settings.removeOnClick && event.metaKey)) {
@@ -132,6 +158,7 @@ export default class TagBuddy extends Plugin {
 					this.editTag (event, tagIndex, tagFile);
 				}, 100);
 			}
+			//console.log(clickedTag.getAttribute('type'))
 
 			if (clickedTag.getAttribute('type') == 'plugin-summary') {
 				setTimeout(async () => {
@@ -188,7 +215,7 @@ export default class TagBuddy extends Plugin {
 		this.processEmbeds(activeNoteContainer);
 		//}, 500)
 	}
-	// To-do: test with yaml
+
 	async getMarkdownTags (file, fileContent) {
 		const tagPositions = [];
 		let match;
@@ -237,14 +264,18 @@ export default class TagBuddy extends Plugin {
 		return tagElArray; //Array.from(tagElements); 
 	}
 
-	async processEmbeds (dom) {
- 
-		const embeds = await dom.querySelectorAll('.summary, .markdown-embed');
-		let embededTagFiles = [];
+	async processEmbeds (element) {
+ 		//const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.summary .tag)');
+		
+		const embeds = await element.querySelectorAll('.summary, .markdown-embed');
+		//let embededTagFiles = [];
 
 		embeds.forEach(async (embed) => {
 			if (embed.classList.contains('summary')) {
-				let summaryBlocks = embed.querySelectorAll('blockquote'); 
+				//console.log('this is a summary')
+
+				// Moved this code to separate methods to process nested content
+				/*let summaryBlocks = embed.querySelectorAll('blockquote'); 
 
 				summaryBlocks.forEach(async (block, index) => {
 					//const linkElement = block.querySelector('a[data-href$=".md"]');
@@ -254,7 +285,7 @@ export default class TagBuddy extends Plugin {
 					if (file) {
 						const fileContent = await app.vault.read(file);
 						const embededTagFile = await this.getMarkdownTags(file, fileContent)
-						embededTagFiles.push(embededTagFile);
+						//embededTagFiles.push(embededTagFile);
 						
 						// Create a temporty element block so we can match match text only content of this element with it's source note
 						const tempBlock = block.cloneNode(true);
@@ -266,11 +297,16 @@ export default class TagBuddy extends Plugin {
 
 						this.assignMarkdownTags(embededTagFile, block.querySelectorAll('.tag'), startIndex, 'plugin-summary');
 					}
-				});		
+				});	*/
+
+				this.processTagSummary(embed);	
 
 			} else if (embed.classList.contains('markdown-embed')) {
-				 
-				const linkElement = embed.getAttribute('src'); //this.findAncestor(clickedTag, 'span')
+				//console.log('this is an embed')
+
+				// Moved this code to separate methods to process nested content
+
+				/*const linkElement = embed.getAttribute('src'); //this.findAncestor(clickedTag, 'span')
 				let filePath = embed.getAttribute('src');
 				const linkArray = filePath.split('#');
 				filePath = linkArray[0].trim() + '.md';
@@ -278,7 +314,7 @@ export default class TagBuddy extends Plugin {
 				if (file) {
 					const fileContent = await app.vault.read(file);
 					const embededTagFile = await this.getMarkdownTags(file, fileContent)
-					embededTagFiles.push(embededTagFile);
+					//embededTagFiles.push(embededTagFile);
 					
 					const tempComponent = new TempComponent();
 					const tempContainerHTML = createEl("div");
@@ -289,7 +325,21 @@ export default class TagBuddy extends Plugin {
 					const startIndex = this.cleanString(tempContainerHTML.innerText).indexOf(innerText);
 					
 					this.assignMarkdownTags(embededTagFile, embed.querySelectorAll('.tag'), startIndex, 'native-embed');
+				}*/
+
+				this.processNativeEmbed(embed);
+				//console.log('found summary in embed, count: ' + Array.from(embed.querySelectorAll('.summary')).length)
+				if (Array.from(embed.querySelectorAll('.summary')).length > 0) {
+					//console.log('found a nested summary')
+					this.processTagSummary(embed);
 				}
+				//} else {
+				//	this.processNativeEmbed(embed);
+				//}
+				//if (embed.classList.querySelectorAll('summary')) {
+					//console.log('embed contains summary')
+				//}
+				//this.processNativeEmbed(embed)
 
 			} else {
 				//new Notice('Tag Buddy: Tag embed in unsupported element.');
@@ -297,13 +347,63 @@ export default class TagBuddy extends Plugin {
 			}
 			
 		});
-		return embededTagFiles;
+		//return embededTagFiles;
 	}
 
-	// Test with yaml!
+	async processNativeEmbed (embed) {
+
+		const linkElement = embed.getAttribute('src'); //this.findAncestor(clickedTag, 'span')
+		let filePath = embed.getAttribute('src');
+		const linkArray = filePath.split('#');
+		filePath = linkArray[0].trim() + '.md';
+		const file = await this.validateFilePath(filePath)
+		if (file) {
+			const fileContent = await app.vault.read(file);
+			const embededTagFile = await this.getMarkdownTags(file, fileContent)
+			//embededTagFiles.push(embededTagFile);
+			
+			const tempComponent = new TempComponent();
+			const tempContainerHTML = createEl("div");
+			
+			await MarkdownRenderer.renderMarkdown(fileContent, tempContainerHTML, file.path, tempComponent);
+			
+			const innerText = this.cleanString(embed.querySelector('.markdown-embed-content').innerText);
+			const startIndex = this.cleanString(tempContainerHTML.innerText).indexOf(innerText);
+			
+			this.assignMarkdownTags(embededTagFile, embed.querySelectorAll('.tag'), startIndex, 'native-embed');
+		}
+	}
+
+	async processTagSummary (embed) {
+
+
+		let summaryBlocks = embed.querySelectorAll('blockquote'); 
+		//console.log(summaryBlocks)
+		summaryBlocks.forEach(async (block, index) => {
+			//const linkElement = block.querySelector('a[data-href$=".md"]');
+			//console.log(block)
+			const filePath = block.getAttribute('file-source'); // linkElement.getAttribute('data-href')
+			const file = this.app.vault.getAbstractFileByPath(filePath);
+
+			if (file) {
+				const fileContent = await app.vault.read(file);
+				const embededTagFile = await this.getMarkdownTags(file, fileContent)
+				//embededTagFiles.push(embededTagFile);
+				
+				// Create a temporty element block so we can match match text only content of this element with it's source note
+				const tempBlock = block.cloneNode(true);
+				tempBlock.querySelector('br')?.remove();
+				tempBlock.querySelector('strong')?.remove(); 
+				const blockText = this.cleanString(tempBlock.innerText);
+
+				const startIndex = this.cleanString(fileContent).indexOf(blockText);
+
+				this.assignMarkdownTags(embededTagFile, block.querySelectorAll('.tag'), startIndex, 'plugin-summary');
+			}
+		});		
+	}
 
 	async editTag (event, index, filePath) {
-
 		//console.log(event.target)
 		//console.log(index);
 		if (this.settings.debugMode) console.log('Tag Buddy edit tag: ' + event.target.innerText + '\nIn file: ' + filePath);
@@ -316,14 +416,13 @@ export default class TagBuddy extends Plugin {
 			const tag: String = event.target.innerText.trim();
 
 			try {
-
+				
 				fileContent = await this.app.vault.read(file);
 				fileContentBackup = fileContent;
-				
 
 			} catch (error) {
 
-				new Notice('Tag Buddy file read error\n' + error.message);
+				new Notice('Tag Buddy file read error:\n' + error.message);
 				return;
 
 			}
@@ -343,8 +442,11 @@ export default class TagBuddy extends Plugin {
 			}
 			
 			//console.log('File content: ', JSON.stringify(fileContent));
+			//console.log ('------------------------------------------------');
 			//console.log('Before Tag: ', JSON.stringify(beforeTag));
+			//console.log ('------------------------------------------------');
 			//console.log('The Tag: ', JSON.stringify(tag));
+			//console.log ('------------------------------------------------');
 			//console.log('After Tag: ', JSON.stringify(afterTag));
 	
 			let newContent = '';
@@ -355,18 +457,19 @@ export default class TagBuddy extends Plugin {
 				//newContent = beforeTag + ' ⚠️---➡️' + tag + afterTag;
 
 			//} else
-
-			if (event.altKey || (event.type == 'touchstart')) { 
+			//new Notice('convert to text: ' + ((event.type == 'touchstart') && this.settings.mobileTagSearch))
+			//new Notice (event.type)
+			if (event.altKey || ((event.type == 'touchstart') && !this.settings.mobileTagSearch)) { 
 
 				// Remove the hash only
 
 				const noHash = tag.substring(1);
 				newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + noHash + afterTag;
 				
-				if (this.app.isMobile) { new Notice ('Tag Buddy: ' + tag + ' converted to text.'); }
+				if (this.app.isMobile && this.settings.mobileNotices) { new Notice ('Tag Buddy: ' + tag + ' converted to text.'); }
 				// Setting: make this a setting to show notices on mobile
 			
-			} else if ((event.type == 'touchend' ) || (event.metaKey && !this.settings.removeOnClick) || (!event.metaKey && this.settings.removeOnClick)) {
+			} else if (((event.type == 'touchend') || this.settings.mobileTagSearch) || (event.metaKey && !this.settings.removeOnClick) || (!event.metaKey && this.settings.removeOnClick)) {
 
 				// Remove tag (or child first, if exists)
 
@@ -379,45 +482,45 @@ export default class TagBuddy extends Plugin {
 					parentTag = parts.join('/');
 					newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + parentTag + afterTag;
 
-					if (this.app.isMobile) { new Notice ('Tag Buddy: \'' + removedChild + '\' removed from parent tag.'); }
+					if (this.app.isMobile && this.settings.mobileNotices) { new Notice ('Tag Buddy: \'' + removedChild + '\' removed from parent tag.'); }
 				
 				} else {
 					newContent = beforeTag + afterTag;
-					if (this.app.isMobile) { new Notice ('Tag Buddy: ' + tag + ' removed.'); }
+					if (this.app.isMobile && this.settings.mobileNotices) { new Notice ('Tag Buddy: ' + tag + ' removed.'); }
 				}
 			} 
-				// File safety checks
-				if ((newContent == '' && !safeToEmptyFile) || this.contentChangedTooMuch(fileContentBackup, newContent, tag, 20)) {
-					// Check if there was only one tag in the file, if so, don't restore backup;
-					new Notice('Tag Buddy: File change error.');
-					newContent = fileContentBackup;
-				} else if (newContent == '' && safeToEmptyFile) {
-					new Notice('Tag Buddy: Tag removed. The file is empty.');
-				}
+			// File safety checks
+			if ((newContent == '' && !safeToEmptyFile) || this.contentChangedTooMuch(fileContentBackup, newContent, tag, 2)) {
+				// Check if there was only one tag in the file, if so, don't restore backup;
+				new Notice('Tag Buddy: File change error.');
+				newContent = fileContentBackup;
+			} else if (newContent == '' && safeToEmptyFile) {
+				new Notice('Tag Buddy: Tag removed. The file is empty.');
+			}
+
+			try {
+			
+				await this.app.vault.modify(file, newContent);
+
+				// When editing content in the active note, it's recommended to not use the modify because the folds and other state stuff is lost
+				// see this link: https://docs.obsidian.md/Plugins/Editor/Editor
+
+			} catch (error) {
 
 				try {
-					
-					await this.app.vault.modify(file, newContent);
 
-					// When editing content in the active note, it's recommended to not use the modify because the folds and other state stuff is lost
-					// see this link: https://docs.obsidian.md/Plugins/Editor/Editor
+					const backupFileName = String(file.name.substring(0, file.name.indexOf('.md')) + ' BACKUP.md');
+					vault.create('', backupFileName, fileContentBackup);
 
+					new Notice('Tag Buddy note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.');
+				
 				} catch (error) {
 
-					try {
+					navigator.clipboard.writeText(fileContentBackup);
+					new Notice('Tag Buddy note editing error: ' + error.message + '\nNote content copied to clipboard.');
 
-						const backupFileName = String(file.name.substring(0, file.name.indexOf('.md')) + ' BACKUP.md');
-						vault.create('', backupFileName, fileContentBackup);
-
-						new Notice('Tag Buddy note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.');
-					
-					} catch (error) {
-
-						navigator.clipboard.writeText(fileContentBackup);
-						new Notice('Tag Buddy note editing error: ' + error.message + '\nNote content copied to clipboard.');
-
-					}
-				} 
+				}
+			} 
 		} else {
 			new Notice('Tag Buddy error: Can\'t identify tag location.');
 		}
@@ -830,7 +933,6 @@ class DoubleTapHandler {
         clearTimeout(this.timeout);
       }, 500);
     }
-    
     this.lastTap = currentTime;
   }
 }

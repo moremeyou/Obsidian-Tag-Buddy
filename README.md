@@ -1,6 +1,8 @@
 ## Obsidian Tag Buddy
 Edit your tags without switching to edit mode! Tag Buddy is a collection of tag functionalities for Obsidian.
 
+![demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/Demo.gif)
+
 #### Use 1: Remove tag in reading mode
 Quickly remove, edit or convert your tags in the active note, embeded note or generated tag summary blocks. Hold ctrl/cmd+click to preserve the native functionality (tag search).
 
@@ -30,10 +32,10 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - Remove child tags first (default: on). OFF: Use SHIFT+CLICK. 
 
 ## Notes
-- ** BETA WARNING ** Plugin is stable, but not fully tested yet.
+- ** BETA WARNING ** Plugin is stable, but not fully tested.
 - ALWAYS BACKUP YOUR VAULT BEFORE USING NEW PLUGINS THAT EDIT YOUR NOTES.
 - Tag interaction is for reading mode only. No plans to make it work in editing mode.
-- Switch to editing mode to undo any edits in the active note. **Deletions are permanent in embeds, for now.**
+- Switch to editing mode to undo any edits in the active note. **Edits are permanent in embeds, for now.**
 
 ## To Do:
 - [x] Optimizations 
@@ -45,15 +47,15 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - [x] Full mobile support (double tap to remove/edit, hold to convert)
 - [x] Deep editing: Remove/edit tags in embeded notes and from rendered code block tag summary
 - [x] Integrate parts of [Tag Summary Plugin](https://github.com/macrojd/tag-summary) into this plugin
-- [ ] Setting to disable notices on mobile
-- [ ] Restore native tag search functionality on single tap on mobile. Might be a toggle between to double and holds.
+- [x] Setting to disable notices on mobile
+- [x] Restore native tag search functionality on single tap on mobile. 
+- [ ] Look into cancelling the text selection after editing or removing a tag
 - [ ] Investigate the limit on rendered tag elements
-- [ ] Even more optimizations and refactoring as per Obsidian plugin guidelines.
-- [ ] More tests with YAML
+- [ ] More optimizations and refactoring as per Obsidian plugin guidelines.
 - [ ] Possible undo/redo without switching to edit mode?
 - [ ] Possible undo/redo changes to embeded or generated content? 
 - [ ] Consider Button and QuickAdd Plugin hooks
-- [ ] Right-click or extra-long press to add tag summary in-line or in new note
+- [ ] Right-click or extra-long press to add tag summary in-line or in new note?
 - [ ] Debug mode
 - [ ] Video demo of my workflow using this plugin. "Super-powered creative inbox: Capture, curate and process your ideas"
 
