@@ -11,7 +11,6 @@ interface TBSettings {
 	debugMode: boolean;
 }
 
-
 const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	removeOnClick: true, // when true, cmd is needed when clicking to remove the tag
 	removeChildTagsFirst: true, // use shift when false
