@@ -31,7 +31,7 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - Convert to tag text with opt+click. Toggle off to use opt+click to perform native tag search.
 - Remove child tags first. Toggle off to use shift+click to remove child tags fitst. 
 - Override native mobile tag search. Toggle on to restore mobile native tag search on tap. Tag removal will then use press+hold.
-- Show mobile noticed. Toggle off to hide notices when editing or removing a tag.
+- Show mobile notices. Toggle off to hide notices when editing or removing a tag.
 
 ### Notes
 - ** BETA WARNING ** Plugin is stable, but not fully tested.
@@ -39,7 +39,7 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - Tag interaction is for reading mode only. No plans to make it work in editing mode.
 - Switch to editing mode to undo any edits in the active note. **Edits are permanent in embeds, for now.**
 
-## To Do:
+### To Do:
 - [x] Optimizations 
 - [x] Test functionalities in other view types (canvas, tables, etc). Errors handled!
 - [x] Settings to customize removal and convert (alt+click removes #, cmd+click native search)
@@ -61,5 +61,5 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - [ ] Debug mode
 - [ ] Video demo of my workflow using this plugin. "Super-powered creative inbox: Capture, curate and process your ideas"
 
-## Disclaimer
+### Disclaimer
 This plugin modifies your notes. There are multiple safety precautions implemented, like checking if more than the clicked tag was changed. If so, the file is not modified. That said, this plugin comes with no guarantee of any kind, and neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk.
