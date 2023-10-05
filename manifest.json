@@ -3,9 +3,9 @@
 	"name": "Tag Buddy",
 	"version": "0.3.0",
 	"minAppVersion": "1.0.0",
-	"description": "A collection of reading-mode tag functionalities for Obsidian.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Add, edit, or remove tags in reading-mode (and other tag functionalities for Obsidian).",
+	"author": "David Fasullo",
+	"authorUrl": "https://www.linkedin.com/in/davidfasullo",
+	"fundingUrl": "https://www.buymeacoffee.com/moremeyou",
 	"isDesktopOnly": false
 }

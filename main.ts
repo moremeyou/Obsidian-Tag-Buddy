@@ -59,6 +59,8 @@ export default class TagBuddy extends Plugin {
 				}, 1000); 
 			}));
 
+			this.injectStyles();
+
 			if (!this.app.isMobile) {
 
 				// This event handles all the interactions on desktop
@@ -85,11 +87,88 @@ export default class TagBuddy extends Plugin {
 		this.registerMarkdownCodeBlockProcessor("tag-summary", this.summaryCodeBlockProcessor.bind(this));
 	}
 
+	async getClickedWord(e) {
+		//Get the click position
+	    let x = e.clientX, y = e.clientY;
+
+	    // Step 3: Get the word under the click position
+	    let range, textNode, offset;
+
+	    // This method is better supported and gives us a range object
+	    if (document.caretRangeFromPoint) {
+	        range = document.caretRangeFromPoint(x, y);
+	        textNode = range.startContainer;
+	        offset = range.startOffset;
+	    }
+	    //console.log(textNode)
+
+	    // LATER, double check different notes types and around the interface
+
+	    // Check if we have a valid text node
+	    if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+	        // Get the whole text of the clicked node
+	        let fullText = textNode.textContent;
+
+	        // LATER: if the word end in valid punctuation, add a space between word and punctuation it when adding the hash.
+	        // LATER, have predefined tags we can insert with different key modifiers on click
+	        // like, #todo or #inbox #later
+
+	        let wordRegex = /[^\s]+(?=[.,:!?]?(\s|$))/g;
+			let match;
+			let clickedWord = null;
+	        while ((match = wordRegex.exec(fullText)) !== null) {
+	            if (match.index <= offset && offset <= match.index + match[0].length) {
+	                // This is our word
+	                if (!/^[^\p{L}\p{N}]/u.test(match[0]) &&        // Not starting with any non-alphanumeric
+	                    !/[^\p{L}\p{N}\s.,:!?]/u.test(match[0]) &&	// Not containing other than allowed chars
+	                    !/[.,:!?](?=[^\s$])/u.test(match[0])) {     // If ends with punctuation, following character must be whitespace or end of string
+	                    clickedWord = match[0];
+	                    break;
+	                }
+	            }
+	        }
+
+
+			let activeView = await this.app.workspace.getActiveViewOfType(MarkdownView);
+
+			
+		    let editor = activeView.sourceMode.cmEditor;  // Get the CodeMirror instance
+		    let fullNote = editor.getValue(); 
+
+			const globalStartPosition = fullNote.indexOf(textNode.textContent);
+
+			if (globalStartPosition !== -1) {
+			    // Assuming the click was right at the end of the word
+			    let wordEndPosition = globalStartPosition + offset;
+
+			    // Traverse backward until a space or start
+			    while (wordEndPosition > 0 && fullNote[wordEndPosition] !== ' ' && fullNote[wordEndPosition] !== '\n') {
+			        wordEndPosition--;
+			    }
+
+			    wordEndPosition++;
+
+			    // Insert hash at wordEndPosition
+			    const updatedNote = [fullNote.slice(0, wordEndPosition), '#', fullNote.slice(wordEndPosition)].join('');
+			    console.log(updatedNote);
+			}
+
+
+		}
+
+		// LATER, to make this work in embeds and summaries
+		// and avoid adding when in the summary empty block. or other code blocks. maybe this check is earlier.
+
+	}
+
 	async onClickEvent (event) {
 		
+		// Support for different views? 
 		// If tag has no context properties, then try to figure out where it is?
 		// Or maybe there's a way to have obsidian add the properties globally.
 		//new Notice ('Tag Buddy event type: ' + event.type);
+
+		//console.log((navigator.platform.toUpperCase().indexOf('MAC') >= 0)?'This is a Mac':'This is not a Mac')
 
 		const target = event.target as HTMLElement;
 		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -106,36 +185,51 @@ export default class TagBuddy extends Plugin {
 		} else {
 			//if (document.contains('repeat-embedded_note'))
 		}
-				//|| (Array.from(embed.querySelectorAll('.repeat-embedded_note')).length <= 0)) return;
-			//repeat-embedded_note markdown-embed
-		//} else {
-		//	return;
-		//}
 		
 		if (!this.app.isMobile) {
-			if ((this.settings.removeOnClick && event.metaKey) || (!this.settings.removeOnClick && !event.metaKey)) { 
+			//new Notice ('Tag Buddy event type: ' + event.type);
+
+
+
+
+			// ADD tag functionality
+			//console.log(this.ctrlCmdKey(event))
+			/*if (target && !target.matches('.tag') 
+			&& target.tagName !== 'A' 
+			&& target.tagName !== 'IMG'
+			&& this.ctrlCmdKey(event)) {
+
+				//console.log(await this.getClickedWord(event));
+				await this.getClickedWord(event);
+
+				return;
+
+			}*/
+
+
+
+
+			if ((this.settings.removeOnClick && this.ctrlCmdKey(event)) || (!this.settings.removeOnClick && !this.ctrlCmdKey(event))) { 
 				return; 
 			} else if (event.altKey && !this.settings.optToConvert) {  
 				return; 
 			}
+
 		} else {
-			// new Notice('mobile tag search is ' + this.settings.mobileTagSearch)
-			// new Notice ('Tag Buddy event type: ' + event.type);
+			
 			if (this.settings.mobileTagSearch && event.type == 'touchend') {
 				// if we get this far, this is a double tap
 				return;
 			}
-
-			// maybe after mobile settings: long press can do convert or remove/edit
-			// double tap can do remove/edit or search (via native click, without prop stop). if double-tap disabled, then native happens.
 		}
-		
 
+
+		
 		//if (view && target && target.matches('.tag')) {	
 		if (target && target.matches('.tag')) {	
 			// const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
 
-			if (this.settings.removeOnClick || (!this.settings.removeOnClick && event.metaKey)) {
+			if (this.settings.removeOnClick || (!this.settings.removeOnClick && this.ctrlCmdKey(event))) {
 				event.stopPropagation();
 				event.preventDefault();
 			}
@@ -148,271 +242,42 @@ export default class TagBuddy extends Plugin {
 
 			if (tagFile) {
 				// Try
-				this.editTag (event, tagIndex, tagFile);
+				//this.editTag (event, tagIndex, tagFile);
+				this.editTag (target, event);
 			} else {
 				// Try again
 				setTimeout(async () => {
 					tagIndex = clickedTag.getAttribute('md-index');
 					tagFile = clickedTag.getAttribute('file-source');
-					this.editTag (event, tagIndex, tagFile);
-				}, 100);
+					//this.editTag (event, tagIndex, tagFile);
+					this.editTag (target, event);
+				}, 300);
 			}
 			//console.log(clickedTag.getAttribute('type'))
 
-			if (clickedTag.getAttribute('type') == 'plugin-summary') {
-				setTimeout(async () => {
-					
-					const summaryContainer = clickedTag.closest('.summary');
-					const tagsStr = summaryContainer.getAttribute('codeblock-tags');
-					const tags = tagsStr ? tagsStr.split(',') : [];
-
-					const tagsIncludeStr = summaryContainer.getAttribute('codeblock-tags-include');
-					const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
-
-					const tagsExcludeStr = summaryContainer.getAttribute('codeblock-tags-exclude');
-					const tagsExclude = tagsExcludeStr ? tagsExcludeStr.split(',') : [];
-
-					// Recreate summary after we've edited the file
-					this.createSummary(summaryContainer, tags, tagsInclude, tagsExclude);
-
-					setTimeout(async () => { this.processTags(); }, 200);
-
-					// this.refreshView(); // no need for this atm
-
-				}, 150);
-			} else {
-				setTimeout(async () => { this.processTags(); }, 50)
-			}	
+			
 		//} else if (view == null && target && target.matches('.tag')) {
 		} else if (!view && target.matches('.tag')) {
 			new Notice('Tag Buddy: Can\'t edit tag. Might be in an unsupported view type.');
 		}
 	}
 
-	async processTags () {
-
-		if (this.settings.debugMode) console.log('Tag Buddy: Processing tags.');
-
-		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
-		//setTimeout(async () => { 
-		const activeNoteContainer = await this.app.workspace.activeLeaf.containerEl;
-		//const activeNoteContainer = await document.querySelector('.view-content');
-		//const activeNoteContainer = await document.querySelector('.markdown-reading-view');// this.app.workspace.activeLeaf.containerEl;
-		//}, 200)
-		//setTimeout(async () => { // All these timeouts were for testing. Issues seems to be resolved now.
-		const activeFile = await this.app.workspace.getActiveFile();
-		const fileContent = await app.vault.read(activeFile);
-		const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.summary .tag)');
-		//const activeFileTagElements = await activeNoteContainer.getElementsByClassName('cm-hashtag')
-		//console.log(Array.from(activeFileTagElements).length)
-		//console.log(Array.from(activeFileTagElements).map(element => element.innerText));
+	async editTag (tagEl, event) {
 
 
-		//setTimeout(async () => { console.log(activeFileTagElements)}, 1000)
-		const activeFileTags = await this.getMarkdownTags(activeFile, fileContent);
-		this.assignMarkdownTags(activeFileTags, activeFileTagElements, 0, 'active');
-		this.processEmbeds(activeNoteContainer);
-		//}, 500)
-	}
+		const index = tagEl.getAttribute('md-index');
+		const filePath = tagEl.getAttribute('file-source');
 
-	async getMarkdownTags (file, fileContent) {
-		const tagPositions = [];
-		let match;
-
-		const regex = /(?:^|\s)#[^\s#]+|```/g; // Adjusted the regex to also match code block delimiters
-		let insideCodeBlock = false;
-
-		while ((match = regex.exec(fileContent)) !== null) {
-		    if (match[0].trim() === "```") {
-		        insideCodeBlock = !insideCodeBlock; 
-		        continue;
-		    }
-		    
-		    if (insideCodeBlock) continue;
-
-		    const tag = match[0].trim();
-		    // Look ahead from the current match and see if it's followed by ]]
-		    if (fileContent.slice(match.index, match.index + tag.length + 2).endsWith("]]")) {
-		        continue; // Skip this match as it's part of a wikilink
-		    }
-		    //console.log(match.index)
-		    tagPositions.push({tag:tag, index:match.index, source:file.name}); 
-		}
-		//console.log('markdown tag count: ' + tagPositions.length)
-
-		return tagPositions;
-	}
-
-	assignMarkdownTags (tagPositions, tagElements, startIndex, type) {
-		let tagEl;
-		const tagElArray = Array.from(tagElements);
-		let tagElIndex = 0;
-		tagPositions.forEach((tagPos, index) => {
-
-			if (tagPositions[index].index >= startIndex) {
-				tagEl = tagElArray[tagElIndex] as HTMLElement;
-        		if (tagEl) {
-        			tagEl.setAttribute('md-index', tagPositions[index].index);
-        			tagEl.setAttribute('file-source', tagPositions[index].source);
-        			tagEl.setAttribute('type', type);
-        			tagElIndex++;
-        		} 
-    		} 
-		}); 
-		//console.log('tag element array length: ' + tagElArray.length);
-		return tagElArray; //Array.from(tagElements); 
-	}
-
-	async processEmbeds (element) {
- 		//const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.summary .tag)');
-		
-		const embeds = await element.querySelectorAll('.summary, .markdown-embed');
-		//let embededTagFiles = [];
-
-		embeds.forEach(async (embed) => {
-			if (embed.classList.contains('summary')) {
-				//console.log('this is a summary')
-
-				// Moved this code to separate methods to process nested content
-				/*let summaryBlocks = embed.querySelectorAll('blockquote'); 
-
-				summaryBlocks.forEach(async (block, index) => {
-					//const linkElement = block.querySelector('a[data-href$=".md"]');
-					const filePath = block.getAttribute('file-source'); // linkElement.getAttribute('data-href')
-					const file = this.app.vault.getAbstractFileByPath(filePath);
-
-					if (file) {
-						const fileContent = await app.vault.read(file);
-						const embededTagFile = await this.getMarkdownTags(file, fileContent)
-						//embededTagFiles.push(embededTagFile);
-						
-						// Create a temporty element block so we can match match text only content of this element with it's source note
-						const tempBlock = block.cloneNode(true);
-						tempBlock.querySelector('br')?.remove();
-						tempBlock.querySelector('strong')?.remove(); 
-						const blockText = this.cleanString(tempBlock.innerText);
-
-						const startIndex = this.cleanString(fileContent).indexOf(blockText);
-
-						this.assignMarkdownTags(embededTagFile, block.querySelectorAll('.tag'), startIndex, 'plugin-summary');
-					}
-				});	*/
-
-				this.processTagSummary(embed);	
-
-			} else if (embed.classList.contains('markdown-embed')) {
-				//console.log('this is an embed')
-
-				// Moved this code to separate methods to process nested content
-
-				/*const linkElement = embed.getAttribute('src'); //this.findAncestor(clickedTag, 'span')
-				let filePath = embed.getAttribute('src');
-				const linkArray = filePath.split('#');
-				filePath = linkArray[0].trim() + '.md';
-				const file = await this.validateFilePath(filePath)
-				if (file) {
-					const fileContent = await app.vault.read(file);
-					const embededTagFile = await this.getMarkdownTags(file, fileContent)
-					//embededTagFiles.push(embededTagFile);
-					
-					const tempComponent = new TempComponent();
-					const tempContainerHTML = createEl("div");
-					
-					await MarkdownRenderer.renderMarkdown(fileContent, tempContainerHTML, file.path, tempComponent);
-					
-					const innerText = this.cleanString(embed.querySelector('.markdown-embed-content').innerText);
-					const startIndex = this.cleanString(tempContainerHTML.innerText).indexOf(innerText);
-					
-					this.assignMarkdownTags(embededTagFile, embed.querySelectorAll('.tag'), startIndex, 'native-embed');
-				}*/
-
-				this.processNativeEmbed(embed);
-				//console.log('found summary in embed, count: ' + Array.from(embed.querySelectorAll('.summary')).length)
-				if (Array.from(embed.querySelectorAll('.summary')).length > 0) {
-					//console.log('found a nested summary')
-					this.processTagSummary(embed);
-				}
-				//} else {
-				//	this.processNativeEmbed(embed);
-				//}
-				//if (embed.classList.querySelectorAll('summary')) {
-					//console.log('embed contains summary')
-				//}
-				//this.processNativeEmbed(embed)
-
-			} else {
-				//new Notice('Tag Buddy: Tag embed in unsupported element.');
-				// Handle this issue on click.
-			}
-			
-		});
-		//return embededTagFiles;
-	}
-
-	async processNativeEmbed (embed) {
-
-		const linkElement = embed.getAttribute('src'); //this.findAncestor(clickedTag, 'span')
-		let filePath = embed.getAttribute('src');
-		const linkArray = filePath.split('#');
-		filePath = linkArray[0].trim() + '.md';
-		const file = await this.validateFilePath(filePath)
-		if (file) {
-			const fileContent = await app.vault.read(file);
-			const embededTagFile = await this.getMarkdownTags(file, fileContent)
-			//embededTagFiles.push(embededTagFile);
-			
-			const tempComponent = new TempComponent();
-			const tempContainerHTML = createEl("div");
-			
-			await MarkdownRenderer.renderMarkdown(fileContent, tempContainerHTML, file.path, tempComponent);
-			
-			const innerText = this.cleanString(embed.querySelector('.markdown-embed-content').innerText);
-			const startIndex = this.cleanString(tempContainerHTML.innerText).indexOf(innerText);
-			
-			this.assignMarkdownTags(embededTagFile, embed.querySelectorAll('.tag'), startIndex, 'native-embed');
-		}
-	}
-
-	async processTagSummary (embed) {
-
-
-		let summaryBlocks = embed.querySelectorAll('blockquote'); 
-		//console.log(summaryBlocks)
-		summaryBlocks.forEach(async (block, index) => {
-			//const linkElement = block.querySelector('a[data-href$=".md"]');
-			//console.log(block)
-			const filePath = block.getAttribute('file-source'); // linkElement.getAttribute('data-href')
-			const file = this.app.vault.getAbstractFileByPath(filePath);
-
-			if (file) {
-				const fileContent = await app.vault.read(file);
-				const embededTagFile = await this.getMarkdownTags(file, fileContent)
-				//embededTagFiles.push(embededTagFile);
-				
-				// Create a temporty element block so we can match match text only content of this element with it's source note
-				const tempBlock = block.cloneNode(true);
-				tempBlock.querySelector('br')?.remove();
-				tempBlock.querySelector('strong')?.remove(); 
-				const blockText = this.cleanString(tempBlock.innerText);
-
-				const startIndex = this.cleanString(fileContent).indexOf(blockText);
-
-				this.assignMarkdownTags(embededTagFile, block.querySelectorAll('.tag'), startIndex, 'plugin-summary');
-			}
-		});		
-	}
-
-	async editTag (event, index, filePath) {
-		//console.log(event.target)
-		//console.log(index);
-		if (this.settings.debugMode) console.log('Tag Buddy edit tag: ' + event.target.innerText + '\nIn file: ' + filePath);
+		//if (this.settings.debugMode) console.log('Tag Buddy edit tag: ' + event.target.innerText + '\nIn file: ' + filePath);
+		if (this.settings.debugMode) console.log('Tag Buddy edit tag: ' + tagEl.innerText + '\nIn file: ' + filePath);
 
 		if (filePath) {
 
 			const file: TFile = await this.validateFilePath(filePath); //app.vault.getAbstractFileByPath(filePath);
 			let fileContent: String;
 			let fileContentBackup: String;
-			const tag: String = event.target.innerText.trim();
+			//const tag: String = event.target.innerText.trim();
+			const tag: String = tagEl.innerText.trim();
 
 			try {
 				
@@ -456,9 +321,12 @@ export default class TagBuddy extends Plugin {
 				//newContent = beforeTag + ' ⚠️---➡️' + tag + afterTag;
 
 			//} else
-			//new Notice('convert to text: ' + ((event.type == 'touchstart') && this.settings.mobileTagSearch))
-			//new Notice (event.type)
-			if (event.altKey || ((event.type == 'touchstart') && !this.settings.mobileTagSearch)) { 
+
+			if (!event) { // then we're calling this method from another button. need to rethink how this is organized.
+				
+				newContent = beforeTag + afterTag;
+
+			} else if (event.altKey || ((event.type == 'touchstart') && !this.settings.mobileTagSearch)) { 
 
 				// Remove the hash only
 
@@ -468,7 +336,7 @@ export default class TagBuddy extends Plugin {
 				if (this.app.isMobile && this.settings.mobileNotices) { new Notice ('Tag Buddy: ' + tag + ' converted to text.'); }
 				// Setting: make this a setting to show notices on mobile
 			
-			} else if (((event.type == 'touchend') || this.settings.mobileTagSearch) || (event.metaKey && !this.settings.removeOnClick) || (!event.metaKey && this.settings.removeOnClick)) {
+			} else if (((event.type == 'touchend') || this.settings.mobileTagSearch) || (this.ctrlCmdKey(event) && !this.settings.removeOnClick) || (!this.ctrlCmdKey(event) && this.settings.removeOnClick)) {
 
 				// Remove tag (or child first, if exists)
 
@@ -494,7 +362,7 @@ export default class TagBuddy extends Plugin {
 				new Notice('Tag Buddy: File change error.');
 				newContent = fileContentBackup;
 			} else if (newContent == '' && safeToEmptyFile) {
-				new Notice('Tag Buddy: Tag removed. The file is empty.');
+				new Notice('Tag Buddy: Tag removed. The note is empty.');
 			}
 
 			try {
@@ -503,6 +371,20 @@ export default class TagBuddy extends Plugin {
 
 				// When editing content in the active note, it's recommended to not use the modify because the folds and other state stuff is lost
 				// see this link: https://docs.obsidian.md/Plugins/Editor/Editor
+
+				if (tagEl.getAttribute('type') == 'plugin-summary') {
+					setTimeout(async () => {
+					
+						this.updateSummaryParagraph(tagEl);
+
+					    setTimeout(async () => { this.processTags(); }, 200);
+
+						// this.refreshView(); // no need for this atm
+
+					}, 150);
+				} else {
+					setTimeout(async () => { this.processTags(); }, 50)
+				}	
 
 			} catch (error) {
 
@@ -525,117 +407,178 @@ export default class TagBuddy extends Plugin {
 		}
 	}
 
-	async readFiles(listFiles: TFile[]): Promise<[TFile, string][]> {
-		let list: [TFile, string][] = [];
-		for (let t = 0; t < listFiles.length; t += 1) {
-			const file = listFiles[t];
-			let content = await this.app.vault.cachedRead(file);
-			list.push([file, content]);
+	updateSummaryParagraph (tagEl) {
+		const summaryContainer = tagEl.closest('.summary');
+		const tagsStr = summaryContainer.getAttribute('codeblock-tags');
+		const tags = tagsStr ? tagsStr.split(',') : [];
+
+		const tagsIncludeStr = summaryContainer.getAttribute('codeblock-tags-include');
+		const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
+
+		const tagsExcludeStr = summaryContainer.getAttribute('codeblock-tags-exclude');
+		const tagsExclude = tagsExcludeStr ? tagsExcludeStr.split(',') : [];
+
+		const sectionsStr = summaryContainer.getAttribute('codeblock-sections');
+		const sections = sectionsStr ? sectionsStr.split(',') : [];
+
+		// Recreate summary after we've edited the file
+		this.createSummary(summaryContainer, tags, tagsInclude, tagsExclude, sections);
+
+		//setTimeout(async () => { this.processTags(); }, 200);
+	}
+
+	async processTags () {
+
+		if (this.settings.debugMode) console.log('Tag Buddy: Processing tags.');
+
+		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
+		//setTimeout(async () => { 
+		const activeNoteContainer = await this.app.workspace.activeLeaf.containerEl;
+		//const activeNoteContainer = await document.querySelector('.view-content');
+		//}, 200)
+		//setTimeout(async () => { // All these timeouts were for testing. Issues seems to be resolved now.
+		const activeFile = await this.app.workspace.getActiveFile();
+		const fileContent = await app.vault.read(activeFile);
+		const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.summary .tag)');
+
+		//setTimeout(async () => { console.log(activeFileTagElements)}, 1000)
+		const activeFileTags = await this.getMarkdownTags(activeFile, fileContent);
+		if (activeFileTags.length > 0) this.assignMarkdownTags(activeFileTags, activeFileTagElements, 0, 'active');
+		this.processEmbeds(activeNoteContainer);
+		//}, 500)
+	}
+
+	async getMarkdownTags (file, fileContent) {
+		const tagPositions = [];
+		let match;
+		const regex = /(?:^|\s)#[^\s#]+|```/g; // Adjusted the regex to also match code block delimiters
+		let insideCodeBlock = false;
+
+		while ((match = regex.exec(fileContent)) !== null) {
+		    if (match[0].trim() === "```") {
+		        insideCodeBlock = !insideCodeBlock; 
+		        continue;
+		    }
+		    
+		    if (insideCodeBlock) continue;
+
+		    const tag = match[0].trim();
+		    // Look ahead from the current match and see if it's followed by ]]
+		    if (fileContent.slice(match.index, match.index + tag.length + 2).endsWith("]]")) {
+		        continue; // Skip this match as it's part of a wikilink
+		    }
+		    tagPositions.push({tag:tag, index:match.index, source:file.name}); 
 		}
-		return list;
+		//console.log('markdown tag count: ' + tagPositions.length)
+
+		return tagPositions;
 	}
 
-	isValidText(listTags: string[], tags: string[], include: string[], exclude: string[]): boolean {
-		let valid = true;
+	assignMarkdownTags (tagPositions, tagElements, startIndex, type) {
+		//console.log('------------------------------')
+		let tagEl;
+		const tagElArray = Array.from(tagElements);
+		let tagElIndex = 0;
+		//tagPositions.forEach(item => console.log(item.index));
+		tagPositions.forEach((tagPos, index) => {
+			if (tagPositions[index].index >= startIndex) {
+				tagEl = tagElArray[tagElIndex] as HTMLElement;
+				if (tagEl) {
+        			//console.log(tagPositions[index].index + '>=' + startIndex + ' = ' + (tagPositions[index].index >= startIndex) + ' : ' + tagPositions[index].source)
+        		
+        			tagEl.setAttribute('md-index', tagPositions[index].index);
+        			tagEl.setAttribute('file-source', tagPositions[index].source);
+        			tagEl.setAttribute('type', type);
+        			tagElIndex++;
+        		} 
+    		} 
+		}); 
+		//console.log('tag element array length: ' + tagElArray.length);
+		//console.log(tagElArray)
+		return tagElArray; //Array.from(tagElements); 
+	}
 
-		// Check OR (tags)
-		if (tags.length > 0) {
-			valid = valid && tags.some((value) => listTags.includes(value));
+	async processEmbeds (element) {
+ 		//const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.summary .tag)');
+		
+		const embeds = await element.querySelectorAll('.summary, .markdown-embed');
+		//let embededTagFiles = [];
+
+		embeds.forEach(async (embed) => {
+			if (embed.classList.contains('summary')) {
+
+				this.processTagSummary(embed);	
+
+			} else if (embed.classList.contains('markdown-embed')) {
+
+				this.processNativeEmbed(embed);
+				
+				if (Array.from(embed.querySelectorAll('.summary')).length > 0) {
+					this.processTagSummary(embed);
+				}
+				
+			} else {
+				//new Notice('Tag Buddy: Tag embed in unsupported element.');
+				// Handle this issue on click.
+			}
+		});
+		//return embededTagFiles;
+	}
+
+	async processNativeEmbed (embed) {
+
+		const linkElement = embed.getAttribute('src'); //this.findAncestor(clickedTag, 'span')
+		let filePath = embed.getAttribute('src');
+		const linkArray = filePath.split('#');
+		filePath = linkArray[0].trim() + '.md';
+		const file = await this.validateFilePath(filePath)
+		if (file) {
+			const fileContent = await app.vault.read(file);
+			const embededTagFile = await this.getMarkdownTags(file, fileContent)
+			//embededTagFiles.push(embededTagFile);
+			
+			const tempComponent = new TempComponent();
+			const tempContainerHTML = createEl("div");
+			
+			await MarkdownRenderer.renderMarkdown(fileContent, tempContainerHTML, file.path, tempComponent);
+			
+			//const innerText = this.cleanString(embed.querySelector('.markdown-embed-content').innerText);
+			//const startIndex = this.cleanString(tempContainerHTML.innerText).indexOf(innerText);
+			const innerText = embed.querySelector('.markdown-embed-content').innerText;
+			const startIndex = tempContainerHTML.innerText.indexOf(innerText);
+			
+			this.assignMarkdownTags(embededTagFile, embed.querySelectorAll('.tag'), startIndex, 'native-embed');
 		}
-		// Check AND (include)
-		if (include.length > 0) {
-			valid = valid && include.every((value) => listTags.includes(value));
-		}
-		// Check NOT (exclude)
-		if (valid && exclude.length > 0) {
-			valid = !exclude.some((value) => listTags.includes(value));
-		}
-		return valid;		
 	}
 
-	async validateFilePath (filePath) {
-		const matchingFiles = await app.vault.getFiles().filter(file => file.name === filePath);
-		if (matchingFiles.length === 1) {
-			const filePath = matchingFiles[0].path;
-			const file = await this.app.vault.getAbstractFileByPath(filePath);
-			//console.log('Validate file: ' + embedFile.name);
-			return file;
-		} else if (matchingFiles.length > 1) {
-			new Notice('Tag Buddy: Multiple files found with the same name. Can\'t safely edit tag.');
-			return null;
-		} else {
-			new Notice('Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.');
-			return null;
-		}
-	}
+	async processTagSummary (embed) {
 
-	contentChangedTooMuch(original, modified, tag, buffer = 5) {
-	  const expectedChange = tag.length; // including the '#' symbol
-	  const threshold = expectedChange + buffer; // allow for some minor unintended modifications
-	  const actualChange = Math.abs(original.length - modified.length);
 
-	  return actualChange > threshold;
-	}
+		let summaryBlocks = embed.querySelectorAll('blockquote'); 
+		summaryBlocks.forEach(async (block, index) => {
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
+			const filePath = block.getAttribute('file-source'); // linkElement.getAttribute('data-href')
+			const file = this.app.vault.getAbstractFileByPath(filePath);
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+			if (file) {
+				const fileContent = await app.vault.read(file);
+				const embededTagFile = await this.getMarkdownTags(file, fileContent);
+				
+				// Create a temporty element block so we can match match text only content of this element with it's source note
+				const tempBlock = block.cloneNode(true);
+				//tempBlock.querySelector('br')?.remove();
+				//tempBlock.querySelector('strong')?.remove(); 
+				tempBlock.querySelector('.tagsummary-item-title')?.remove(); 
+				tempBlock.querySelector('.tagsummary-buttons')?.remove(); 
+				//const blockText = this.cleanString(tempBlock.innerText); // fuck this bug!
+				//const startIndex = this.cleanString(fileContent).indexOf(blockText);
+				const blockText = tempBlock.innerText;
+				const startIndex = fileContent.indexOf(blockText);
 
-	cleanString(input) {
-		let cleanedStr;
 
-		// Check if input is a DOM element
-		if (input instanceof Element) {
-			//console.log('input is: Element');
-			cleanedStr = input.outerHTML.trim();
-		} else {
-			//console.log('input is: String');
-			cleanedStr = input.trim();
-		}
-
-		// Whitespace normalization
-		//cleanedStr = cleanedStr.replace(/\s+/g, ' ');
-
-		// Remove <br> elements
-		//cleanedStr = cleanedStr.replace(/<br>/g, ' ');
-
-		// Remove blockquote tags but keep their content
-		//cleanedStr = cleanedStr.replace(/<\/?blockquote>/g, '');
-
-		// Remove blockquote tags but keep their content
-		//cleanedStr = cleanedStr.replace(/<\/?div>/g, '');
-
-		// Remove spaces between tags
-		//cleanedStr = cleanedStr.replace(/>\s+</g, '><');
-
-		// Whitespace normalization
-		cleanedStr = cleanedStr.replace(/\s+/g, ' ');
-
-		// HTML entity decoding
-		const textArea = document.createElement('textarea');
-		textArea.innerHTML = cleanedStr;
-		cleanedStr = textArea.value.trim();
-
-		// Optional: convert to lowercase
-		// cleanedStr = cleanedStr.toLowerCase();
-
-		return cleanedStr;
-	}
-
-	async refreshView (){
-		//console.log('Refresh view.');
-		new Notice ('Refresh view.');
-		// if using rerender,
-		//const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
-		//await view.previewMode.rerender(true);
-
-		await app.workspace.activeLeaf.rebuildView();
-		// only needed if we use rerender above. do this on a timeout
-		//this.app.workspace.getActiveViewOfType(MarkdownView).previewMode.applyScroll(scrollState);
+				this.assignMarkdownTags(embededTagFile, block.querySelectorAll('.tag'), startIndex, 'plugin-summary');
+			}
+		});		
 	}
 
 	//////////////// CUSTOM TAG-SUMMARY IMPLEMENTATION //////////////
@@ -646,6 +589,7 @@ export default class TagBuddy extends Plugin {
 		let tags: string[] = Array();
 		let include: string[] = Array();
 		let exclude: string[] = Array();
+		let sections: string[] = Array();
 
 		// Process rows inside codeblock
 		const rows = source.split("\n").filter((row) => row.length > 0);
@@ -695,11 +639,19 @@ export default class TagBuddy extends Plugin {
 				});
 				exclude = list;
 			}
+
+			// Check if the line specifies sections of a note
+			if (line.match(/^\s*sections:[\p{L}0-9_\-/#, ]+$/gu)) {
+				const content = line.replace(/^\s*sections:/, "").trim();
+				// Get the list of sections and assign them to the sections variable
+				let list = content.split(',').map((sec) => sec.trim());
+				sections = list;
+			}
 		});
 
 		// Create summary only if the user specified some tags
 		if (tags.length > 0 || include.length > 0) {
-			await this.createSummary(el, tags, include, exclude, ctx.sourcePath);
+			await this.createSummary(el, tags, include, exclude, sections, ctx.sourcePath);
 		} else {
 			this.createEmptySummary(el);
 		} 
@@ -715,12 +667,12 @@ export default class TagBuddy extends Plugin {
 		element.replaceWith(container);
 	}
 
-	async createSummary(element: HTMLElement, tags: string[], include: string[], exclude: string[], filePath: string) {
+	async createSummary(element: HTMLElement, tags: string[], include: string[], exclude: string[], sections: string[], filePath: string) {
 		
 		const activeFile = await this.app.workspace.getActiveFile();
 		const validTags = tags.concat(include); // All the tags selected by the user
 		const tempComponent = new TempComponent();
-		const summaryContainer = createEl("div");
+		const summaryContainer = createEl('div');
 		summaryContainer.setAttribute('class', 'summary');
 		
 		// Get files
@@ -861,26 +813,88 @@ export default class TagBuddy extends Plugin {
               			tagSection = tag
               		} 
             	});
+          		
+          		const buttonContainer = createEl('div');
+          		buttonContainer.setAttribute('class', 'tagsummary-buttons')
 
-				// Possible Button and QuickAdd Plugin usage
-				// paragraph += '```button\nname Copy to ' + tagSection.replace('#', '') + ' section\ntype command\naction QuickAdd: Paste Clipboard Text\n```'
+          		const paragraphContent = createEl("blockquote");
+				paragraphContent.setAttribute('file-source', filePath);
+				//paragraphContent.appendChild(buttonContainer);
 
+
+				/*if (this.app.plugins.getPlugin('quickadd')) {
+					let count = 0;
+					sections.forEach((sec) => {
+						if (count++ > 3) return; // limit to 4 section buttons for now, for space.
+						buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphContent, tagSection, filePath));
+					});
+				}*/
+
+				//buttonContainer.appendChild(this.makeCopyButton(paragraph.trim()));
+				//buttonContainer.appendChild(this.makeRemoveTagButton(paragraphContent, tagSection, filePath));
+
+
+				////////////////////////////////////////////////////////////////
+				//  MESSY! Lots of refactoring to be done in this function
+				////////////////////////////////////////////////////////////////
+				
 				// Add link to original note. Tag Buddy added deep linking.
-				let blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu); 
+				const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu); 
+				let link;
+				//console.log(filePath, fileName)
         		if (blockLink) { 
-        			paragraph = "**[[" + filePath + "#" + blockLink + "|" + fileName + "]]**\n" + paragraph; 
+        			//paragraph = "**[[" + filePath + "#" + blockLink + "|" + fileName + "]]**" + paragraph; 
+        			link = '[[' + filePath + '#' + blockLink + '|' + fileName + ']]';
+
+        			if (this.app.plugins.getPlugin('quickadd')) {
+						let count = 0;
+						sections.forEach((sec) => {
+							if (count++ > 3) return; // limit to 4 section buttons for now, for space.
+							buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphContent, tagSection, (filePath + '#' + blockLink)));
+						});
+					}
+
+					buttonContainer.appendChild(this.makeCopyButton(paragraph.trim()));
+        			buttonContainer.appendChild(this.makeRemoveTagButton(paragraphContent, tagSection, (filePath + '#' + blockLink)));
+
         		} else { 
-        			paragraph = "**[[" + filePath + "|" + fileName + "]]**\n" + paragraph; 
+        			//paragraph = "**[[" + filePath + "|" + fileName + "]]**" + paragraph; 
+        			link = '[[' + filePath + '|' + fileName + ']]';
+
+        			if (this.app.plugins.getPlugin('quickadd')) {
+						let count = 0;
+						sections.forEach((sec) => {
+							if (count++ > 3) return; // limit to 4 section buttons for now, for space.
+							buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphContent, tagSection, filePath));
+						});
+					}
+
+					buttonContainer.appendChild(this.makeCopyButton(paragraph.trim()));
+        			buttonContainer.appendChild(this.makeRemoveTagButton(paragraphContent, tagSection, (filePath)));
         		}
+
+        		paragraph = '**' + link + '**' + paragraph; 
+
 
         		// Original formatting method. Will remove.
             	paragraph += "\n\n";
           		summary += paragraph;
 
-          		// Tag Buddy added custom formatting for tag editing functionality. Fixed component error.
-          		const paragraphContent = createEl("blockquote");
-				paragraphContent.setAttribute('file-source', filePath);
           		await MarkdownRenderer.renderMarkdown(paragraph, paragraphContent, this.app.workspace.getActiveFile()?.path, tempComponent);
+          		//console.log(paragraphContent)
+          		
+
+          		/*const titleEl = createEl('div');
+          		titleEl.setAttribute('class', 'tagsummary-item-title');
+          		titleEl.appendChild(paragraphContent.querySelector('strong').cloneNode(true))
+          		titleEl.appendChild(buttonContainer);
+          		paragraphContent.querySelector('strong').replaceWith(titleEl)*/
+          		const titleEl = createEl('div');
+          		titleEl.setAttribute('class', 'tagsummary-item-title');
+          		titleEl.appendChild(paragraphContent.querySelector('strong').cloneNode(true))
+          		paragraphContent.appendChild(buttonContainer);
+          		paragraphContent.querySelector('strong').replaceWith(titleEl)
+
           		summaryContainer.appendChild(paragraphContent);
 			});
 		});
@@ -892,6 +906,7 @@ export default class TagBuddy extends Plugin {
 			summaryContainer.setAttribute('codeblock-tags', tags.join(','));
 			summaryContainer.setAttribute('codeblock-tags-include', ((include.length>0)?include.join(','):''));
 			summaryContainer.setAttribute('codeblock-tags-exclude', ((exclude.length>0)?exclude.join(','):''));
+			summaryContainer.setAttribute('codeblock-sections', ((sections.length>0)?sections.join(','):''));
 			element.replaceWith(summaryContainer);
 		} else {
 			this.createEmptySummary(element);
@@ -900,7 +915,333 @@ export default class TagBuddy extends Plugin {
 	/////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////
 
+
+	makeCopyToButton (content, section, paragraph, tag, filePath) {
+		
+
+		const quickAddPlugin = this.app.plugins.plugins.quickadd.api; // need to check if this plugin is installed. and settings.
+		
+		const button = this.makeButton ((' ❏   ' + section), (e) => { 
+			e.stopPropagation();
+			const sectionElObj = this.getSectionTitleWithHashes(section);
+			const contentAsList = '- ' + content.trim() + '\n';
+			if (sectionElObj) {
+				if (e.metaKey) {
+					quickAddPlugin.executeChoice('Copy To Section', {section:sectionElObj.md, content:(this.removeTagFromString(contentAsList, tag)+'\n')});
+					// ideally we can replicate this QuickAdd functionality...
+					this.editTag (this.getTagElement(paragraph, tag));
+
+					// deep link to this paragraph
+
+					const notice = new Notice ('Copied to ' + section + ' and ' + tag + ' removed.\n🔗 Open source note.', 5000);
+					this.registerDomEvent(notice.noticeEl, 'click', (e) => {
+			 			//const fileToOpen = app.vault.getAbstractFileByPath(filePath);
+						//if (fileToOpen instanceof TFile) {
+    						//this.app.workspace.activeLeaf.openFile(fileToOpen);
+    						this.app.workspace.openLinkText(filePath, '');
+						//}
+			 		});
+			 		//console.log(this.removeTagFromString(contentAsList, tag));
+				} else {
+					quickAddPlugin.executeChoice('Copy To Section', {section:sectionElObj.md, content:contentAsList});
+					// ideally we can replicate this QuickAdd functionality...
+					new Notice ('Copied to ' + section + '.');
+				}
+
+				
+			} else { 
+				new Notice ('Tag Buddy can\'t find ' + section + '. Might not be rendered. Use ❏ to copy paragraph.');
+			}
+		});
+		button.title = 'Copy paragraph to ' + section + '.\n(CTRL+CLICK to remove tag and copy.';
+		//element.appendChild(button);
+		return button;
+	}
+
+	makeCopyButton (content) {
+		
+		const button = this.makeButton (' ❏ ', (e) => { 
+			e.stopPropagation();
+			navigator.clipboard.writeText(content);
+			new Notice ('Copied to clipboard.');
+		});
+		//element.appendChild(button);
+		button.title = 'Copy paragraph to clipboard.';
+		return button;
+	}
+
+	makeRemoveTagButton (paragraph, tag, filePath) {
+		
+		const button = this.makeButton (' ⌗ˣ ', (e) => { 
+			e.stopPropagation();
+			const notice = new Notice ('🔖 ' + tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
+
+			//console.log(paragraph)
+			//console.log(this.getTagElement(paragraph, tag))
+
+
+			this.editTag (this.getTagElement(paragraph, tag));
+
+			 this.registerDomEvent(notice.noticeEl, 'click', (e) => {
+				//if (fileToOpen instanceof TFile) {
+    				//this.app.workspace.activeLeaf.openFile(fileToOpen);
+			 	 	this.app.workspace.openLinkText(filePath, '');
+				//}
+			 });
+
+		});
+		button.title = 'Remove ' + tag + ' from paragraph.';
+		//element.appendChild(button);
+		return button;
+	}
+
+	makeButton (lable, clickFn, classId='tagsummary-button') {
+		const button = document.createElement('button');
+	    button.innerText = lable;
+	    button.className = classId;
+	    this.registerDomEvent(button, 'click', clickFn.bind(this));
+	    return button;
+	}
+
+	removeTagFromString(inputText, hashtagToRemove) {
+	    // Use a regular expression to globally replace the hashtag with an empty string
+	    const regex = new RegExp("\\s?" + hashtagToRemove + "\\b", "gi");
+	    return inputText.replace(regex, '').trim();
+	}
+
+	getSectionTitleWithHashes(sectionTitle) {
+	    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+	    if (!activeView) {
+	        console.log('No active markdown view found.');
+	        return null;
+	    }
+
+	    const contentEl = activeView.contentEl;
+
+	    // Get all heading elements
+	    // This doesn't work with super long notes. 
+	    const headings = contentEl.querySelectorAll('h1, h2, h3, h4, h5, h6');
+	    //const headings = await contentEl.getElementsByClassName('h1, h2, h3, h4, h5, h6');
+	    
+	    //console.log(headings)
+	    for (const heading of headings) {
+	        if (heading.textContent.trim() === sectionTitle.trim()) {
+	            // Determine the number of hashes based on the heading level
+	            const level = parseInt(heading.tagName.substr(1), 10);  // e.g., "H2" -> 2
+	            const hashes = '#'.repeat(level);
+	            //console.log(heading);
+	            return {md:`${hashes} ${sectionTitle}`, el:heading};
+	        }
+	    }
+
+	    console.log(`Section "${sectionTitle}" not found.`);
+	    return null;
+	}
+
+	async readFiles(listFiles: TFile[]): Promise<[TFile, string][]> {
+		let list: [TFile, string][] = [];
+		for (let t = 0; t < listFiles.length; t += 1) {
+			const file = listFiles[t];
+			let content = await this.app.vault.cachedRead(file);
+			list.push([file, content]);
+		}
+		return list;
+	}
+
+	isValidText(listTags: string[], tags: string[], include: string[], exclude: string[]): boolean {
+		let valid = true;
+
+		// Check OR (tags)
+		if (tags.length > 0) {
+			valid = valid && tags.some((value) => listTags.includes(value));
+		}
+		// Check AND (include)
+		if (include.length > 0) {
+			valid = valid && include.every((value) => listTags.includes(value));
+		}
+		// Check NOT (exclude)
+		if (valid && exclude.length > 0) {
+			valid = !exclude.some((value) => listTags.includes(value));
+		}
+		return valid;		
+	}
+
+	async validateFilePath (filePath) {
+		const matchingFiles = await app.vault.getFiles().filter(file => file.name === filePath);
+		if (matchingFiles.length === 1) {
+			const filePath = matchingFiles[0].path;
+			const file = await this.app.vault.getAbstractFileByPath(filePath);
+			//console.log('Validate file: ' + embedFile.name);
+			return file;
+		} else if (matchingFiles.length > 1) {
+			new Notice('Tag Buddy: Multiple files found with the same name. Can\'t safely edit tag.');
+			return null;
+		} else {
+			new Notice('Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.');
+			return null;
+		}
+	}
+
+	contentChangedTooMuch(original, modified, tag, buffer = 5) {
+	  const expectedChange = tag.length; // including the '#' symbol
+	  const threshold = expectedChange + buffer; // allow for some minor unintended modifications
+	  const actualChange = Math.abs(original.length - modified.length);
+
+	  return actualChange > threshold;
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
+
+	// fuck.this.function
+	/*cleanString(input) {
+		let cleanedStr;
+
+		// Check if input is a DOM element
+		if (input instanceof Element) {
+			//console.log('input is: Element');
+			cleanedStr = input.outerHTML.trim();
+		} else {
+			//console.log('input is: String');
+			cleanedStr = input.trim();
+		}
+
+		// Whitespace normalization
+		//cleanedStr = cleanedStr.replace(/\s+/g, ' ');
+
+		// Remove <br> elements
+		//cleanedStr = cleanedStr.replace(/<br>/g, ' ');
+
+		// Remove blockquote tags but keep their content
+		//cleanedStr = cleanedStr.replace(/<\/?blockquote>/g, '');
+
+		// Remove blockquote tags but keep their content
+		//cleanedStr = cleanedStr.replace(/<\/?div>/g, '');
+
+		// Remove spaces between tags
+		//cleanedStr = cleanedStr.replace(/>\s+</g, '><');
+
+		// Whitespace normalization
+		cleanedStr = cleanedStr.replace(/\s+/g, ' ');
+
+		// HTML entity decoding
+		const textArea = document.createElement('textarea');
+		textArea.innerHTML = cleanedStr;
+		cleanedStr = textArea.value.trim();
+
+		// Optional: convert to lowercase
+		// cleanedStr = cleanedStr.toLowerCase();
+
+		return cleanedStr;
+	}*/
+
+	async refreshView (){
+		//console.log('Refresh view.');
+		new Notice ('Refresh view.');
+		// if using rerender,
+		//const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
+		//await view.previewMode.rerender(true);
+
+		await app.workspace.activeLeaf.rebuildView();
+		// only needed if we use rerender above. do this on a timeout
+		//this.app.workspace.getActiveViewOfType(MarkdownView).previewMode.applyScroll(scrollState);
+	}
+
+    injectStyles() {
+    // Check if the styles have already been injected to avoid duplication
+    //if (document.getElementById('my-plugin-styles')) return;
+
+    const styles = `
+        .tagsummary-button {
+
+            color: var(--text-primary);
+            border: 1px solid var(--text-quote);  // Assuming this is the block quote color
+            border-radius: var(--border-radius);
+            padding: 2.5px 5px;  // Reduced padding
+            font-size: 50%;  // Reduced font size
+            transition: background-color 0.3s;
+            margin: 0px 3px 0px 0px;
+            min-width: 40px !important;
+
+	       color: var(--link-color) !important;
+	       border: 1px solid var(--link-color) !important; 
+		   background-color: var(--background-primary) !important;
+        }
+
+        .tagsummary-button:hover {
+            background-color: var(--link-color) !important;
+            color: var(--background-secondary) !important;
+        }
+
+        .tagsummary-item-title {
+            margin: 5px 0px
+        }
+
+        .tagsummary-buttons {
+            /*float: right;*/
+            text-align: right;
+        }
+
+	   @media only screen and (max-device-width: 480px), 
+	       only screen and (max-width: 480px) and (orientation: landscape),
+	       only screen and (max-device-width: 1024px), 
+	       only screen and (min-width: 481px) and (max-width: 1024px) and (orientation: landscape) {
+		   .tagsummary-button {
+		       display: inline-block !important;
+		       font-size: 12px !important;
+		       padding: 5px 5px;
+		       box-shadow: none;  /* remove shadows if they look off */
+		       border-radius: 4px;
+		       color: var(--link-color) !important;
+		       border: 1px solid var(--link-color); 
+		       width: auto !important;            /* auto adjusts width based on content */
+    		   /*max-width: 60px !important;  */  
+    		   max-height: 30px !important;
+    		   min-width: 40px !important;
+    		   white-space: nowrap;
+    		   /*text-align: left !important;*/
+    		   overflow: hidden;
+    		   background-color: var(--background-primary) !important;
+		   }
+		}
+
+    `;
+
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = styles;
+    styleSheet.id = 'my-plugin-styles'; // ID to prevent injecting the styles multiple times
+    document.head.appendChild(styleSheet);
+	}
+
+	getTagElement(paragraph, tagText) {
+	    const elements = paragraph.querySelectorAll('.tag'); 
+	    for (let element of elements) {
+	        if (element.innerText.trim() === tagText) {
+	            return element;
+	        }
+	    }
+	    console.warn(`Element with text "${tagText}" not found`);
+	    return null;
+	}
+
+	ctrlCmdKey (event) {
+		const isMac = (navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+
+		if (isMac) return event.metaKey;
+		else return event.ctrlKey;
+
+	}
+
+
 }
+
+
 
 class TempComponent extends Component {
 	onload() {}

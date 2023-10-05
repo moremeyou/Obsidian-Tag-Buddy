@@ -51,9 +51,12 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - [x] Integrate parts of [Tag Summary Plugin](https://github.com/macrojd/tag-summary) into this plugin
 - [x] Setting to disable notices on mobile
 - [x] Restore native tag search functionality on single tap on mobile. 
-- [ ] Look into cancelling the text selection after editing or removing a tag
+- [ ] Setting to open notes in new tab or not
+- [ ] Look into cancelling the text selection on mobile after editing or removing a tag
+- [ ] Bug: ctrl=click on windows breaks the plugin, working on it.
+- [ ] Explore ability to convert normal word to tag (add hash to word)
 - [ ] Investigate the limit on rendered tag elements
-- [ ] More optimizations and refactoring as per Obsidian plugin guidelines.
+- [ ] More optimizations and major refactoring.
 - [ ] Possible undo/redo without switching to edit mode?
 - [ ] Possible undo/redo changes to embeded or generated content? 
 - [ ] Consider Button and QuickAdd Plugin hooks
