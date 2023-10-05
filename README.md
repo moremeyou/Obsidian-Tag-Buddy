@@ -53,7 +53,7 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - [x] Restore native tag search functionality on single tap on mobile. 
 - [ ] Setting to open notes in new tab or not
 - [ ] Look into cancelling the text selection on mobile after editing or removing a tag
-- [ ] Bug: ctrl=click on windows breaks the plugin, working on it.
+- [x] Bug: ctrl=click on windows breaks the plugin, working on it.
 - [ ] Explore ability to convert normal word to tag (add hash to word)
 - [ ] Investigate the limit on rendered tag elements
 - [ ] More optimizations and major refactoring.
