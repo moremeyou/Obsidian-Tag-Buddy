@@ -191,7 +191,6 @@ export default class TagBuddy extends Plugin {
 
 
 
-
 			// ADD tag functionality
 			//console.log(this.ctrlCmdKey(event))
 			/*if (target && !target.matches('.tag') 
