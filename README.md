@@ -1,6 +1,7 @@
 # Obsidian Tag Buddy 🔖
 Edit and remove tags and copy, move or edit tagged blocks all without leaving **reading-mode**. 
 
+
 ### Use 1: Remove tag  🫥
 ![Remove tag demo](image.gif)
 Click to remove tags in the active note, embedded note/block or generated tag summary blocks. Double-tap on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search functionality on desktop and adjust the plugin settings to for native search on mobile.
@@ -48,7 +49,6 @@ sections: Section 1, Section 2 //  Header sections in the same note as this code
 ````
 Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic behind inserting content under headers.
 
-- - - 
 ## Settings
 - Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native tag search on click.
 - Convert to tag text with ALT/OPT+CLICK. Toggle off to use ALT/OPT+CLICK to perform native tag search.
@@ -58,7 +58,6 @@ Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic
 - Specify the copy-to-section prefix when using buttons in tag summary.
 - Enable tag summary paragraph action buttons. Disable to hide. 
 
-- - - 
 ## Why is this useful to me? 
 I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review and process on-demand.  
 
