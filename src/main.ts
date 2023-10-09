@@ -1026,6 +1026,7 @@ export default class TagBuddy extends Plugin {
 			} else {
 				// errors currently from from the copy to. Will refactor.
 			}
+			
 		});
 
 		button.title = 'Copy paragraph to ' + section + '.\nCTRL/CMD+CLICK to remove tag(s) then copy.';
