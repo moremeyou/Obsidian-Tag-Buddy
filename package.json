@@ -1,7 +1,7 @@
 {
 	"name": "TagBuddy",
 	"version": "0.3.0",
-	"description": "Add, edit, or remove tags in reading-mode (and other tag functionalities for Obsidian).",
+	"description": "Edit and remove tags and copy, move or edit tagged blocks all without leaving reading-mode.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

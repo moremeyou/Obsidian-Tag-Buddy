@@ -11,12 +11,13 @@ export class TBSettingsTab extends PluginSettingTab {
     }
     display(): void {
         let { containerEl } = this;
-
         containerEl.empty();
+
+        containerEl.createEl("h1", { text: "Tag Buddy" });
 
         new Setting(containerEl)
         .setName("Override native tag search on click")
-        .setDesc("Toggle off to use cmd+click to remove tag.")
+        .setDesc("Toggle OFF to use CTRL/CMD+CLICK to remove tag.")
         .addToggle((toggle) =>
             toggle
             .setValue(this.plugin.settings.removeOnClick)
@@ -25,9 +26,10 @@ export class TBSettingsTab extends PluginSettingTab {
                 await this.plugin.saveSettings();
             })
         );
+
         new Setting(containerEl)
-        .setName("Convert to tag text with opt+click (removes #)")
-        .setDesc("Toggle off to use opt+click to perform native tag search.")
+        .setName("Convert to tag text (removes #)")
+        .setDesc("Toggle OFF to use OPT/ALT+CLICK to perform native tag search.")
         .addToggle((toggle) =>
             toggle
             .setValue(this.plugin.settings.optToConvert)
@@ -36,9 +38,10 @@ export class TBSettingsTab extends PluginSettingTab {
                 await this.plugin.saveSettings();
             })
         );
+
         new Setting(containerEl)
-        .setName("Remove child tags first")
-        .setDesc("Toggle off to use shift+click to remove child tags fitst.")
+        .setName("Remove nested tags first")
+        .setDesc("Toggle OFF to use SHIFT+CLICK to remove nested tags first.")
         .addToggle((toggle) =>
             toggle
             .setValue(this.plugin.settings.removeChildTagsFirst)
@@ -47,9 +50,10 @@ export class TBSettingsTab extends PluginSettingTab {
                 await this.plugin.saveSettings();
             })
         );
+
         new Setting(containerEl)
         .setName("Mobile tag search")
-        .setDesc("Toggle on to restore mobile native tag search on tap. Tag removal will then use press+hold.")
+        .setDesc("Toggle ON to restore mobile native tag search on tap. Tag removal will then use LONG PRESS.")
         .addToggle((toggle) =>
             toggle
             .setValue(this.plugin.settings.mobileTagSearch)
@@ -58,9 +62,10 @@ export class TBSettingsTab extends PluginSettingTab {
                 await this.plugin.saveSettings();
             })
         );
+
         new Setting(containerEl)
         .setName("Show mobile notices")
-        .setDesc("Toggle off to hide notices when editing or removing a tag.")
+        .setDesc("Toggle OFF to hide notices when editing or removing a tag.")
         .addToggle((toggle) =>
             toggle
             .setValue(this.plugin.settings.mobileNotices)
@@ -69,6 +74,42 @@ export class TBSettingsTab extends PluginSettingTab {
                 await this.plugin.saveSettings();
             })
         );
+
+        new Setting(containerEl)
+        .setName("Show tag summary buttons")
+        .setDesc("Show buttons below each tagged paragraph that let you copy, remove, and move the paragraph.")
+        .addToggle((toggle) =>
+            toggle
+            .setValue(this.plugin.settings.tagSummaryButtonsNotices)
+            .onChange(async (value) => {
+                this.plugin.settings.tagSummaryButtonsNotices = value;
+                await this.plugin.saveSettings();
+            })
+        );
+
+        new Setting(containerEl)
+        .setName("Copy to section prefix")
+        .setDesc("When moving a tagged paragraph from tag summaries below note header sections use this prefix:\nExample: '- ', '> ', '- [ ]'")
+        .addText((text) => {
+            text
+            .setPlaceholder(this.plugin.settings.taggedParagraphCopyPrefix)
+            .setValue(this.plugin.settings.taggedParagraphCopyPrefix)
+            .onChange(async (value) => {
+                this.plugin.settings.taggedParagraphCopyPrefix = value;
+                await this.plugin.saveSettings();
+            });
+        });
+
+        containerEl.createEl('hr');
+        containerEl.createEl("h1", { text: "Support a buddy" });
+        const donateButton = containerEl.createEl('a');
+        donateButton.setAttribute('href', 'https://www.buymeacoffee.com/moremeyou');
+        donateButton.innerHTML = `<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>`;
+
+        containerEl.createEl('br');
+        containerEl.createEl('br');
+        containerEl.createEl('br');
+
         new Setting(containerEl)
         .setName("Debug mode")
         .setDesc("Output to console.")
