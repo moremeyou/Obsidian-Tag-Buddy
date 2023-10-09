@@ -58,11 +58,8 @@ Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic
 - Specify the copy-to-section prefix when using buttons in tag summary.
 - Enable tag summary paragraph action buttons. Disable to hide. 
 
-- - - 
 ## Why is this useful to me? 
 I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review and process on-demand.  
-
-Tag Buddy lives somewhere between edit mode and reading mode. These in-between functionalities help me keep my flow by not having to switch to edit mode when quickly processing tags. I will make a video of demo'ing this workflow.
 
 ## Notes
 - **BETA WARNING!** Plugin is stable, but not fully tested.
