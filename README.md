@@ -1,23 +1,23 @@
 # Obsidian Tag Buddy 🔖
-Edit and remove tags and copy, move or edit tagged blocks all without leaving **reading-mode**.
+Edit and remove tags and copy, move or edit tagged blocks all without leaving **reading-mode**. 
 
-### Use 1: Remove tag  
+### Use 1: Remove tag  🫥
 ![Remove tag demo](image.gif)
 Click to remove tags in the active note, embedded note/block or generated tag summary blocks. Double-tap on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search functionality on desktop and adjust the plugin settings to for native search on mobile.
 
-### Use 2: Remove nested tags
+### Use 2: Remove nested tags 🪺
 ![Remove child tags demo](image.gif)
 If there are nested tags, Use 1 will progressively remove these first.
 
-### Use 3: Convert tag to text
+### Use 3: Convert tag to text 🫧
 ![Convert tags demo](image.gif)
 Removes the hash (converts the tag to text) with **OPT/ALT+CLICK** on desktop or PRESS+HOLD on mobile.
 
-### Use 4: Add tag to text
+### Use 4: Add tag to text ✏️
 ![Convert tags demo](image.gif)
 Add tag to content block/area with CTRL/CMD+RIGHT-CLICK.
 
-### Use 5: Render a summary of tagged paragraphs
+### Use 5: Render a summary of tagged paragraphs 📜
 ![Tag summary demo](image.gif)
 Tags are editable in the active note, native embeds and when rendered using a tag summary code block. Use this syntax:
 ````markdown
@@ -30,14 +30,14 @@ max: 3 // restricts the results in the summary (optional)
 ````
 Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the original code behind the summaries.
 
-### Use 6: Tag summary buttons
+### Use 6: Tag summary buttons 📝
 ![Summary copy/remove buttons demo](image.gif)
 - Tagged paragraph copy button: copy's paragraph to clickboard.
 - Tagged paragraph remove-tag button: removes the queried tag from the paragraph (which also removes it from the summary).
 - Made a mistake? Use the notices to easily jump to the note the tag was removed from. 
 ![Notices demo](image.gif)
 
-### Use 7: Copy/move tagged paragraphs other sections
+### Use 7: Copy/move tagged blocks to sections 📑
 ![Summary copy-to-section button demo](image.gif)
 Buttons added to each tagged paragraph in summaries let you copy the paragraph (with a back link) to header sections in the active note. Use CTRL/CMD when clicking to remove the tag (from the paragraph and summary), effectively moving the paragraph to the section. These buttons will appear when you add section details to the tag summary code block like this:
 ````markdown
@@ -58,6 +58,7 @@ Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic
 - Specify the copy-to-section prefix when using buttons in tag summary.
 - Enable tag summary paragraph action buttons. Disable to hide. 
 
+- - - 
 ## Why is this useful to me? 
 I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review and process on-demand.  
 
