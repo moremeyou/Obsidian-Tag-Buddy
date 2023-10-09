@@ -1,5 +1,5 @@
 # Obsidian Tag Buddy 🔖
-Edit and remove tags and copy, move or edit tagged blocks all without leaving **reading-mode**. 
+Add, edit and remove tags and copy, move or edit tagged blocks all without leaving **reading-mode**. 
 
 
 ### Use 1: Remove tag  🫥
