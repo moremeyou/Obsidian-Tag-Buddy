@@ -10,7 +10,9 @@ interface TBSettings {
 	mobileTagSearch: boolean; 
 	mobileNotices: boolean; 
 	tagSummaryButtonsNotices: boolean; 
-	taggedParagraphCopyPrefix: string
+	taggedParagraphCopyPrefix: string;
+	recentlyAddedTags: string;
+	lockRecentTags: boolean;
 	debugMode: boolean;
 }
 
@@ -22,6 +24,8 @@ const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	mobileNotices: true,
 	tagSummaryButtonsNotices: true,
 	taggedParagraphCopyPrefix: '- ',
+	recentlyAddedTags: '',
+	lockRecentTags: false,
 	debugMode: false,
 }; 
 
@@ -66,7 +70,10 @@ export default class TagBuddy extends Plugin {
 	    			const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
 			        if (view && this.ctrlCmdKey (event) && (view.getMode() == 'preview')) {
 			            event.preventDefault();
-			            this.showTagSelector(event.pageX, event.pageY);
+
+			            const file = await this.app.workspace.getActiveFile();
+
+			            this.showTagSelector(event.pageX, event.pageY, file);
 			        }
 			    });
 		    }));
@@ -150,25 +157,6 @@ export default class TagBuddy extends Plugin {
 		
 		if (!this.app.isMobile) {
 			//new Notice ('Tag Buddy event type: ' + event.type);
-
-
-
-			// ADD tag functionality
-			//console.log(this.ctrlCmdKey(event))
-			/*if (target && !target.matches('.tag') 
-			&& target.tagName !== 'A' 
-			&& target.tagName !== 'IMG'
-			&& this.ctrlCmdKey(event)) {
-
-				//console.log(await this.getClickedWord(event));
-				await this.getClickedWord(event);
-
-				return;
-
-			}*/
-
-
-
 
 		if ((this.settings.removeOnClick && this.ctrlCmdKey(event)) || (!this.settings.removeOnClick && !this.ctrlCmdKey(event))) { 
 			return; 
@@ -338,17 +326,30 @@ export default class TagBuddy extends Plugin {
 					setTimeout(async () => {
 						
 						const tagParagraphEl = tagEl.closest('.tag-summary-paragraph');
+						//console.log('this is the error')
 						const tagSummaryBlock = tagEl.closest('.tag-summary-block');
 						
-						const tagsStr = tagSummaryBlock.getAttribute('codeblock-tags');
-						const tags = tagsStr ? tagsStr.split(',') : [];
-						const tagsIncludeStr = tagSummaryBlock.getAttribute('codeblock-tags-include');
-						const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
-						const tagsToCheck = tags.concat(tagsInclude);
+						//const tagsStr = tagSummaryBlock.getAttribute('codeblock-tags');
+						//const tags = tagsStr ? tagsStr.split(',') : [];
+						//const tagsIncludeStr = tagSummaryBlock.getAttribute('codeblock-tags-include');
+						//const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
+						//const tagsToCheck = tags.concat(tagsInclude);
+						const tagsToCheck = this.getTagsToCheckFromEl(tagSummaryBlock);
+
+						const tagsInContent = this.tagsInString(tagParagraphEl.innerText);
+						//const tagCount = tagsInContent?.length;
+						//const tagCount = this.countOccurrences(tagsToCheck, tagsInContent)
+
+						//console.log('tags to check: ' + tagsToCheck)
+						
 
 						if (tagsToCheck.includes(tag)) {
-							const tagCount = this.tagsInString(tagParagraphEl.innerText, tag);
+							//let tagCount = this.tagsInString(tagParagraphEl.innerText, tag).length;
+							const tagCount = this.countOccurrences(tagsToCheck, tagsInContent)
 							
+							// count all of the occurrences of tags to check against tags in this paragraph
+							// not just the one tag
+
 							if (tagCount >= 2) {
 								this.updateSummary(tagSummaryBlock); 
 								//this.updateSummaries(); // causes screen flicker
@@ -358,7 +359,7 @@ export default class TagBuddy extends Plugin {
 								//console.log('last one, will remove paragraph')
 								const notice = new Notice ('Last ' + tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
 								this.removeElementWithAnimation(tagParagraphEl, () => {
-				    				setTimeout(async () => { this.updateSummary(tagSummaryBlock); }, 500);
+				    				setTimeout(async () => { this.updateSummary(tagSummaryBlock); tagParagraphEl.remove(); }, 500);
 									//this.updateSummaries(); // causes screen flicker
 							    	setTimeout(async () => { this.processTags(); }, 800);
 									// this.refreshView(); // no need for this atm
@@ -374,7 +375,7 @@ export default class TagBuddy extends Plugin {
 							// this.refreshView(); // no need for this atm
 						}
 
-					}, 150);
+					}, 200);
 				} else {
 					setTimeout(async () => { this.processTags(); }, 50)
 				}	
@@ -401,7 +402,16 @@ export default class TagBuddy extends Plugin {
 		}
 	}
 
+	getTagsToCheckFromEl (tagSummaryEl):Array {
+		const tagsStr = tagSummaryEl.getAttribute('codeblock-tags');
+		const tags = tagsStr ? tagsStr.split(',') : [];
+		const tagsIncludeStr = tagSummaryEl.getAttribute('codeblock-tags-include');
+		const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
+		return tags.concat(tagsInclude);
+	}
+
 	updateSummary (summaryEl) {
+		console.log('Update summary')
 		const summaryContainer = summaryEl; //tagEl.closest('.tag-summary-block');
 		const tagsStr = summaryContainer.getAttribute('codeblock-tags');
 		const tags = tagsStr ? tagsStr.split(',') : [];
@@ -971,7 +981,7 @@ export default class TagBuddy extends Plugin {
 	}*/
 
 	makeSummaryRefreshButton (summaryEl) {	
-		const button = this.makeButton (' ↺   Refresh Tag Summary', (e) => { 
+		const button = this.makeButton (' ↺   Refresh', (e) => { 
 			e.stopPropagation();
 			this.updateSummary(summaryEl)
 			setTimeout(async () => { this.processTags(); }, 10);
@@ -979,22 +989,6 @@ export default class TagBuddy extends Plugin {
 		button.title = 'Refresh Tag Summary';
 		return button;
 	}
-
-	/*removeAllTagsByElement (paragraphEl:HTMLElement, tag:string) {
-		// Replace this logic when we've abstracted the function to insert or remove content from files
-		// functions to insert at char or line. Line uses char
-		// add at top or bottom or section (already done, but abstract it)
-		// parameters for prefix(bullet), suffic(line break), remove double white space
-		// returns the new file string
-
-		let tagCount = this.tagsInString(paragraphText, tag).length;
-		let tagEl = this.getTagElement(paragraphEl, tag);
-
-		while (tagEl)
-			
-			tagEl = this.getTagElement(paragraphEl, tagText) 
-		}
-	}	*/
 
 	makeCopyToButton (content, section, paragraph, tag, filePath) {
 		//const quickAddPlugin = this.app.plugins.plugins.quickadd.api; // need to check if this plugin is installed. and settings.
@@ -1026,7 +1020,7 @@ export default class TagBuddy extends Plugin {
 			} else {
 				// errors currently from from the copy to. Will refactor.
 			}
-			
+
 		});
 
 		button.title = 'Copy paragraph to ' + section + '.\nCTRL/CMD+CLICK to remove tag(s) then copy.';
@@ -1043,34 +1037,62 @@ export default class TagBuddy extends Plugin {
 		return button;
 	}
 
-	tagsInString (string:string, tag:string):Array {
+	/*tagsInString (string:string, tag:string=''):Array {
 		const regex = new RegExp(tag.replace(/\//g, '\\/') + "(?![\\w\\/\\#])", "g");
 		const matches = string.match(regex);
-		return matches ? matches.length : 0;
+		console.log(matches)
+		return matches || []; //matches ? matches.length : 0;
+	}*/
+	tagsInString(string: string, tag?: string): string[] {
+	    let regex;
+
+	    if (tag) {
+	        regex = new RegExp(tag.replace(/\//g, '\\/') + "(?![\\w\\/\\#])", "g");
+	    } else {
+	        // Match any tag-like pattern starting with '#'
+	        regex = /#(\w+)(?![\w\/#])/g;
+	    }
+
+	    const matches = string.match(regex);
+	    return matches || [];
+	}
+
+	countOccurrences(summaryTags, contentTags) {
+	    let count = 0;
+	    //console.log (summaryTags, contentTags);
+	    for (let tag of summaryTags) {
+	        count += contentTags.filter(item => item === tag).length;
+	    }
+
+	    return count;
 	}
 
 	makeRemoveTagButton (paragraphEl, tag, filePath) {
 		const button = this.makeButton (' ⌗ˣ ', (e) => { 
 			e.stopPropagation();
 
-			const tagCount = this.tagsInString(paragraphEl.innerText, tag);
+			//const tagsToCheck = this.getTagsToCheckFromEl(paragraphEl.closest('.tag-summary-block'));
+			//const tagsInContent = this.tagsInString(paragraphEl.innerText);
+			//const tagCount = tagsInContent?.length;
+			//const tagCount = this.countOccurrences(tagsToCheck, tagsInContent)
+
+			//console.log('summary tags left: ' + tagCount)
+
 			const tagEl = this.getTagElement(paragraphEl, tag);
-			if (tagCount >= 2 ) {
+			this.editTag(tagEl);
+			/*if (tagCount >= 2 ) {
 				//console.log('more than one left')
-				//console.log(tagEl)
     			this.editTag(tagEl);
 			} else {
 				//console.log('last one, will remove paragraph')
 				const notice = new Notice ('🔖 ' + tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
 				this.removeElementWithAnimation(paragraphEl, () => {
-					//let tempTagEl = paragraphEl.cloneNode(true);
     				this.editTag(tagEl);
-    				//setTimeout(async () => { tempTagEl = null; }, 1000);
 				});
 				this.registerDomEvent(notice.noticeEl, 'click', (e) => {
 			 	 	this.app.workspace.openLinkText(filePath, '');
 				});
-			}
+			}*/
 		});
 		button.title = 'Remove ' + tag + ' from paragraph (and from this summary).';
 		return button;
@@ -1095,7 +1117,7 @@ export default class TagBuddy extends Plugin {
 	  el.addEventListener('transitionend', function onEnd() {
     		el.removeEventListener('transitionend', onEnd);
     		callback();
-	    	setTimeout(() => { el.remove(); }, 10);
+	    	//setTimeout(() => { el.remove(); }, 10); // remove in the callback
 	  });
 	}
 
@@ -1279,6 +1301,39 @@ export default class TagBuddy extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	isTagValid (tag:string):boolean { // including the #
+		const tagPattern = /^#[\w]+$/;
+		return tagPattern.test(tag);
+	}
+
+	saveRecentTag (tag:string) {
+
+		if (this.isTagValid(tag)) {
+			
+			const recentTagsString = this.settings.recentlyAddedTags;
+			let recentTags:Array;
+			if (recentTagsString.indexOf(', ')) {
+				recentTags = this.settings.recentlyAddedTags.split(', ');
+			} else {
+				recentTags = [this.settings.recentlyAddedTags]
+			}
+
+			if (recentTags.includes(tag)) {
+				recentTags.splice(recentTags.indexOf(tag), 1);
+			}
+
+			recentTags.unshift(tag.trim());
+			recentTags = recentTags.slice(0, 3);
+			this.settings.recentlyAddedTags = recentTags.join(', ');
+			this.saveSettings();
+		}
+	}
+
+	getRecentTags ():Array {
+		const recentTags = this.settings.recentlyAddedTags==''?[]:this.settings.recentlyAddedTags.split(', ');
+		return recentTags;
 	}
 
 	// fuck.this.function
@@ -1498,6 +1553,22 @@ export default class TagBuddy extends Plugin {
 	    document.head.appendChild(styleSheet);
 	}
 
+	async getEmbedFile (el):TFile {
+		let filePath = el.getAttribute('src');
+		const linkArray = filePath.split('#');
+		filePath = linkArray[0].trim() + '.md';
+		const file = await this.validateFilePath(filePath);
+		//const fileContent = await this.app.vault.read(file);
+		return file; //Content;
+	}
+
+	async getSummaryFile (el):TFile {
+		const filePath = el.getAttribute('file-source'); 
+		const file = await this.app.vault.getAbstractFileByPath(filePath);
+		//const fileContent = await this.app.vault.read(file);
+		return file;
+	}
+
 	showTagSelector(x: number, y: number) {
 		// Adjustments for the scrollbar and dynamic height
 		const maxTagContainerHeight = 180; // This is a chosen max height, adjust as desired
@@ -1551,35 +1622,45 @@ export default class TagBuddy extends Plugin {
 	            }
 	            itemEl.style.setProperty('max-height', `${dynamicHeight}px`, 'important');
 
-		        this.registerDomEvent(itemEl, 'click', () => {
+		        this.registerDomEvent(itemEl, 'click', (e) => {
 		        //itemEl.addEventListener('click', () => {
-				    console.log(`Selected tag: #${tag}`);
+				    //console.log(`-----> Selected tag: #${tag}`);
 				    // Add your logic here to insert the tag into the note
-
+		        	this.addTag('#'+tag, x, y)
 				    // Close the menu after selection
 				    menuEl.remove();
 				}, true);
 
-    			// Handle Enter key press
-				this.registerDomEvent(searchEl, 'keyup', (e: KeyboardEvent) => {
-				//searchEl.addEventListener('keydown', (e: KeyboardEvent) => {
-				    if (e.key === 'Enter') {
-				        const activeTag = tagContainer.querySelector('.active');
-				        if (activeTag) {
-				            activeTag.click();  // Simulate a click on the active tag
-				        }
-				    }
-				});
+	        	tagContainer.appendChild(itemEl);
+    		});
 
-	        tagContainer.appendChild(itemEl);
-    	});
 
 		    if (filteredTags.length * tagItemHeight > maxTagContainerHeight) {
-			        tagContainer.style.overflowY = 'auto !important';
-			    } else {
-			        tagContainer.style.overflowY = 'hidden !important';
-			    }
-			};
+		        tagContainer.style.overflowY = 'auto !important';
+		    } else {
+		        tagContainer.style.overflowY = 'hidden !important';
+		    }
+		};
+
+		// Handle Enter key press
+		this.registerDomEvent(searchEl, 'keyup', (e: KeyboardEvent) => {
+		//searchEl.addEventListener('keydown', (e: KeyboardEvent) => {
+			const searchQuery = (e.target as HTMLInputElement).value.trim();
+			const pattern = /^[^\s\p{P}]+$/u; 
+			const isValid = pattern.test("example"); 
+
+
+		    if (e.key === 'Enter') {
+		        const activeTag = tagContainer.querySelector('.active');
+		        if (activeTag) {
+		            //activeTag.click();  // Simulate a click on the active tag
+		            this.addTag('#'+activeTag.innerText, x, y);
+		        } else if (pattern.test(searchQuery)) {
+		        	this.addTag('#'+searchQuery, x, y);
+		        }
+		        menuEl.remove();
+		    }
+		});
 
 	    // Initial render
 	    renderTags('');
@@ -1601,9 +1682,11 @@ export default class TagBuddy extends Plugin {
 		    if (e instanceof MouseEvent && (e.button === 0 || e.button === 2)) {
 		        if (!menuEl.contains(e.target as Node)) {  // Check if the click was outside the menu
 		            menuEl.remove();
-		            //document.body.removeEventListener('click', closeMenu);
-		            //document.body.removeEventListener('contextmenu', closeMenu);
-		            //document.body.removeEventListener('keydown', closeMenu);
+		            //console.log('Enter 1')
+
+		            document.body.removeEventListener('click', closeMenu);
+		            document.body.removeEventListener('contextmenu', closeMenu);
+		            document.body.removeEventListener('keyup', closeMenu);
 		        }
 		    } else if (e instanceof KeyboardEvent && e.key === 'Escape') {
 		        menuEl.remove();
@@ -1659,10 +1742,11 @@ export default class TagBuddy extends Plugin {
 		            nextActiveTag = tagContainer.lastChild; // loop back to the last item
 		        }
 		    } else if (e.key === 'Enter') {
-		        if (activeTag) {
-		            activeTag.click();
-		            return;
-		        }
+		        //if (activeTag) {
+		        //	console.log('Enter 2') // this never happens.
+		        //    activeTag.click();
+		        //    return;
+		       // }
 		    }
 
 		    if (nextActiveTag) {
@@ -1676,64 +1760,177 @@ export default class TagBuddy extends Plugin {
 		});
 	}
 
-	getTagElement(paragraphEl, tagText) {
-	    //console.log('Get tag element')
-	    const els = paragraphEl.querySelectorAll('.tag'); 
-	    //Array.from(els).map(el => console.log(el.innerText));
-	    let tagElText = '';
-	    let tagElHasSub:boolean;
-	    for (let el of els) {
-	    	tagElText = el.innerText.trim();
-	    	//console.log(tagElText + ' == ' + tagText)
-	    	if (tagElText === tagText) {
-	    		//console.log(el.innerText)
-	    		//console.log(el)
-	    		return el
-	    	}
-	    	//tagElText = el.innerText.trim();
-	    	//tagElHasSub = tagElText.includes('/')
-	    	//console.log(tagElText + ' has sub? ' + tagElHasSub)
-	    }	
-	    /*for (let el of els) {
-	    	console.log(el.innerText)
-	    	tagElText = el.innerText.trim();
-	    	tagElHasSub = tagElText.includes('/')
-	    	//console.log(tagElText + ' has sub? ' + tagElHasSub)
-	        if (tagElHasSub) {
-	        	//console.log(el);
-	        	continue;
-	        } else if (tagElText === tagText && (!tagElHasSub || (tagElHasSub && (tagElText === tagText)))) {
-	            return el;
-	        }
-	    }*/
 
-	    console.warn(`Element with text "${tagText}" not found`);
-	    return null;
+	async addTag (tag:string, x:number, y:number) {
+
+		if (this.settings.debugMode) { console.log('Tag Buddy add'); console.log(x, y, tag); }
+
+		let fileContent:string;
+		let file:TFile;
+		const clickedTextObj = this.getClickedTextObjFromDoc (x, y);
+		const clickedText:string = clickedTextObj?.text;
+		const clickedTextIndex:number = clickedTextObj?.index; // this is the index in document, for narrowing down to the word clicked.
+		const clickedTextEl:HTMLElement = clickedTextObj?.el;
+		let contentSourceType:string = null
+		let summaryEl:HTMLElement;
+		let embedEl:HTMLElement;
+
+		// is this in a summary or embed?
+		// !!!!!!!!! Check for nested embeds/summaries. issues?
+		if (clickedTextObj) {
+
+			summaryEl = clickedTextEl.closest('.tag-summary-paragraph');
+			embedEl = clickedTextEl.closest('.markdown-embed');
+
+			if (summaryEl) {
+				
+				file = await this.getSummaryFile(summaryEl);
+				fileContent = await this.app.vault.read(file);
+				contentSourceType = 'plugin-summary';
+				console.log('In a summary')
+
+				//console.log(fileContent)
+				
+			} else if (embedEl) {
+				console.log('In an embed');
+				file = await this.getEmbedFile(embedEl);
+				fileContent = await this.app.vault.read(file);
+				contentSourceType = 'native-embed';
+				//console.log(fileContent)
+
+				// !!!!!! we could be in some other kind of embed. Need to be sure about this.
+			} else { 
+				console.log('In a active file')
+				file = await this.app.workspace.getActiveFile();
+				fileContent = await this.app.vault.read(file);
+				contentSourceType = 'active';
+			} 
+
+		} else {
+			new Notice ('⚠️ Tag Buddy: Can\'t find text position.\nTry a another text block.');
+		    return;
+		}
+
+
+		if (clickedText) {
+			//console.log (clickedText);
+		} else {
+			new Notice ('⚠️ Tag Buddy: Can\'t add tag here.\nTry a bigger text block.')
+			return;
+		}
+
+		const escapedClickedText = this.escapeRegExp(clickedText);
+		const regex = new RegExp(escapedClickedText, "g");  // The "g" flag means "global", so it will find all occurrences
+		const matches = fileContent.match(regex);
+
+		if (matches && matches.length > 1) {
+		    //console.log(`Found ${matches.length} occurrences of "${pattern}" in "${subject}".`);
+		    new Notice ('⚠️ Tag Buddy: Duplicate text blocks found.\nTry a another text block.');
+		    return;
+		} else if ((matches && matches.length === 0) || !matches) {
+			new Notice ('⚠️ Tag Buddy: Can\'t find text position.\nTry a another text block.');
+		    return;
+		} 
+
+		if (!this.settings.lockRecentTags) this.saveRecentTag (tag); 
+		
+		const startIndex = regex.exec(fileContent).index; // this is the index in the md source
+		const endIndex = startIndex + clickedText.length-1;
+
+		const clickedWordObj = this.getWordObjFromString (clickedText, clickedTextIndex);
+		const clickedWord = clickedWordObj.text;
+		const clickedWordIndex = clickedWordObj.index;
+		
+		const newContent = this.insertTextInString(tag, fileContent, startIndex+clickedWordIndex)
+		
+
+		// modify file
+		//console.log(newContent)
+		await this.app.vault.modify(file, newContent);
+
+		if (contentSourceType == 'plugin-summary') {
+			const summaryContainer = summaryEl.closest('.tag-summary-block')
+			this.updateSummary(summaryContainer); 
+		}
+
+		setTimeout(async () => { this.processTags(); }, 200);
 	}
 
-	ctrlCmdKey (event) {
-		const isMac = (navigator.platform.toUpperCase().indexOf('MAC') >= 0);
 
-		if (isMac) return event.metaKey;
-		else return event.ctrlKey;
+	replaceTextInString (replaceText, sourceText, all:boolean=false) {
+
+		const regex = new RegExp(this.escapeRegExp(replaceText), all ? "gi" : "i");
+    	return sourceText.replace(regex, newText).trim();
+
 	}
 
-	debounce(func, wait) {
-    	let timeout;
-    	return function(...args) {
-        	const context = this;
-        	clearTimeout(timeout);
-        	timeout = setTimeout(() => {
-            	func.apply(context, args);
-        	}, wait);
-    	};
+	insertTextInString (newText, sourceText, charPos) { // pass 0 for the start or sourceText.length-1 for the end
+
+		// LATER: Proper white space or line break checking of the area we're adding
+		return (sourceText.substring(0, charPos).trim() + ' ' + newText + ' ' + sourceText.substring(charPos)).trim();
+
 	}
 
-	// Exploring this. Not liking it because it's just as easy to add a hash in edit mode.
-	// And that's when I think you'd be in the midset of converting words.
-	// More useful would be injecting a tag at a point with cmd+click in reading mode
-	// would bring up a selector for you to chose from. then we'd just insert it
-	// for now could just be in the active note...?
+	removeTextFromString (removeText, sourceText, all:boolean=false) {
+
+		const regex = new RegExp(this.escapeRegExp(removeText), all ? "gi" : "i");
+    	return sourceText.replace(regex, '').trim();
+
+	}
+
+	getWordObjFromString(sourceText, offset):Object {
+		let wordRegex = /[^\s]+(?=[.,:!?]?(\s|$))/g;
+		let match;
+		let index;
+		let word = null;
+        while ((match = wordRegex.exec(sourceText)) !== null) {
+            if (match.index <= offset && offset <= match.index + match[0].length) {
+                // This is our word
+                //if (!/^[^\p{L}\p{N}]/u.test(match[0]) &&        // Not starting with any non-alphanumeric
+                //    !/[^\p{L}\p{N}\s.,:!?]/u.test(match[0]) &&	// Not containing other than allowed chars
+                //    !/[.,:!?](?=[^\s$])/u.test(match[0])) {     // If ends with punctuation, following character must be whitespace or end of string
+                    word = match[0];
+                    index = match.index;
+                    break;
+            }
+           // }
+        }
+        return {text: word, index: index};
+	}
+
+	getClickedTextObjFromDoc(x, y):string {
+		const minNodeLength:number = 20;
+
+	    // Get the word under the click position
+	    let range, nodeText, offset;
+
+	    // This method is better supported and gives us a range object
+	    if (document.caretRangeFromPoint) {
+	        range = document.caretRangeFromPoint(x, y);
+	        
+	        //const containerEl = range.startContainer.parentNode as HTMLElement;
+	        //console.log(containerEl.closest('.tag-summary-block'))
+	        
+	        //console.log(range.startContainer.parentNode.parentNode)
+	        
+
+	        if (range.startContainer.nodeType === Node.TEXT_NODE) {
+        		nodeText = range.startContainer.nodeValue.trim();
+    		} else {
+    			console.log ('no text')
+    			return null;
+    		}
+	        offset = range.startOffset;
+	    }
+
+	    if (nodeText.length < minNodeLength) {
+	    	console.log ('text too short')
+	    	return null;
+		}
+
+	    return {text: nodeText, index: offset, el: range.startContainer.parentNode};
+	}
+
 	/*async getClickedWord(e) {
 		//Get the click position
 	    let x = e.clientX, y = e.clientY;
@@ -1807,6 +2004,10 @@ export default class TagBuddy extends Plugin {
 		// and avoid adding when in the summary empty block. or other code blocks. maybe this check is earlier.
 	}*/
 
+	escapeRegExp(string):string {
+    	return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+	}
+
 	getTagsFromApp(): string[] {
 	    const tagsObject = this.app.metadataCache.getTags();
 
@@ -1816,11 +2017,74 @@ export default class TagBuddy extends Plugin {
 	    // Sort by use count
 	    tagsArray.sort((a, b) => b[1] - a[1]);
 
-	    // Extract tag names after removing the #
-	    return tagsArray.map(([tag, _]) => tag.replace(/^#/, ""));
+	    const recentTags = this.getRecentTags();
+	   // console.log('recent tag length: ' + recentTags.length)
+
+	    if (recentTags.length>0) {
+	    	//console.log(recentTags)
+	    	// convert them to [tag, count] tuples for consistency
+	   		const recentTagsAsTuples = recentTags.map(tag => [tag, 0]);
+	    	// Concatenate the two arrays
+	    	const recentAndAllTags = recentTagsAsTuples.concat(tagsArray);
+	    	// Extract tag names after removing the #
+	    	return recentAndAllTags.map(([tag, _]) => tag.replace(/^#/, ""));
+       	} else {
+       		return tagsArray.map(([tag, _]) => tag.replace(/^#/, ""));
+       	}
 	}
 
+	getTagElement(paragraphEl, tagText) {
+	    //console.log('Get tag element')
+	    const els = paragraphEl.querySelectorAll('.tag'); 
+	    //Array.from(els).map(el => console.log(el.innerText));
+	    let tagElText = '';
+	    let tagElHasSub:boolean;
+	    for (let el of els) {
+	    	tagElText = el.innerText.trim();
+	    	//console.log(tagElText + ' == ' + tagText)
+	    	if (tagElText === tagText) {
+	    		//console.log(el.innerText)
+	    		//console.log(el)
+	    		return el
+	    	}
+	    	//tagElText = el.innerText.trim();
+	    	//tagElHasSub = tagElText.includes('/')
+	    	//console.log(tagElText + ' has sub? ' + tagElHasSub)
+	    }	
+	    /*for (let el of els) {
+	    	console.log(el.innerText)
+	    	tagElText = el.innerText.trim();
+	    	tagElHasSub = tagElText.includes('/')
+	    	//console.log(tagElText + ' has sub? ' + tagElHasSub)
+	        if (tagElHasSub) {
+	        	//console.log(el);
+	        	continue;
+	        } else if (tagElText === tagText && (!tagElHasSub || (tagElHasSub && (tagElText === tagText)))) {
+	            return el;
+	        }
+	    }*/
 
+	    console.warn(`Element with text "${tagText}" not found`);
+	    return null;
+	}
+
+	ctrlCmdKey (event) {
+		const isMac = (navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+
+		if (isMac) return event.metaKey;
+		else return event.ctrlKey;
+	}
+
+	debounce(func, wait) {
+    	let timeout;
+    	return function(...args) {
+        	const context = this;
+        	clearTimeout(timeout);
+        	timeout = setTimeout(() => {
+            	func.apply(context, args);
+        	}, wait);
+    	};
+	}
 }
 
 class TempComponent extends Component {

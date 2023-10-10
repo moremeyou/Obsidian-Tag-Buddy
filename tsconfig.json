@@ -19,7 +19,7 @@
     ]
   },
   "include": [
-    "**/*.ts"
+    "**/*.ts",
     "styles.css"
   ]
 }

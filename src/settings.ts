@@ -100,6 +100,43 @@ export class TBSettingsTab extends PluginSettingTab {
             });
         });
 
+        function isValidTag(tag) {
+            const tagPattern = /^#[\w]+$/;
+            return tagPattern.test(tag);
+        }
+
+        function filterAndJoinTags(tagsString) {
+            const tagsArray = tagsString.split(", ");
+            const validTags = tagsArray.filter(isValidTag);
+            return validTags.join(", ");
+        }
+
+        // Adding will always limit to 3. But if they edit it here, it can be any length.
+        new Setting(containerEl)
+        .setName("Recent tags")
+        .setDesc("The most recent tags added via Tag Buddy are stored here. These will show up first in the list when adding.")
+        .addText((text) => {
+            text
+            .setPlaceholder(this.plugin.settings.recentlyAddedTags)
+            .setValue(this.plugin.settings.recentlyAddedTags)
+            .onChange(async (value) => {
+                this.plugin.settings.recentlyAddedTags = filterAndJoinTags(value); //value;
+                await this.plugin.saveSettings();
+            });
+        });
+
+        new Setting(containerEl)
+        .setName("Lock recent tags")
+        .setDesc("Toggle ON to lock the recent tags list. Recent tags will not be updated. Instead, the tags above will act like a favorites list.")
+        .addToggle((toggle) =>
+            toggle
+            .setValue(this.plugin.settings.lockRecentTags)
+            .onChange(async (value) => {
+                this.plugin.settings.lockRecentTags = value;
+                await this.plugin.saveSettings();
+            })
+        );
+
         containerEl.createEl('hr');
         containerEl.createEl("h1", { text: "Support a buddy" });
         const donateButton = containerEl.createEl('a');
