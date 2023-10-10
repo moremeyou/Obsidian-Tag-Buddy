@@ -1,25 +1,24 @@
 # Obsidian Tag Buddy 🔖
-Add, edit and remove tags and copy, move or edit tagged blocks all without leaving **reading-mode**. 
+Add, edit and remove tags. Copy, move or edit tagged blocks. All in **reading-mode**.
 
+### 🫥 Use 1: Remove tags in reading-mode
+![Remove Tag Demo](https://user-images.githubusercontent.com/8971804/273923015-9eb2de41-3aeb-4243-9655-efdf4fd70ace.gif)
+Click to remove tags in the active note, embedded note/block or generated tag summary blocks. DOUBLE-TAP on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search.
 
-### Use 1: Remove tag  🫥
-![Remove tag demo](image.gif)
-Click to remove tags in the active note, embedded note/block or generated tag summary blocks. Double-tap on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search functionality on desktop and adjust the plugin settings to for native search on mobile.
-
-### Use 2: Remove nested tags 🪺
-![Remove child tags demo](image.gif)
+### 🪺  Use 2: Edit nested tags in reading mode
+![Nested Tag Demo](https://user-images.githubusercontent.com/8971804/273923013-0b449539-cd7d-4c50-bb30-a2eb7c66dc93.gif)
 If there are nested tags, Use 1 will progressively remove these first.
 
-### Use 3: Convert tag to text 🫧
-![Convert tags demo](image.gif)
+### 🧼  Use 3: Convert tags to text in reading-mode
+![Convert Tag Demo](https://user-images.githubusercontent.com/8971804/273923003-d22b0c3e-39dc-4444-8716-fa9bcb327319.gif)
 Removes the hash (converts the tag to text) with **OPT/ALT+CLICK** on desktop or PRESS+HOLD on mobile.
 
-### Use 4: Add tag to text ✏️
-![Convert tags demo](image.gif)
-Add tag to content block/area with CTRL/CMD+RIGHT-CLICK.
+### ✏️  Use 4: Add tags to note in reading-mode
+![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
+Add tag to content block/area with CTRL/CMD+RIGHT-CLICK. Recently added tags are saved and you can lock this list in settings, effectively making a favorites list.
 
-### Use 5: Render a summary of tagged paragraphs 📜
-![Tag summary demo](image.gif)
+### 🔎  Use 5: Add/edit tags in tag summary
+![Tag Summary Demo](https://user-images.githubusercontent.com/8971804/274069683-1e6257a6-f6d6-402a-adae-c534c2f5a507.gif)
 Tags are editable in the active note, native embeds and when rendered using a tag summary code block. Use this syntax:
 ````markdown
 ```tag-summary
@@ -31,16 +30,14 @@ max: 3 // restricts the results in the summary (optional)
 ````
 Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the original code behind the summaries.
 
-### Use 6: Tag summary buttons 📝
-![Summary copy/remove buttons demo](image.gif)
-- Tagged paragraph copy button: copy's paragraph to clickboard.
+### #️⃣  Use 6: Copy/remove tagged blocks
+- Tagged paragraph copy button: copy's paragraph to clipboard.
 - Tagged paragraph remove-tag button: removes the queried tag from the paragraph (which also removes it from the summary).
-- Made a mistake? Use the notices to easily jump to the note the tag was removed from. 
-![Notices demo](image.gif)
+	- Made a mistake? Use the notices to easily jump to the note the tag was removed from. 
 
-### Use 7: Copy/move tagged blocks to sections 📑
-![Summary copy-to-section button demo](image.gif)
-Buttons added to each tagged paragraph in summaries let you copy the paragraph (with a back link) to header sections in the active note. Use CTRL/CMD when clicking to remove the tag (from the paragraph and summary), effectively moving the paragraph to the section. These buttons will appear when you add section details to the tag summary code block like this:
+### 📑   Use 7: Copy/move tagged blocks to section
+![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069666-d56b899c-1d74-411b-8b6e-c048bc8df491.gif)
+Buttons added to each tagged paragraph in summaries let you copy the paragraph (with a back link) to header sections in the active note. Use CTRL/CMD when clicking to also remove the tag, effectively moving the paragraph to the section. These buttons will appear when you add section details to the tag summary code block like this:
 ````markdown
 ```tag-summary
 tags: #tag1 #tag2 
@@ -49,7 +46,14 @@ sections: Section 1, Section 2 //  Header sections in the same note as this code
 ````
 Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic behind inserting content under headers.
 
-## Settings
+### 📜  Use 8: Create note from tag summary
+![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069678-4191d61b-109b-4e90-a770-44dedc5edfce.gif)
+**Copy tag summary** and **Copy tag summary to new note** buttons: Using the include, exclude, and max parameters of the tag summary code block you can easily customise and build new notes from tagged content. 
+
+## Support a buddy
+<a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
+
+## ⚙️ Settings
 - Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native tag search on click.
 - Convert to tag text with ALT/OPT+CLICK. Toggle off to use ALT/OPT+CLICK to perform native tag search.
 - Remove child tags first. Toggle off to use SHIFT+CLICK to remove child tags first. 
@@ -57,11 +61,14 @@ Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic
 - Show mobile notices. Toggle off to hide notices when editing or removing a tag.
 - Specify the copy-to-section prefix when using buttons in tag summary.
 - Enable tag summary paragraph action buttons. Disable to hide. 
+- Disable tag summary buttons
+- Edit recently added tags.
+- Lock recently added tags
 
-## Why is this useful to me? 
+## 🧐 Why is this useful to me? 
 I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review and process on-demand.  
 
-## Notes
+## 🗒️ Notes
 - **BETA WARNING!** Plugin is stable, but not fully tested.
 > **ALWAYS BACKUP YOUR VAULT BEFORE USING NEW PLUGINS THAT EDIT YOUR NOTES.**
 - Most Tag Buddy interactions are for **reading mode only**, though some features work naturally in both. Please let me know if you have a use case for multi-mode compatibility.
@@ -72,29 +79,27 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 	 - Editing tags within some other plugins or unknown view types is not supported, for now. Please reach out if you have a use case.
 	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin. But I should implement warnings.
 	 - Tag editing doesn’t work on first click after unfolding content. WORKAROUND: Click again - the first click was needed to reprocess the tags. Please connect if you know of any fold-state events I can listen for so I can automatically re-process the tags.
-	 - Two (or more) tag summaries in the same note referencing the same tags will lose sync with each other. The fix is to update all the summaries in the active note, not just the one you clicked into. But this causes screen flicker as the codeblocks are re-rendered. So I don't think the trade-off is worth it. Maybe make this a setting in there’s a use case. Please reach out.
-
-
-## Support a buddy
-<a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
-
-
-## To Do:
+	 - Two (or more) tag summaries in the same note referencing the same tags will lose sync with each other. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. I can also automatically update all the summaries in the active note, but this causes screen flicker as the codeblocks are re-rendered. I don't think the trade-off is worth it. Maybe this is a setting. Please reach out if you have a use case. 
+	
+## ✅ To Do:
 - [ ] ON-GOING: Tweak Turndown rules to ensure html and markdown match in all cases. Please share issues if found.
 - [ ] ON-GOING: Total re-work for more robust/flexible/compatible tag processing
 - [ ] ON-GOING: More safety checks when editing tagged content in embeds or summary with non-obsidian markdown formatting
 - [ ] Setting to open notes in new tab or not when using buttons
 - [ ] Cancel text selection on mobile after editing or removing a tag
-- [ ] Add tags to content with CTRL/CMD+Right-click
-- [ ] Option to remove tags from source note tagged block when using CTRL/CMD + copying to section button in tag summaries
 - [ ] Error handling when editing very small and duplicated embeds
 - [ ] Specify copy to section prefix within the tag-summary code block Ex: (Section 1(- ))
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embeded or generated content? 
 - [ ] Right-click or extra-long press to add tag summary in-line or in new note?
 - [ ] Automatic tag re-processing on fold state change
+- [ ] Bake summary into note
 - [ ] Command to add tag at cursor position
-- [ ] Video demo of my workflow using this plugin. "Super-powered creative inbox: Capture, curate and process your ideas"
+- [ ] Command to create tag summary
+- [x] ~~Settings for recently used tags~~ (edit, lock)
+- [x] ~~Copy/make note from summary~~
+- [x] ~~Add tags to content with CTRL/CMD+Right-click~~
+- [x] ~~Option to remove tags from source note tagged block when copying~~
 - [x] ~~Debug mode~~
 - [x] ~~Test functionalities in other view types (canvas, tables, etc). Errors handled!~~
 - [x] ~~Settings to customize removal and convert (alt+click removes #, cmd+click native search)~~
@@ -114,7 +119,8 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - [x] ~~Bug: ctrl+click on windows breaks the plugin - fixed!~~
 - [x] ~~Optimizations~~ 
 
-
+## Support a buddy
+<a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 - - -
 
 ## Disclaimer
