@@ -1,3 +1,5 @@
+// ![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069678-4191d61b-109b-4e90-a770-44dedc5edfce.gif)
+
 import { TBSettingsTab } from "./settings";
 import { App, debounce, Editor, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { htmlToMarkdown } from './utils';
@@ -9,10 +11,11 @@ interface TBSettings {
 	optToConvert: boolean; //alt
 	mobileTagSearch: boolean; 
 	mobileNotices: boolean; 
-	tagSummaryButtonsNotices: boolean; 
+	tagSummaryBlockButtons: boolean; 
 	taggedParagraphCopyPrefix: string;
 	recentlyAddedTags: string;
 	lockRecentTags: boolean;
+	showSummaryButtons:boolean;
 	debugMode: boolean;
 }
 
@@ -22,10 +25,11 @@ const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	optToConvert: true, // when false, clicking tag will do nothing
 	mobileTagSearch: false, // toggle on use double tap for search. press+hold will then remove.
 	mobileNotices: true,
-	tagSummaryButtonsNotices: true,
+	tagSummaryBlockButtons: false,
 	taggedParagraphCopyPrefix: '- ',
 	recentlyAddedTags: '',
 	lockRecentTags: false,
+	showSummaryButtons:false,
 	debugMode: false,
 }; 
 
@@ -385,7 +389,7 @@ export default class TagBuddy extends Plugin {
 				try {
 
 					const backupFileName = String(file.name.substring(0, file.name.indexOf('.md')) + ' BACKUP.md');
-					vault.create('', backupFileName, fileContentBackup);
+					vault.create(backupFileName, fileContentBackup);
 
 					new Notice('Tag Buddy note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.');
 				
@@ -900,7 +904,7 @@ export default class TagBuddy extends Plugin {
 							buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tagSection, (filePath + '#' + blockLink)));
 						});
 					//}
-					if (this.settings.tagSummaryButtonsNotices) {
+					if (this.settings.tagSummaryBlockButtons) {
 						buttonContainer.appendChild(this.makeCopyButton(paragraph.trim()));
         				buttonContainer.appendChild(this.makeRemoveTagButton(paragraphEl, tagSection, (filePath + '#' + blockLink)));
         			}
@@ -913,10 +917,10 @@ export default class TagBuddy extends Plugin {
 						let count = 0;
 						sections.forEach((sec) => {
 							if (count++ > 3) return; // limit to 4 section buttons for now, for space.
-							if (this.settings.tagSummaryButtonsNotices) buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tagSection, filePath));
+							if (this.settings.tagSummaryBlockButtons) buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tagSection, filePath));
 						});
 					//}
-					if (this.settings.tagSummaryButtonsNotices) {
+					if (this.settings.tagSummaryBlockButtons) {
 						buttonContainer.appendChild(this.makeCopyButton(paragraph.trim()));
         				buttonContainer.appendChild(this.makeRemoveTagButton(paragraphEl, tagSection, filePath));
         			}
@@ -924,7 +928,7 @@ export default class TagBuddy extends Plugin {
 
         		paragraph = '**' + link + '**\n' + paragraph;
             	//paragraph += "\n";
-          		summary += paragraph;
+          		summary += paragraph + '\n'; 
 
           		//const tempEl = await createEl('div');
           		//await MarkdownRenderer.renderMarkdown(paragraph, tempEl,'', tempComponent);
@@ -938,21 +942,26 @@ export default class TagBuddy extends Plugin {
           		const titleEl = createEl('span');
           		titleEl.setAttribute('class', 'tagsummary-item-title');
           		titleEl.appendChild(paragraphEl.querySelector('strong').cloneNode(true))
-          		if (this.settings.tagSummaryButtonsNotices) paragraphEl.appendChild(buttonContainer);
+          		if (this.settings.tagSummaryBlockButtons) paragraphEl.appendChild(buttonContainer);
           		paragraphEl.querySelector('strong').replaceWith(titleEl)
 
           		summaryContainer.appendChild(paragraphEl);
 			});
 			//count++
 		});
-		
-		setTimeout(async () => { 
-			if (this.settings.debugMode) summaryContainer.appendChild(this.makeSummaryRefreshButton(summaryContainer));
-			summaryContainer.appendChild(createEl('hr')); 
-		}, 0);
+	
 		
 		// Add Summary
 		if (summary != "") {
+			setTimeout(async () => { 
+				if (this.settings.showSummaryButtons) {
+					summaryContainer.appendChild(this.makeSummaryRefreshButton(summaryContainer));
+	        		summaryContainer.appendChild(this.makeCopySummaryButton(summary));
+	        		summaryContainer.appendChild(this.makeSummaryNoteButton(summary, tags));
+	        		summaryContainer.appendChild(createEl('br')); 
+				} 
+				summaryContainer.appendChild(createEl('hr')); 
+			}, 0);
 			summaryContainer.setAttribute('codeblock-tags', tags.join(','));
 			summaryContainer.setAttribute('codeblock-tags-include', ((include.length>0)?include.join(','):''));
 			summaryContainer.setAttribute('codeblock-tags-exclude', ((exclude.length>0)?exclude.join(','):''));
@@ -980,10 +989,103 @@ export default class TagBuddy extends Plugin {
 		return button;
 	}*/
 
-	makeSummaryRefreshButton (summaryEl) {	
-		const button = this.makeButton (' ↺   Refresh', (e) => { 
+	makeCopySummaryButton (summaryMd:string) {
+		const button = this.makeButton (' ❏  ', (e) => { 
 			e.stopPropagation();
-			this.updateSummary(summaryEl)
+			navigator.clipboard.writeText(summaryMd);
+			new Notice ('Summary copied to clipboard.');
+		});
+		button.title = 'Copy summary';
+		return button;
+	}
+
+	makeSummaryNoteButton (summaryMd:string, tags:Array) {
+		const button = this.makeButton (' ❏ Note', (e) => { 
+			e.stopPropagation();
+			const newNoteObj = this.fileObjFromTags(tags);
+			let fileContent = '## ' + newNoteObj.title + '\n\n' + summaryMd;
+			const fileName = this.getActiveFileFolder()+newNoteObj.fileName;
+			const file = this.app.vault.getAbstractFileByPath(fileName);
+			let notice;
+
+			tags.forEach ((tag) => {
+				//fileContent = this.removeTagFromString(fileContent, tag);
+				fileContent = this.replaceTextInString (tag, fileContent, tag.substring(1), true)
+				//replaceTextInString (replaceText, sourceText, newText, all:boolean=false) 
+			});
+			//console.log(fileContent)
+			if (file instanceof TFile) {
+				//await leaf.openFile(file, {active: newFolder.focused});
+				notice = new Notice ('⚠️ Note already exists.\nClick here to overwrite.', 5000);
+				this.registerDomEvent(notice.noticeEl, 'click', (e) => {
+					this.app.vault.modify(file, fileContent);
+					notice = new Notice ('Note updated.\n🔗 Open note.', 5000);
+					this.registerDomEvent(notice.noticeEl, 'click', (e) => {
+						this.app.workspace.openLinkText(fileName, '');
+					});
+				});
+			} else if (!file) {
+				this.app.vault.create(fileName, fileContent);
+				const notice = new Notice ('Tag Buddy: Summary note created. 📜\n🔗 Open note.');
+				this.registerDomEvent(notice.noticeEl, 'click', (e) => {
+					this.app.workspace.openLinkText(newNoteObj.fileName, '');
+				});
+			}
+		});
+		button.title = 'Create note from summary';
+		return button;
+	}
+
+	fileObjFromTags(tags:Array):Object {
+	    // Remove hashes and split tags into an array
+	    let tagsArray = tags.map(tag => tag.replace(/#/g, '').toLowerCase());
+
+	    // Filter out duplicates
+	    tagsArray = tagsArray.filter((tag, index, self) => self.indexOf(tag) === index);
+
+	    // Construct the file name
+	    const tagsPart = tagsArray.join('+');
+	    const currentDate = new Date();
+	    const datePart = currentDate.getDate().toString().padStart(2, '0') + '-' +
+	                     (currentDate.getMonth() + 1).toString().padStart(2, '0') + '-' +
+	                     currentDate.getFullYear().toString().slice(-2);
+	    const fileName = `Tag Summary (${tagsPart}) (${datePart}).md`;
+
+	    // Construct the title
+	    const titleTagsPart = tagsArray.map(tag => tag.charAt(0).toUpperCase() + tag.slice(1)).join(' + ');
+	    const title = `${titleTagsPart} Tag Summary`;
+
+	    // Return the object with fileName and title properties
+	    return {
+	        fileName: fileName,
+	        title: title
+	    };
+	}
+
+	getActiveFileFolder() {
+		const activeFile = app.workspace.activeLeaf.view.file;
+	    if (!activeFile) return null;
+
+	    // Determine the correct path separator
+	    const pathSeparator = activeFile.path.includes('\\') ? '\\' : '/';
+
+	    const pathParts = activeFile.path.split(pathSeparator);
+	    pathParts.pop();  // Remove the file name part
+	    let folderPath = pathParts.join(pathSeparator);
+
+	    // Ensure the folder path ends with the correct path separator
+	    if (!folderPath.endsWith(pathSeparator)) {
+	        folderPath += pathSeparator;
+	    }
+
+	    return folderPath;
+	}
+
+	makeSummaryRefreshButton (summaryEl) {	
+		const button = this.makeButton (' ↺  ', (e) => { 
+			e.stopPropagation();
+			this.updateSummary(summaryEl);
+			new Notice ('Tag Summary updated');
 			setTimeout(async () => { this.processTags(); }, 10);
 		});
 		button.title = 'Refresh Tag Summary';
@@ -1031,9 +1133,10 @@ export default class TagBuddy extends Plugin {
 		const button = this.makeButton (' ❏ ', (e) => { 
 			e.stopPropagation();
 			navigator.clipboard.writeText(content);
-			new Notice ('Tag Buddy: Copied to clipboard.');
+			const notice = new Notice ('Tag Buddy: Copied to clipboard.');
+			//notice.noticeEl.style.top = '500px';
 		});
-		button.title = 'Copy paragraph to clipboard.';
+		button.title = 'Copy paragraph';
 		return button;
 	}
 
@@ -1198,7 +1301,7 @@ export default class TagBuddy extends Plugin {
 		}
 	}
 
-	removeTagFromString(inputText, hashtagToRemove, all:boolean=true) {
+	removeTagFromString(inputText, hashtagToRemove, all:boolean=true):string {
 	    // Use a regular expression to globally replace the hashtag with an empty string
 	    console.log('Tag to remove: ' + hashtagToRemove)
 	    //const regex = new RegExp("\\s?" + hashtagToRemove + "\\b", all?"gi":"i");
@@ -1311,10 +1414,13 @@ export default class TagBuddy extends Plugin {
 	saveRecentTag (tag:string) {
 
 		if (this.isTagValid(tag)) {
+
 			
 			const recentTagsString = this.settings.recentlyAddedTags;
 			let recentTags:Array;
-			if (recentTagsString.indexOf(', ')) {
+			if (recentTagsString == '') {
+				recentTags = [];
+			} else if (recentTagsString.indexOf(', ')) {
 				recentTags = this.settings.recentlyAddedTags.split(', ');
 			} else {
 				recentTags = [this.settings.recentlyAddedTags]
@@ -1760,7 +1866,6 @@ export default class TagBuddy extends Plugin {
 		});
 	}
 
-
 	async addTag (tag:string, x:number, y:number) {
 
 		if (this.settings.debugMode) { console.log('Tag Buddy add'); console.log(x, y, tag); }
@@ -1856,26 +1961,22 @@ export default class TagBuddy extends Plugin {
 		setTimeout(async () => { this.processTags(); }, 200);
 	}
 
-
-	replaceTextInString (replaceText, sourceText, all:boolean=false) {
+	replaceTextInString (replaceText, sourceText, newText, all:boolean=false) {
 
 		const regex = new RegExp(this.escapeRegExp(replaceText), all ? "gi" : "i");
     	return sourceText.replace(regex, newText).trim();
-
 	}
 
 	insertTextInString (newText, sourceText, charPos) { // pass 0 for the start or sourceText.length-1 for the end
 
 		// LATER: Proper white space or line break checking of the area we're adding
 		return (sourceText.substring(0, charPos).trim() + ' ' + newText + ' ' + sourceText.substring(charPos)).trim();
-
 	}
 
 	removeTextFromString (removeText, sourceText, all:boolean=false) {
 
 		const regex = new RegExp(this.escapeRegExp(removeText), all ? "gi" : "i");
     	return sourceText.replace(regex, '').trim();
-
 	}
 
 	getWordObjFromString(sourceText, offset):Object {

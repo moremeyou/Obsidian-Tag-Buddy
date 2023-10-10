@@ -76,13 +76,25 @@ export class TBSettingsTab extends PluginSettingTab {
         );
 
         new Setting(containerEl)
-        .setName("Show tag summary buttons")
+        .setName("Show tag summary block buttons")
         .setDesc("Show buttons below each tagged paragraph that let you copy, remove, and move the paragraph.")
         .addToggle((toggle) =>
             toggle
-            .setValue(this.plugin.settings.tagSummaryButtonsNotices)
+            .setValue(this.plugin.settings.tagSummaryBlockButtons)
             .onChange(async (value) => {
-                this.plugin.settings.tagSummaryButtonsNotices = value;
+                this.plugin.settings.tagSummaryBlockButtons = value;
+                await this.plugin.saveSettings();
+            })
+        );
+
+        new Setting(containerEl)
+        .setName("Show tag summary buttons")
+        .setDesc("Show buttons below each summary that let you copy or make a note from the summary.")
+        .addToggle((toggle) =>
+            toggle
+            .setValue(this.plugin.settings.showSummaryButtons)
+            .onChange(async (value) => {
+                this.plugin.settings.showSummaryButtons = value;
                 await this.plugin.saveSettings();
             })
         );
