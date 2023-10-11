@@ -4,33 +4,33 @@ Add, edit and remove tags. Copy, move or edit tagged blocks. All in **reading-mo
 ### 🫥 Use 1: Remove tags in reading-mode
 ![Remove Tag Demo](https://user-images.githubusercontent.com/8971804/273923015-9eb2de41-3aeb-4243-9655-efdf4fd70ace.gif)
 
-Click to remove tags in the active note, embedded note/block or generated tag summary blocks. DOUBLE-TAP on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search.
+Click to remove tags in the active note, embedded note/block or generated tag summary blocks. DOUBLE-TAP on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search. Customize this in plugin settings. 
 
 ### 🪺  Use 2: Edit nested tags in reading mode
 ![Nested Tag Demo](https://user-images.githubusercontent.com/8971804/273923013-0b449539-cd7d-4c50-bb30-a2eb7c66dc93.gif)
 
-If there are nested tags, Use 1 will progressively remove these first.
+If there are nested tags, Tag Buddy will progressively remove these first. 
 
-### 🧼  Use 3: Convert tags to text in reading-mode
-![Convert Tag Demo](https://user-images.githubusercontent.com/8971804/273923003-d22b0c3e-39dc-4444-8716-fa9bcb327319.gif)
-
-Removes the hash (converts the tag to text) with **OPT/ALT+CLICK** on desktop or PRESS+HOLD on mobile.
-
-### ✏️  Use 4: Add tags to note in reading-mode
+### ✏️  Use 3: Add tags to note in reading-mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
-Add tag to content block/area with CTRL/CMD+RIGHT-CLICK. Recently added tags are saved and you can lock this list in settings, effectively making a favorites list.
+Add tag to content block/area with **CTRL/CMD+RIGHT-CLICK**. Recently added tags are saved and you can lock this list in settings, effectively making a favorites list.
 
-### 🔎  Use 5: Add/edit tags in tag summary
+### 🧼  Use 4: Convert tags to text in reading-mode
+![Convert Tag Demo](https://user-images.githubusercontent.com/8971804/273923003-d22b0c3e-39dc-4444-8716-fa9bcb327319.gif)
+
+Removes the hash (converts the tag to text) with **OPT/ALT+CLICK** on desktop or **PRESS+HOLD** on mobile.
+
+### 🔎  Use 5: Add/edit tags in tag summaries
 ![Tag Summary Demo](https://user-images.githubusercontent.com/8971804/274069683-1e6257a6-f6d6-402a-adae-c534c2f5a507.gif)
 
 Tags are editable in the active note, native embeds and when rendered using a tag summary code block. Use this syntax:
 ````markdown
 ```tag-summary
-tags: #tag1 #tag2 // search for notes with blocks that have these tags (required)
-include: #tag3 #tag4 // summaries for tag1 or tag2 must also 
-exclude: #tag5 // but not have tag5 (optional)
-max: 3 // restricts the results in the summary (optional)
+tags: #tag1 #tag2 // Find notes that have these tags (required)
+include: #tag3 #tag4 // Results must also have these tags (optional)
+exclude: #tag5 #tag6 // But not have these tags (optional)
+max: 3 // Limits the results in the summary (optional)
 ```
 ````
 Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the original code behind the summaries.
@@ -39,26 +39,28 @@ Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the o
 - Tagged paragraph copy button: copy's paragraph to clipboard.
 - Tagged paragraph remove-tag button: removes the queried tag from the paragraph (which also removes it from the summary).
 	- Made a mistake? Use the notices to easily jump to the note the tag was removed from. 
+![Notice Demo](https://user-images.githubusercontent.com/8971804/274208965-fb8423e7-4f64-4bf6-84e8-afe1d44d81b4.gif)
 
 ### 📑   Use 7: Copy/move tagged blocks to section
 ![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069666-d56b899c-1d74-411b-8b6e-c048bc8df491.gif)
 
-Buttons added to each tagged paragraph in summaries let you copy the paragraph (with a back link) to header sections in the active note. Use CTRL/CMD when clicking to also remove the tag, effectively moving the paragraph to the section. These buttons will appear when you add section details to the tag summary code block like this:
+Buttons added to each tagged paragraph in summaries let you copy the paragraph (with a back link) to header sections in the active note. Use **CTRL/CMD** when clicking to also remove the tag, effectively moving the paragraph to the section. These buttons will appear when you add section details to the tag summary code block like this (max 3, for space):
 ````markdown
 ```tag-summary
 tags: #tag1 #tag2 
-sections: Section 1, Section 2 //  Header sections in the same note as this code block. Max 3 (for space).
+sections: Section 1, Section 2 //  Header sections in the same note.
 ```
 ````
 
 Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic behind inserting content under headers.
 
-### 📜  Use 8: Create note from tag summary
+### 📜  Use 8: Bake/create tag summary note
 ![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069678-4191d61b-109b-4e90-a770-44dedc5edfce.gif)
 
-**Copy tag summary** and **Copy tag summary to new note** buttons: Using the include, exclude, and max parameters of the tag summary code block you can easily customise and build new notes from tagged content. 
+**Summary buttons**: Using the include, exclude, and max parameters of the tag summary code block you can easily customise and build new notes from tagged content. Copy to clipboard, create new note or bake into the active note as markdown (replaces the code block).
 
 ## Support a buddy
+There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 
 ## ⚙️ Settings
@@ -93,14 +95,13 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - [ ] ON-GOING: Tweak Turndown rules to ensure html and markdown match in all cases. Please share issues if found.
 - [ ] ON-GOING: Total re-work for more robust/flexible/compatible tag processing
 - [ ] ON-GOING: More safety checks when editing tagged content in embeds or summary with non-obsidian markdown formatting
-- [ ] Setting to open notes in new tab or not when using buttons
 - [ ] Cancel text selection on mobile after editing or removing a tag
 - [ ] Error handling when editing very small and duplicated embeds
 - [ ] Specify copy to section prefix within the tag-summary code block Ex: (Section 1(- ))
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
-- [ ] Possible undo/redo changes to embeded or generated content? 
+- [ ] Possible undo/redo changes to embedded or generated content? 
 - [ ] Right-click or extra-long press to add tag summary in-line or in new note?
-- [ ] Automatic tag re-processing on fold state change
+- [ ] Automatic tag re-processing on fold state change. Need event…
 - [ ] Bake summary into note
 - [ ] Command to add tag at cursor position
 - [ ] Command to create tag summary
@@ -128,6 +129,7 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 - [x] ~~Optimizations~~ 
 
 ## Support a buddy
+There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 - - -
 
