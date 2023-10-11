@@ -64,7 +64,7 @@ Enable these buttons in plugin settings. Thanks to [QuickAdd Plugin](https://git
 ## 🧐 Why is this useful to me? 
 I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review and process on-demand.  
 
-## Support a buddy
+## 👍 Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
@@ -131,7 +131,7 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - [x] ~~Bug: ctrl+click on windows breaks the plugin - fixed!~~
 - [x] ~~Optimizations~~ 
 
-## Support a buddy
+## 👍 Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
