@@ -61,6 +61,7 @@ Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic
 
 ## Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
+
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 
 ## ⚙️ Settings
@@ -130,6 +131,7 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 
 ## Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
+
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 - - -
 
