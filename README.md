@@ -4,7 +4,7 @@ Add, edit and remove tags. Copy, move or edit tagged blocks. All in **reading-mo
 ### 🫥 Use 1: Remove tags in reading-mode
 ![Remove Tag Demo](https://user-images.githubusercontent.com/8971804/273923015-9eb2de41-3aeb-4243-9655-efdf4fd70ace.gif)
 
-Click to remove tags in the active note, embedded note/block or generated tag summary blocks. DOUBLE-TAP on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search. Customize this in plugin settings. 
+Click to remove tags in the active note, embedded note/block or generated tag summary blocks. **DOUBLE-TAP** on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search. Customize this in plugin settings. 
 
 ### 🪺  Use 2: Edit nested tags in reading mode
 ![Nested Tag Demo](https://user-images.githubusercontent.com/8971804/273923013-0b449539-cd7d-4c50-bb30-a2eb7c66dc93.gif)
@@ -14,7 +14,7 @@ If there are nested tags, Tag Buddy will progressively remove these first.
 ### ✏️  Use 3: Add tags to note in reading-mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
-Add tag to content block/area with **CTRL/CMD+RIGHT-CLICK**. Recently added tags are saved and you can lock this list in settings, effectively making a favorites list.
+Add tag to content block/area with **CTRL/CMD+RIGHT-CLICK**. Recently added tags are saved and you can lock this list in settings, effectively making a favorites list. Im still testing best key/click combos. Reach out if you have a preference.
 
 ### 🧼  Use 4: Convert tags to text in reading-mode
 ![Convert Tag Demo](https://user-images.githubusercontent.com/8971804/273923003-d22b0c3e-39dc-4444-8716-fa9bcb327319.gif)
@@ -41,6 +41,8 @@ Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the o
 	- Made a mistake? Use the notices to easily jump to the note the tag was removed from. 
 ![Notice Demo](https://user-images.githubusercontent.com/8971804/274208965-fb8423e7-4f64-4bf6-84e8-afe1d44d81b4.gif)
 
+Enable these buttons in plugin settings. 
+
 ### 📑   Use 7: Copy/move tagged blocks to section
 ![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069666-d56b899c-1d74-411b-8b6e-c048bc8df491.gif)
 
@@ -52,12 +54,15 @@ sections: Section 1, Section 2 //  Header sections in the same note.
 ```
 ````
 
-Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic behind inserting content under headers.
+Enable these buttons in plugin settings. Thanks to [QuickAdd Plugin](https://github.com/chhoumann/quickadd) for the logic behind inserting content under headers.
 
 ### 📜  Use 8: Bake/create tag summary note
 ![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069678-4191d61b-109b-4e90-a770-44dedc5edfce.gif)
 
-**Summary buttons**: Using the include, exclude, and max parameters of the tag summary code block you can easily customise and build new notes from tagged content. Copy to clipboard, create new note or bake into the active note as markdown (replaces the code block).
+**Summary buttons**: Using the include, exclude, and max parameters of the tag summary code block you can easily customise and build new notes from tagged content. Copy to clipboard, create new note or bake into the active note as markdown (replaces the code block). Enable these buttons in plugin settings.
+
+## 🧐 Why is this useful to me? 
+I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review and process on-demand.  
 
 ## Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
@@ -75,9 +80,6 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - Disable tag summary buttons
 - Edit recently added tags.
 - Lock recently added tags
-
-## 🧐 Why is this useful to me? 
-I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review and process on-demand.  
 
 ## 🗒️ Notes
 - **BETA WARNING!** Plugin is stable, but not fully tested.
