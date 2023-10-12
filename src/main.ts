@@ -1,8 +1,6 @@
-// ![Notice Demo](https://user-images.githubusercontent.com/8971804/274208965-fb8423e7-4f64-4bf6-84e8-afe1d44d81b4.gif)
-
 import { TBSettingsTab } from "./settings";
 import { App, debounce, Editor, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { htmlToMarkdown } from './utils';
+
 import { getTagsFromApp } from './utils';
 //import { showTagSelector } from './ui'; // need to give these files reference to the plugin
 interface TBSettings {
@@ -271,10 +269,11 @@ export default class TagBuddy extends Plugin {
 			let afterTag = fileContent.substring((Number(index)+Number(tag.length)));
 
 			let afterTagChr;
-//console.log(JSON.stringify(afterTag))
+			let beforeTagChr
+//console.log(JSON.stringify(beforeTag))
 			
-//console.log ('after tag ends with space? ' + afterTag.startsWith(' '))
-//console.log ('after tag ends with linebreak? ' + afterTag.startsWith('\n'))
+//console.log ('before tag ends with space? ' + before.startsWith(' '))
+//console.log ('before tag ends with linebreak? ' + before.startsWith('\n'))
 			if (afterTag.startsWith(' ')) {
 				afterTagChr = ' ';
 			} else if (afterTag.startsWith('\n')) {
@@ -320,7 +319,7 @@ export default class TagBuddy extends Plugin {
 
 				const noHash = tag.substring(1);
 				//newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + noHash + afterTag;
-				ewContent = beforeTag + noHash + afterTagChr + afterTag;
+				newContent = beforeTag + noHash + afterTagChr + afterTag;
 				
 				if (this.app.isMobile && this.settings.mobileNotices) { new Notice ('Tag Buddy: ' + tag + ' converted to text.'); }
 				// Setting: make this a setting to show notices on mobile
@@ -1671,7 +1670,7 @@ export default class TagBuddy extends Plugin {
         .tagsummary-button {
 
             color: var(--text-primary) !important;
-            border: .5px solid var(--text-quote) !important;
+            /*border: .5px solid var(--text-quote) !important;*/
             border-radius: 6px !important;
             padding: 2.5px 5px !important;
             font-size: 65% !important;
@@ -1738,7 +1737,7 @@ export default class TagBuddy extends Plugin {
 		.addtag-menu {
 			position: absolute !important;
 		    background-color: var(--background-primary) !important;
-		    color: white !important;
+		    /*color: white !important;*/
 		    border: 2px solid var(--divider-color) !important;
 		    z-index: 10000 !important;
 		    overflow-y: auto !important;
@@ -1783,12 +1782,12 @@ export default class TagBuddy extends Plugin {
 
 		.tag-item:hover {
 	        background-color: var(--background-modifier-hover) !important; // Added ,1 for opacity
-	        color: white !important;
+	        /*color: white !important;*/
 	    }
 		.tag-item.active {
 	        background-color: var(--background-modifier-hover) !important;
 	        /*background-color: var(--interactive-accent) !important;*/
-	        color: white !important;
+	        /*color: white !important;*/
 	    }
 
 		#addtag-menu .disable-hover .tag-item:hover {
@@ -2029,6 +2028,7 @@ export default class TagBuddy extends Plugin {
 		        nextActiveTag.classList.add('active');
 		        // Ensure the newly active tag is visible
 		        nextActiveTag.scrollIntoView({ block: 'nearest' });
+		        searchEl.value = nextActiveTag.innerText;
 		    }
 		});
 	}
@@ -2111,6 +2111,13 @@ export default class TagBuddy extends Plugin {
 		const clickedWord = clickedWordObj.text;
 		const clickedWordIndex = clickedWordObj.index;
 		
+
+//console.log(JSON.stringify(tag))
+			
+//console.log ('before tag ends with space? ' + before.startsWith(' '))
+//console.log ('before tag ends with linebreak? ' + before.startsWith('\n'))
+
+
 		const newContent = this.insertTextInString(tag, fileContent, startIndex+clickedWordIndex)
 		
 
@@ -2132,10 +2139,12 @@ export default class TagBuddy extends Plugin {
     	return sourceText.replace(regex, newText).trim();
 	}
 
+	// I removed .trim() from the before and after to fix the add bug.
 	insertTextInString (newText, sourceText, charPos):string { // pass 0 for the start or sourceText.length-1 for the end
 
 		// LATER: Proper white space or line break checking of the area we're adding
-		return (sourceText.substring(0, charPos).trim() + ' ' + newText + ' ' + sourceText.substring(charPos)).trim();
+		//return (sourceText.substring(0, charPos).trim() + ' ' + newText + ' ' + sourceText.substring(charPos)).trim();
+		return (sourceText.substring(0, charPos) + ' ' + newText + ' ' + sourceText.substring(charPos));
 	}
 
 	removeTextFromString (removeText, sourceText, all:boolean=false):string {
