@@ -1,4 +1,4 @@
-// ![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069678-4191d61b-109b-4e90-a770-44dedc5edfce.gif)
+// ![Notice Demo](https://user-images.githubusercontent.com/8971804/274208965-fb8423e7-4f64-4bf6-84e8-afe1d44d81b4.gif)
 
 import { TBSettingsTab } from "./settings";
 import { App, debounce, Editor, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	mobileTagSearch: false, // toggle on use double tap for search. press+hold will then remove.
 	mobileNotices: true,
 	tagSummaryBlockButtons: false,
-	taggedParagraphCopyPrefix: '- ',
+	taggedParagraphCopyPrefix: '',
 	recentlyAddedTags: '',
 	lockRecentTags: false,
 	showSummaryButtons:false,
@@ -70,17 +70,30 @@ export default class TagBuddy extends Plugin {
 
 		    this.registerEvent( this.app.workspace.on('active-leaf-change', async () => { 
 		    	//console.log('active leaf change'); 
-	    		this.registerDomEvent(document, 'contextmenu', async (event: MouseEvent) => {
+	    		
+	    		/*this.registerDomEvent(document, 'contextmenu', async (event: MouseEvent) => {
 	    			const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
 			        if (view && this.ctrlCmdKey (event) && (view.getMode() == 'preview')) {
 			            event.preventDefault();
-
+			            console.log('right click')
 			            const file = await this.app.workspace.getActiveFile();
 
 			            this.showTagSelector(event.pageX, event.pageY, file);
 			        }
-			    });
+			    });*/
 		    }));
+
+
+		    this.registerDomEvent(document, 'contextmenu', async (event: MouseEvent) => {
+    			const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
+		        if (view && this.ctrlCmdKey (event) && (view.getMode() == 'preview')) {
+		            event.preventDefault();
+		            //console.log('right click')
+		            const file = await this.app.workspace.getActiveFile();
+		            //console.log(view)
+		            this.showTagSelector(event.pageX, event.pageY, file);
+		        }
+		    });
 
 			// Don't need this event because we'll always need to switch between views to edit note and affect the tag indices.
 			// this.registerEvent(this.app.workspace.on('editor-change', debounce(async () => { console.log('editor change'); this.processTags(); }, 3000, true)));
@@ -244,6 +257,8 @@ export default class TagBuddy extends Plugin {
 
 			}
 
+			//console.log(this.getClickedTextObjFromDoc(event.pageX, event.pageY, 0))
+
 			// check if the file has only one tag left (and that's all thats left in the file)
 			let safeToEmptyFile = false;
 			const tagRegex = /^\s*#(\w+)\s*$/;
@@ -252,8 +267,22 @@ export default class TagBuddy extends Plugin {
 			}
 			
 			let beforeTag = fileContent.substring(0, index);
-			let afterTag = fileContent.substring((Number(index)+Number(tag.length)+1));
+			//let afterTag = fileContent.substring((Number(index)+Number(tag.length)+1));
+			let afterTag = fileContent.substring((Number(index)+Number(tag.length)));
 
+			let afterTagChr;
+//console.log(JSON.stringify(afterTag))
+			
+//console.log ('after tag ends with space? ' + afterTag.startsWith(' '))
+//console.log ('after tag ends with linebreak? ' + afterTag.startsWith('\n'))
+			if (afterTag.startsWith(' ')) {
+				afterTagChr = ' ';
+			} else if (afterTag.startsWith('\n')) {
+				afterTagChr = '\n';
+			}
+
+			// can't remember why I have this...
+			// need to refactor all this line break space stuff
 			if (fileContent[index] === '\n') {
     			beforeTag += '\n'; // appending the newline character to beforeTag
 			}
@@ -279,16 +308,19 @@ export default class TagBuddy extends Plugin {
 			// SUPER MESSY. NEED TO REFACTOR
 			////////////////////////////////////////////////////////////////
 
+
 			if (!event) { // then we're calling this method from a button. need to rethink how this is organized.
 				
-				newContent = beforeTag + afterTag;
+				//afterTagChr = afterTag.endsWith(' ')?' ':''
+				newContent = beforeTag + afterTagChr + afterTag //+ afterTagChr;
 
 			} else if (event.altKey || ((event.type == 'touchstart') && !this.settings.mobileTagSearch)) { 
 
 				// Remove the hash only
 
 				const noHash = tag.substring(1);
-				newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + noHash + afterTag;
+				//newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + noHash + afterTag;
+				ewContent = beforeTag + noHash + afterTagChr + afterTag;
 				
 				if (this.app.isMobile && this.settings.mobileNotices) { new Notice ('Tag Buddy: ' + tag + ' converted to text.'); }
 				// Setting: make this a setting to show notices on mobile
@@ -304,7 +336,9 @@ export default class TagBuddy extends Plugin {
 					let parts = tag.split('/');
 					const removedChild = parts.pop();
 					parentTag = parts.join('/');
-					newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + parentTag + afterTag;
+					//newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + parentTag + (!afterTag.startsWith(' ')?' ':'') + afterTag;
+					newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + parentTag + afterTagChr + afterTag;
+
 
 					if (this.app.isMobile && this.settings.mobileNotices) { new Notice ('Tag Buddy: \'' + removedChild + '\' removed from parent tag.'); }
 				
@@ -313,20 +347,42 @@ export default class TagBuddy extends Plugin {
 					if (this.app.isMobile && this.settings.mobileNotices) { new Notice ('Tag Buddy: ' + tag + ' removed.'); }
 				}
 			} 
-			// File safety checks
-			if ((newContent == '' && !safeToEmptyFile) || this.contentChangedTooMuch(fileContentBackup, newContent, tag, 2)) {
-				// Check if there was only one tag in the file, if so, don't restore backup;
-				new Notice('Tag Buddy: File change error.');
-				newContent = fileContentBackup;
-			} else if (newContent == '' && safeToEmptyFile) {
-				new Notice('Tag Buddy: Tag removed. The note is empty.');
-			}
+			
 
 			try {
 			
-				await this.app.vault.modify(file, newContent);
-				//console.log('Tag el: ' + tagEl)
+				//await this.app.vault.modify(file, newContent);
+
+
 				if (tagEl.getAttribute('type') == 'plugin-summary') {
+
+
+					const summaryEl = tagEl.closest('.tag-summary-paragraph');
+					const mdSource = summaryEl.getAttribute('md-source').trim();
+					
+					const escapedText = this.escapeRegExp(mdSource);
+					const regex = new RegExp(escapedText, "g");  // The "g" flag means "global", so it will find all occurrences
+					const matches = fileContent.match(regex);
+					
+					if (matches && matches.length > 1) {
+					    //console.log(`Found ${matches.length} occurrences of "${pattern}" in "${subject}".`);
+					    new Notice ('⚠️ Can\'t safely remove/edit tag:\nSurrounding text repeated in source note.');
+					    return;
+					} else if ((matches && matches.length === 0) || !matches) {
+						new Notice ('⚠️ Can\'t find tag in source note.\n');
+					    return;
+					}
+
+
+					// File safety checks
+					if ((newContent == '' && !safeToEmptyFile) || this.contentChangedTooMuch(fileContentBackup, newContent, tag, 2)) {
+						// Check if there was only one tag in the file, if so, don't restore backup;
+						new Notice('Tag Buddy: File change error.');
+						newContent = fileContentBackup;
+					} else if (newContent == '' && safeToEmptyFile) {
+						new Notice('Tag Buddy: Tag removed. The note is empty.');
+					}
+
 					setTimeout(async () => {
 						
 						const tagParagraphEl = tagEl.closest('.tag-summary-paragraph');
@@ -361,7 +417,7 @@ export default class TagBuddy extends Plugin {
 								// this.refreshView(); // no need for this atm
 							} else {
 								//console.log('last one, will remove paragraph')
-								const notice = new Notice ('Last ' + tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
+								const notice = new Notice (tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
 								this.removeElementWithAnimation(tagParagraphEl, () => {
 				    				setTimeout(async () => { this.updateSummary(tagSummaryBlock); tagParagraphEl.remove(); }, 500);
 									//this.updateSummaries(); // causes screen flicker
@@ -382,27 +438,31 @@ export default class TagBuddy extends Plugin {
 					}, 200);
 				} else {
 					setTimeout(async () => { this.processTags(); }, 50)
-				}	
+				}
+
+
+				await this.app.vault.modify(file, newContent);
+
 
 			} catch (error) {
 
 				try {
 
 					const backupFileName = String(file.name.substring(0, file.name.indexOf('.md')) + ' BACKUP.md');
-					vault.create(backupFileName, fileContentBackup);
+					this.app.vault.create(backupFileName, fileContentBackup);
 
-					new Notice('Tag Buddy note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.');
+					new Notice('⚠️ Tag/note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.');
 				
 				} catch (error) {
 
 					navigator.clipboard.writeText(fileContentBackup);
-					new Notice('Tag Buddy note editing error: ' + error.message + '\nNote content copied to clipboard.');
+					new Notice('⚠️ Tag/note editing error: ' + error.message + '\nNote content copied to clipboard.');
 
 				}
 			} 
 		} else {
 			this.processTags();
-			new Notice('Tag Buddy error: Can\'t identify tag location. Please try again.');
+			new Notice('⚠️ Can\'t identify tag location. Please try again.');
 		}
 	}
 
@@ -415,7 +475,7 @@ export default class TagBuddy extends Plugin {
 	}
 
 	updateSummary (summaryEl) {
-		console.log('Update summary')
+		//console.log('Update summary')
 		const summaryContainer = summaryEl; //tagEl.closest('.tag-summary-block');
 		const tagsStr = summaryContainer.getAttribute('codeblock-tags');
 		const tags = tagsStr ? tagsStr.split(',') : [];
@@ -431,8 +491,10 @@ export default class TagBuddy extends Plugin {
 
 		const max = Number(summaryContainer.getAttribute('codeblock-max'));
 
+		const mdSource = summaryContainer.getAttribute('codeblock-code');
+
 		// Recreate summary after we've edited the file
-		this.createSummary(summaryContainer, tags, tagsInclude, tagsExclude, sections, max);
+		this.createSummary(summaryContainer, tags, tagsInclude, tagsExclude, sections, max, '', mdSource);
 
 		//setTimeout(async () => { this.processTags(); }, 200);
 	}
@@ -458,6 +520,11 @@ export default class TagBuddy extends Plugin {
 		if (view) {
 			//setTimeout(async () => { 
 			const activeNoteContainer = await this.app.workspace.activeLeaf.containerEl;
+			//console.log(activeNoteContainer)
+			const activeNoteReadingView = activeNoteContainer.querySelector('.markdown-reading-view');
+			const activeNoteEditView = activeNoteContainer.querySelector('.markdown-source-view');
+			
+			//console.log(activeNoteContainer)
 			//const activeNoteContainer = await document.querySelector('.view-content');
 			//}, 200)
 			//setTimeout(async () => { // All these timeouts were for testing. Issues seems to be resolved now.
@@ -468,15 +535,20 @@ export default class TagBuddy extends Plugin {
 			//setTimeout(async () => { console.log(activeFileTagElements)}, 1000)
 			const activeFileTags = await this.getMarkdownTags(activeFile, fileContent);
 			if (activeFileTags.length > 0) this.assignMarkdownTags(activeFileTags, activeFileTagElements, 0, 'active');
-			this.processEmbeds(activeNoteContainer);
+			//this.processEmbeds(activeNoteContainer);
+			this.processEmbeds(activeNoteReadingView);
 			//}, 500)
 		}
 	}
 
 	async getMarkdownTags (file, fileContent) {
+		//console.log('getMarkdownTags')
 		const tagPositions = [];
 		let match;
-		const regex = /(?:^|\s)#[^\s#]+|```/g; // Adjusted the regex to also match code block delimiters
+		//const regex = /(?:^|\s)#[^\s#]+|```/g; // BUG: wrong match.index. matches the space before the tag.
+		//const regex = /(?<=^|\s)#[^\s#]+|```/g // FIX. But still matching punctuation after
+		const regex = /(?<=^|\s)(#[^\s#.,;!?:]+)(?=[.,;!?:\s]|$)|```/g  // matches punctuation after, but not included in the match
+
 		let insideCodeBlock = false;
 
 		while ((match = regex.exec(fileContent)) !== null) {
@@ -496,12 +568,14 @@ export default class TagBuddy extends Plugin {
 		    //console.log(tagPositions[tagPositions.length-1])
 		}
 		//console.log('markdown tag count: ' + tagPositions.length)
-
+		//console.log(tagPositions)
 		return tagPositions;
 	}
 
-	assignMarkdownTags (tagPositions, tagElements, startIndex, type) {
+	assignMarkdownTags (tagPositions:Array, tagElements, startIndex, type) {
 		//console.log('------------------------------')
+		//console.log(startIndex)
+		//console.log(tagPositions)
 		let tagEl;
 		const tagElArray = Array.from(tagElements);
 		let tagElIndex = 0;
@@ -524,11 +598,12 @@ export default class TagBuddy extends Plugin {
 
 	async processEmbeds (element, ids=['tag-summary-block', 'markdown-embed']) {
  		//const embeds = await element.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.tag-summary-block .tag)');
-		
+		//console.log('processEmbeds')
 		const embeds = await element.querySelectorAll('.tag-summary-block, .markdown-embed');
 		//let embededTagFiles = [];
-
+		//console.log(embeds)
 		embeds.forEach(async (embed) => {
+			//console.log(embed)
 			//if (embed.classList.contains('tag-summary-block') && ids.includes('tag-summary-block')) {
 			if (embed.classList.contains('tag-summary-block')) {
 				//console.log('process summary')
@@ -552,7 +627,6 @@ export default class TagBuddy extends Plugin {
 	}
 
 	async processNativeEmbed (embed) {
-
 		const linkElement = embed.getAttribute('src'); //this.findAncestor(clickedTag, 'span')
 		let filePath = embed.getAttribute('src');
 		const linkArray = filePath.split('#');
@@ -586,7 +660,7 @@ export default class TagBuddy extends Plugin {
 			const tempComponent = new TempComponent();
 
 			if (file) {
-				const fileContent = await app.vault.read(file);
+				let fileContent = await app.vault.read(file);
 				const embededTagFile = await this.getMarkdownTags(file, fileContent);
 				
 				// Create a temporty element block so we can match match text only content of this element with it's source note
@@ -597,15 +671,29 @@ export default class TagBuddy extends Plugin {
 				tempBlock.querySelector('.tagsummary-buttons')?.remove(); 
 				//const blockText = this.cleanString(tempBlock.innerText); // fuck this bug!
 				//const startIndex = this.cleanString(fileContent).indexOf(blockText)
-				const markdownBlock = htmlToMarkdown(tempBlock).trim();
-				const blockText = markdownBlock; //tempBlock.innerText.trim();
+				
+				/////
+				// old way before we stored the MD paragraph in the html element
+				//const markdownBlock = htmlToMarkdown(tempBlock).trim();
+				/////
+				// NEW WAY
+				const markdownBlock = block.getAttribute('md-source').trim();
+
+
+				//fileContent = fileContent.replace(/\s+/g, ' '); // whitespace normalization because the tag summary will have done this to the block
+				// nope, can't do that because then the indexes will be off.
+				
+
+				//const blockText = markdownBlock; //tempBlock.innerText.trim();
 				const startIndex = fileContent.indexOf(markdownBlock);
 				//const tempDom = createEl('div'); 
 				//await MarkdownRenderer.renderMarkdown(fileContent, tempDom, '', tempComponent);
 				//const tempContent = tempDom.innerText
+				//console.log('-----> ' + fileContent.indexOf('#tools2'))
 				/*console.log(fileContent)
 				console.log('----------------')
-				console.log(JSON.stringify(markdownBlock)) //console.log(blockText)
+				//console.log(JSON.stringify(markdownBlock)) //console.log(blockText)
+				console.log(markdownBlock)
 				console.log('----------------')
 				console.log(fileContent.indexOf(markdownBlock))*/
 				// htmlToMarkdown(summaryContainer.innerHTML)
@@ -691,16 +779,16 @@ export default class TagBuddy extends Plugin {
     			max = Math.min(50, Number(match[1]));
 			}
 		});
-
+		const codeBlock = '```tag-summary\n'+source.trim()+'\n```'
 		// Create summary only if the user specified some tags
 		if (tags.length > 0 || include.length > 0) {
-			await this.createSummary(el, tags, include, exclude, sections, max, ctx.sourcePath);
+			await this.createSummary(el, tags, include, exclude, sections, max, ctx.sourcePath, codeBlock);
 		} else {
-			this.createEmptySummary(el, tags?tags:[], include?include:[], exclude?exclude:[], sections?sections:[], max?max:[], ctx.sourcePath?ctx.sourcePath:'');
+			this.createEmptySummary(el, tags?tags:[], include?include:[], exclude?exclude:[], sections?sections:[], max?max:[], ctx.sourcePath?ctx.sourcePath:'', codeBlock);
 		} 
 	}; 
 
-	createEmptySummary(element: HTMLElement, tags: String[], include: string[], exclude: string[], sections: string[], max: number, filePath: string) {
+	createEmptySummary(element: HTMLElement, tags: String[], include: string[], exclude: string[], sections: string[], max: number, fileCtx: string, mdSource:string) {
 		const container = createEl('div');
 		//const buttonContainer = createEl('div');
 		//buttonContainer.setAttribute('class', 'tagsummary-buttons');
@@ -717,7 +805,9 @@ export default class TagBuddy extends Plugin {
 		container.setAttribute('codeblock-tags-exclude', (exclude?exclude.join(','):''));
 		container.setAttribute('codeblock-sections', (sections?sections.join(','):''));
 		container.setAttribute('codeblock-max', max);
-		if (this.settings.debugMode) container.appendChild(this.makeSummaryRefreshButton(container));;
+		container.setAttribute('codeblock-code', mdSource);
+		//if (this.settings.debugMode) 
+		container.appendChild(this.makeSummaryRefreshButton(container));;
 
 		element.replaceWith(container);
 	}
@@ -729,7 +819,8 @@ export default class TagBuddy extends Plugin {
 		exclude: string[], 
 		sections: string[],
 		max: number, 
-		filePath: string) {
+		fileCtx: string,
+		mdSource:string) {
 		
 		const activeFile = await this.app.workspace.getActiveFile();
 		const validTags = tags.concat(include); // All the tags selected by the user
@@ -779,6 +870,7 @@ export default class TagBuddy extends Plugin {
 			const filePath = item[0].path;
 			//console.log(activeFile)
 			// Do not add this item if it's in the same file we're creating the summary
+			// should filter this file out earlier
 			if (activeFile) {
 				if (activeFile.name == item[0].name) return;
 			}
@@ -901,7 +993,8 @@ export default class TagBuddy extends Plugin {
 						let count = 0;
 						sections.forEach((sec) => {
 							if (count++ > 3) return; // limit to 4 section buttons for now, for space.
-							buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tagSection, (filePath + '#' + blockLink)));
+							//buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tagSection, (filePath + '#' + blockLink)));
+							buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tags, (filePath + '#' + blockLink), paragraphEl, summaryContainer));
 						});
 					//}
 					if (this.settings.tagSummaryBlockButtons) {
@@ -917,7 +1010,8 @@ export default class TagBuddy extends Plugin {
 						let count = 0;
 						sections.forEach((sec) => {
 							if (count++ > 3) return; // limit to 4 section buttons for now, for space.
-							if (this.settings.tagSummaryBlockButtons) buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tagSection, filePath));
+							//if (this.settings.tagSummaryBlockButtons) buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tagSection, filePath));
+							if (this.settings.tagSummaryBlockButtons) buttonContainer.appendChild(this.makeCopyToButton (paragraph, sec, paragraphEl, tags, filePath, paragraphEl, summaryContainer));
 						});
 					//}
 					if (this.settings.tagSummaryBlockButtons) {
@@ -925,7 +1019,8 @@ export default class TagBuddy extends Plugin {
         				buttonContainer.appendChild(this.makeRemoveTagButton(paragraphEl, tagSection, filePath));
         			}
         		}
-
+        		//console.log('MD paragraph:\n' + paragraph)
+        		const mdParagraph = paragraph;
         		paragraph = '**' + link + '**\n' + paragraph;
             	//paragraph += "\n";
           		summary += paragraph + '\n'; 
@@ -944,6 +1039,7 @@ export default class TagBuddy extends Plugin {
           		titleEl.appendChild(paragraphEl.querySelector('strong').cloneNode(true))
           		if (this.settings.tagSummaryBlockButtons) paragraphEl.appendChild(buttonContainer);
           		paragraphEl.querySelector('strong').replaceWith(titleEl)
+          		paragraphEl.setAttribute('md-source', mdParagraph)
 
           		summaryContainer.appendChild(paragraphEl);
 			});
@@ -958,6 +1054,10 @@ export default class TagBuddy extends Plugin {
 					summaryContainer.appendChild(this.makeSummaryRefreshButton(summaryContainer));
 	        		summaryContainer.appendChild(this.makeCopySummaryButton(summary));
 	        		summaryContainer.appendChild(this.makeSummaryNoteButton(summary, tags));
+	        		summaryContainer.appendChild(this.makeBakeButton(summary, summaryContainer, activeFile.path));
+	        		// When refactoring, we should have a summary object that stores everything about it. 
+	        		// That will help with making undo
+	        		// What about for native embeds
 	        		summaryContainer.appendChild(createEl('br')); 
 				} 
 				summaryContainer.appendChild(createEl('hr')); 
@@ -967,11 +1067,13 @@ export default class TagBuddy extends Plugin {
 			summaryContainer.setAttribute('codeblock-tags-exclude', ((exclude.length>0)?exclude.join(','):''));
 			summaryContainer.setAttribute('codeblock-sections', ((sections.length>0)?sections.join(','):''));
 			summaryContainer.setAttribute('codeblock-max', max);
+			summaryContainer.setAttribute('codeblock-code', mdSource);
 
 			// await MarkdownRenderer.renderMarkdown(htmlToMarkdown(summaryContainer.innerHTML), summaryContainer, '', tempComponent);
 			element.replaceWith(summaryContainer);
 		} else {
-			this.createEmptySummary(element, tags);
+			//this.createEmptySummary(element, tags, include, exclude);
+			this.createEmptySummary(element, tags?tags:[], include?include:[], exclude?exclude:[], sections?sections:[], max?max:[], '', mdSource);
 		}
 	}
 
@@ -1000,7 +1102,7 @@ export default class TagBuddy extends Plugin {
 	}
 
 	makeSummaryNoteButton (summaryMd:string, tags:Array) {
-		const button = this.makeButton (' ❏ Note', (e) => { 
+		const button = this.makeButton ('Note', (e) => { 
 			e.stopPropagation();
 			const newNoteObj = this.fileObjFromTags(tags);
 			let fileContent = '## ' + newNoteObj.title + '\n\n' + summaryMd;
@@ -1092,40 +1194,91 @@ export default class TagBuddy extends Plugin {
 		return button;
 	}
 
-	makeCopyToButton (content, section, paragraph, tag, filePath) {
+	makeCopyToButton (content, section, paragraph, tags:Array, filePath, paragraphEl, summaryEl) {
 		//const quickAddPlugin = this.app.plugins.plugins.quickadd.api; // need to check if this plugin is installed. and settings.
 		const buttonLabel = (' ❏   ' + this.truncateStringAtWord(section, 16));
 		const button = this.makeButton (buttonLabel, async(e) => { 
 			e.stopPropagation();
+
+			let newContent = content;
 			const prefix = this.settings.taggedParagraphCopyPrefix;
-			const newContent = prefix + (this.ctrlCmdKey(e) ? this.removeTagFromString(content, tag) : content).trim();
-			const copySuccess = this.copyTextToSection(newContent, section, filePath);
+
+			if (this.ctrlCmdKey(e)) {
+				tags.forEach((tag, i) => {
+					newContent = this.removeTagFromString(newContent, tag).trim();
+				});
+			} 
+
+			//const newContent = prefix + (this.ctrlCmdKey(e) ? this.removeTagFromString(content, tag) : content).trim();
+			const copySuccess = this.copyTextToSection(prefix + newContent, section, filePath);
 			//quickAddPlugin.executeChoice('Copy To Section', {section:sectionElObj.md, content:(this.removeTagFromString(contentAsList, tag)+'\n')});
 
 			if (copySuccess) {
-				/*if (this.ctrlCmdKey(e)) {
+				if (this.ctrlCmdKey(e) && e.shiftKey) {
 					
+					const file = this.app.vault.getAbstractFileByPath(filePath);
+					let fileContent = await this.app.vault.read(file);
+					fileContent = fileContent.trim();
+					
+					//console.log(fileContent);
+					//console.log('------------------------')
+					const newFileContent = this.replaceTextInString (content.trim(), fileContent, newContent).trim();
+					//console.log(fileContent.indexOf(content.trim()));
+					//console.log(newFileContent)
+					//
+					if (fileContent != newFileContent) {
+						
+						this.app.vault.modify(file, newFileContent);
 
-					// This will be replaced with the new insert/remove/whatever logic. 
-					// We can't keep hacking these methods together.
-					// So for now we'll just remove all the tags from the copied paragraph and not modify the original file.
+						const notice = new Notice ('Paragraph moved to ' + section +'.\n🔗 Open source note.', 5000);
 
-
-					this.editTag (this.getTagElement(paragraph, tag));
-					const notice = new Notice ('Copied to ' + section + ' and ' + tag + ' removed.\n🔗 Open source note.', 5000);
-					this.registerDomEvent(notice.noticeEl, 'click', (e) => {
-						this.app.workspace.openLinkText(filePath, '');
-		 			});
-				} else {*/
+						this.removeElementWithAnimation(paragraphEl, () => {
+		    				setTimeout(async () => { this.updateSummary(summaryEl); paragraphEl.remove(); }, 500);						
+					    	setTimeout(async () => { this.processTags(); }, 800);
+						});
+						this.registerDomEvent(notice.noticeEl, 'click', (e) => {
+							this.app.workspace.openLinkText(filePath, '');
+		 				});
+					} else {
+						new Notice ('Tag Buddy: Paragraph copied to ' + section + '.\nBut can\'t update source file.');
+					}
+					
+				} else {
 					new Notice ('Tag Buddy: Paragraph copied to ' + section + '.');
-				//}
+				}
 			} else {
 				// errors currently from from the copy to. Will refactor.
 			}
 
 		});
 
-		button.title = 'Copy paragraph to ' + section + '.\nCTRL/CMD+CLICK to remove tag(s) then copy.';
+		button.title = 'Copy paragraph to ' + section + '.\n'+ this.ctrlCmdStr() + '+CLICK to remove tag(s) then copy.\n';
+		button.title += 'SHIFT+' + this.ctrlCmdStr() + '+CLICK to remove tags from source note paragraph.'
+		return button;
+	}
+
+	makeBakeButton (summaryMd, summaryEl, filePath) {	
+		const button = this.makeButton ('Bake', async(e) => { 
+			e.stopPropagation();
+			const mdSource = summaryEl.getAttribute('codeblock-code');
+			if (mdSource) {
+				//console.log(mdSource)
+				// active file
+				const file = this.app.vault.getAbstractFileByPath(filePath);
+				const fileContent = await this.app.vault.read(file);
+				// replace this mdSource in active file
+				const newFileContent = this.replaceTextInString (mdSource, fileContent, summaryMd)
+				//console.log(newFileContent)
+				// save the active note
+				this.app.vault.modify(file, newFileContent);
+
+				const notice = new Notice ('Tag summary flattened to active note.');
+				//notice.noticeEl.style.top = '500px';
+			} else {
+				new Notice ('⚠️ Tag Buddy: Can\t find code block source. This is a BUG.');
+			}
+		});
+		button.title = 'Flatten summary (replaces code block).';
 		return button;
 	}
 
@@ -1138,6 +1291,12 @@ export default class TagBuddy extends Plugin {
 		});
 		button.title = 'Copy paragraph';
 		return button;
+	}
+
+	ctrlCmdStr () {
+		const isMac = (navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+		if (isMac) return 'CMD';
+		else return 'CTRL';
 	}
 
 	/*tagsInString (string:string, tag:string=''):Array {
@@ -1303,7 +1462,7 @@ export default class TagBuddy extends Plugin {
 
 	removeTagFromString(inputText, hashtagToRemove, all:boolean=true):string {
 	    // Use a regular expression to globally replace the hashtag with an empty string
-	    console.log('Tag to remove: ' + hashtagToRemove)
+	    //console.log('Tag to remove: ' + hashtagToRemove)
 	    //const regex = new RegExp("\\s?" + hashtagToRemove + "\\b", all?"gi":"i");
 	    const regex = new RegExp("\\s?" + hashtagToRemove.replace(/#/g, '\\#') + "(?!\\w|\\/)", all?"gi":"i");
 	    return inputText.replace(regex, '').trim();
@@ -1511,18 +1670,19 @@ export default class TagBuddy extends Plugin {
 
         .tagsummary-button {
 
-            color: var(--text-primary);
-            border: 1px solid var(--text-quote);  // Assuming this is the block quote color
-            border-radius: var(--border-radius);
-            padding: 2.5px 5px;  // Reduced padding
-            font-size: 50%;  // Reduced font size
-            transition: background-color 0.3s;
-            margin: 0px 3px 0px 0px;
+            color: var(--text-primary) !important;
+            border: .5px solid var(--text-quote) !important;
+            border-radius: 6px !important;
+            padding: 2.5px 5px !important;
+            font-size: 65% !important;
+            transition: background-color 0.3s !important;
+            margin: 0px 3px 0px 0px !important;
             min-width: 40px !important;
 
 	       color: var(--link-color) !important;
 	       border: 1px solid var(--link-color) !important; 
 		   background-color: var(--background-primary) !important;
+
         }
 
         .tagsummary-button:hover {
@@ -1539,29 +1699,14 @@ export default class TagBuddy extends Plugin {
             text-align: right !important;
         }
 
-		/*@keyframes slideUp {
-		  from {
-		    height: initial;
-		    opacity: 1;
-		  }
-		  to {
-		    height: 0;
-		    opacity: 0;
-		  }
-		}
-
-		blockquote.tag-summary-paragraph.removing {
-		  animation: slideUp 0.9s forwards;
-		} */
-
 		blockquote.tag-summary-paragraph {
-		  /*transition: height 0.2s, opacity 0.2s;*/
-		  transition: height 0.3s ease, margin 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+		  transition: height 0.3s, opacity 0.3s;
+		  /*transition: height 0.3s ease, margin 0.3s ease, padding 0.3s ease, opacity 0.3s ease;*/
 		  overflow: hidden;
 		}
 
 		.removing {
-		  height: 0 !important;  /* Important to ensure override */
+		  height: 0 !important; 
 		  opacity: 0;
 		  margin: 0;
 		  padding: 0;
@@ -1599,41 +1744,50 @@ export default class TagBuddy extends Plugin {
 		    overflow-y: auto !important;
 		    /*max-height: 150px !important;*/
 		    width: 150px !important;
-		    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2) !important;
-	        border-radius: 8px !important;  // Rounded corners
-	        font-family: Arial, sans-serif;  // Common OS font
+		    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.5) !important;
+	        border-radius: 8px !important;  
+	        font-family: Arial, sans-serif;  
 	        font-size: 12px !important;
 	        overflow: hidden !important;  // Hide overflow
 			padding-right: 10px !important;  // Adjust padding to make space for scrollbar
 			box-sizing: border-box !important; 
+			
+    		border-radius: 10px !important;
+    		
 		}
 
 		.tag-list {
 			overflow-y: auto !important;
 		    overflow-x: hidden !important; 
-		    padding-right: 8px !important;  // Adjust padding to give space for scrollbar
-		    margin-right: -8px !important;  // Adjust margin to move scrollbar into the padding
+		    /*padding-right: 8px !important;  // Adjust padding to give space for scrollbar
+		    /*margin-right: -8px !important;  // Adjust margin to move scrollbar into the padding*/
 		    box-sizing: border-box !important; 
 		}
 
 		.tag-item {
-			padding: 5px 10px 5px 10px !important;  // Adjusted padding
+			padding: 5px 10px 5px 10px !important;  
             cursor: pointer !important;
-            border-bottom: 1px solid var(--divider-color) !important;  // Separator line
+           /* border-bottom: 1px solid var(--divider-color) !important;  // Separator line*/
             font-size: 14px !important;
-            width: 150px !important;
+            /*width: 130px !important;*/
+            width: 100% !important;
             /*height: 20px !important;*/
-            text-overflow: ellipsis !important;  // Indicate content that overflows with an ellipsis
-			white-space: nowrap !important;  // Ensure content does not wrap
+            text-overflow: ellipsis !important; 
+			white-space: nowrap !important;  
 			box-sizing: border-box !important; 
+
+			
+			transition: background-color 0.2s ease !important; 
+			border-radius: 5px !important; 
 		}
 
 		.tag-item:hover {
-	        background-color: var(--interactive-accent) !important; // Added ,1 for opacity
+	        background-color: var(--background-modifier-hover) !important; // Added ,1 for opacity
 	        color: white !important;
 	    }
 		.tag-item.active {
-	        background-color: var(--interactive-accent) !important;
+	        background-color: var(--background-modifier-hover) !important;
+	        /*background-color: var(--interactive-accent) !important;*/
 	        color: white !important;
 	    }
 
@@ -1648,7 +1802,18 @@ export default class TagBuddy extends Plugin {
 	        border: none !important;
 	        font-family: Arial, sans-serif;
 	        font-size: 14px !important;
-	        box-sizing: border-box !important;  // Ensure padding doesn't expand width
+	    }
+
+        .tag-search:focus {
+        	outline: none !important;
+        	border: none !important;
+        	border-bottom: 0px !important;
+        	box-shadow: none !important;
+        	outline-style: none !important;
+    		outline-width: 0px !important;
+
+
+        } 
 
     `;
 
@@ -1676,8 +1841,9 @@ export default class TagBuddy extends Plugin {
 	}
 
 	showTagSelector(x: number, y: number) {
+		//console.log('show tag inspector')
 		// Adjustments for the scrollbar and dynamic height
-		const maxTagContainerHeight = 180; // This is a chosen max height, adjust as desired
+		const maxTagContainerHeight = 170; // This is a chosen max height, adjust as desired
 		const tagItemHeight = 30; // Approximate height of one tag item, adjust based on your styles
 		// 30 works perfect based on other padding and margin. 20 breaks it when there's one left.
 
@@ -1685,7 +1851,7 @@ export default class TagBuddy extends Plugin {
     	const existingMenu = document.getElementById('addtag-menu');
     	if (existingMenu) existingMenu.remove();
 
-	    const menuEl = document.createElement('div');
+	    const menuEl = createEl('div');
 	    menuEl.setAttribute('id', 'addtag-menu');
 	    menuEl.classList.add('addtag-menu');
 	    menuEl.style.left = `${x}px`;
@@ -1695,7 +1861,8 @@ export default class TagBuddy extends Plugin {
 	    // Create and style the search input field
 	    const searchEl = createEl('input');
 	    searchEl.setAttribute('type', 'text');
-	    //searchEl.setAttribute('id', 'tag-search');
+	    searchEl.setAttribute('id', 'tag-search');
+	    searchEl.classList.add('tag-search');
 	    searchEl.setAttribute('placeholder', 'Search tags...');
 	    
 	    menuEl.appendChild(searchEl);
@@ -1753,7 +1920,7 @@ export default class TagBuddy extends Plugin {
 		//searchEl.addEventListener('keydown', (e: KeyboardEvent) => {
 			const searchQuery = (e.target as HTMLInputElement).value.trim();
 			const pattern = /^[^\s\p{P}]+$/u; 
-			const isValid = pattern.test("example"); 
+			//const isValid = pattern.test("example"); 
 
 
 		    if (e.key === 'Enter') {
@@ -1880,8 +2047,6 @@ export default class TagBuddy extends Plugin {
 		let summaryEl:HTMLElement;
 		let embedEl:HTMLElement;
 
-		// is this in a summary or embed?
-		// !!!!!!!!! Check for nested embeds/summaries. issues?
 		if (clickedTextObj) {
 
 			summaryEl = clickedTextEl.closest('.tag-summary-paragraph');
@@ -1892,27 +2057,27 @@ export default class TagBuddy extends Plugin {
 				file = await this.getSummaryFile(summaryEl);
 				fileContent = await this.app.vault.read(file);
 				contentSourceType = 'plugin-summary';
-				console.log('In a summary')
+				//console.log('In a summary')
 
 				//console.log(fileContent)
 				
 			} else if (embedEl) {
-				console.log('In an embed');
+				//console.log('In an embed');
 				file = await this.getEmbedFile(embedEl);
 				fileContent = await this.app.vault.read(file);
 				contentSourceType = 'native-embed';
 				//console.log(fileContent)
 
-				// !!!!!! we could be in some other kind of embed. Need to be sure about this.
+				// !!!!!! we could be in some other kind of embed/view/plugin. Need to be sure about this.
 			} else { 
-				console.log('In a active file')
+				//console.log('In a active file')
 				file = await this.app.workspace.getActiveFile();
 				fileContent = await this.app.vault.read(file);
 				contentSourceType = 'active';
 			} 
 
 		} else {
-			new Notice ('⚠️ Tag Buddy: Can\'t find text position.\nTry a another text block.');
+			new Notice ('⚠️ Can\'t find text position or area too busy.\nTry a another text area.');
 		    return;
 		}
 
@@ -1920,7 +2085,7 @@ export default class TagBuddy extends Plugin {
 		if (clickedText) {
 			//console.log (clickedText);
 		} else {
-			new Notice ('⚠️ Tag Buddy: Can\'t add tag here.\nTry a bigger text block.')
+			new Notice ('⚠️ Can\'t add tag.\nTry a different text area.')
 			return;
 		}
 
@@ -1930,10 +2095,10 @@ export default class TagBuddy extends Plugin {
 
 		if (matches && matches.length > 1) {
 		    //console.log(`Found ${matches.length} occurrences of "${pattern}" in "${subject}".`);
-		    new Notice ('⚠️ Tag Buddy: Duplicate text blocks found.\nTry a another text block.');
+		    new Notice ('⚠️ Can\'t add tag: Clicked text repeated in note. Try a another text block.');
 		    return;
 		} else if ((matches && matches.length === 0) || !matches) {
-			new Notice ('⚠️ Tag Buddy: Can\'t find text position.\nTry a another text block.');
+			new Notice ('⚠️ Can\'t find text position or area too busy.\nTry a another text area.');
 		    return;
 		} 
 
@@ -1961,19 +2126,19 @@ export default class TagBuddy extends Plugin {
 		setTimeout(async () => { this.processTags(); }, 200);
 	}
 
-	replaceTextInString (replaceText, sourceText, newText, all:boolean=false) {
+	replaceTextInString (replaceText, sourceText, newText, all:boolean=false):string {
 
 		const regex = new RegExp(this.escapeRegExp(replaceText), all ? "gi" : "i");
     	return sourceText.replace(regex, newText).trim();
 	}
 
-	insertTextInString (newText, sourceText, charPos) { // pass 0 for the start or sourceText.length-1 for the end
+	insertTextInString (newText, sourceText, charPos):string { // pass 0 for the start or sourceText.length-1 for the end
 
 		// LATER: Proper white space or line break checking of the area we're adding
 		return (sourceText.substring(0, charPos).trim() + ' ' + newText + ' ' + sourceText.substring(charPos)).trim();
 	}
 
-	removeTextFromString (removeText, sourceText, all:boolean=false) {
+	removeTextFromString (removeText, sourceText, all:boolean=false):string {
 
 		const regex = new RegExp(this.escapeRegExp(removeText), all ? "gi" : "i");
     	return sourceText.replace(regex, '').trim();
@@ -1999,8 +2164,8 @@ export default class TagBuddy extends Plugin {
         return {text: word, index: index};
 	}
 
-	getClickedTextObjFromDoc(x, y):string {
-		const minNodeLength:number = 20;
+	getClickedTextObjFromDoc(x, y, minNodeLength:string=10):string {
+		//const minNodeLength:number = 10;
 
 	    // Get the word under the click position
 	    let range, nodeText, offset;
@@ -2018,14 +2183,14 @@ export default class TagBuddy extends Plugin {
 	        if (range.startContainer.nodeType === Node.TEXT_NODE) {
         		nodeText = range.startContainer.nodeValue.trim();
     		} else {
-    			console.log ('no text')
+    			//console.log ('no text')
     			return null;
     		}
 	        offset = range.startOffset;
 	    }
 
 	    if (nodeText.length < minNodeLength) {
-	    	console.log ('text too short')
+	    	//console.log ('text too short')
 	    	return null;
 		}
 
