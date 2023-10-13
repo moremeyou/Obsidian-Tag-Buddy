@@ -232,11 +232,15 @@ export default class TagBuddy extends Plugin {
 		const index = tagEl.getAttribute('md-index');
 		const filePath = tagEl.getAttribute('file-source');
 
+
 		//if (this.settings.debugMode) console.log('Tag Buddy edit tag: ' + event.target.innerText + '\nIn file: ' + filePath);
 		if (this.settings.debugMode) console.log('Tag Buddy edit tag: ' + tagEl.innerText + '\nIn file: ' + filePath);
+		//new Notice ('Tag Buddy edit tag: ' + tagEl.innerText + '\nIn file: ' + filePath);
+		//new Notice (tagEl.innerText + ': ' + index + '\n' + filePath)
+		//new Notice (tagEl.outerHTML)
 
 		if (filePath) {
-
+ 
 			const file: TFile = await this.validateFilePath(filePath); //app.vault.getAbstractFileByPath(filePath);
 			let fileContent: String;
 			let fileContentBackup: String;
@@ -268,8 +272,9 @@ export default class TagBuddy extends Plugin {
 			//let afterTag = fileContent.substring((Number(index)+Number(tag.length)+1));
 			let afterTag = fileContent.substring((Number(index)+Number(tag.length)));
 
-			let afterTagChr;
-			let beforeTagChr
+			let afterTagChr = '';
+			//let beforeTagChr
+
 //console.log(JSON.stringify(beforeTag))
 			
 //console.log ('before tag ends with space? ' + before.startsWith(' '))
@@ -279,7 +284,7 @@ export default class TagBuddy extends Plugin {
 			} else if (afterTag.startsWith('\n')) {
 				afterTagChr = '\n';
 			}
-
+			//new Notice (afterTagChr)
 			// can't remember why I have this...
 			// need to refactor all this line break space stuff
 			if (fileContent[index] === '\n') {
@@ -513,6 +518,7 @@ export default class TagBuddy extends Plugin {
 	}*/
 
 	async processTags () {
+		//new Notice ('Tag Buddy: Processing tags.')
 
 		if (this.settings.debugMode) console.log('Tag Buddy: Processing tags.');
 		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -529,7 +535,11 @@ export default class TagBuddy extends Plugin {
 			//setTimeout(async () => { // All these timeouts were for testing. Issues seems to be resolved now.
 			const activeFile = await this.app.workspace.getActiveFile();
 			const fileContent = await app.vault.read(activeFile);
-			const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.tag-summary-block .tag)');
+			//const activeFileTagElements = await activeNoteContainer.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.tag-summary-block .tag)');
+			//const activeFileTagElements = await activeNoteReadingView.querySelectorAll('.mod-active .tag:not(.markdown-embed .tag):not(.tag-summary-block .tag)');
+			const activeFileTagElements = await activeNoteReadingView.querySelectorAll(
+				'.mod-active .tag:not(.frontmatter-section-data .tag):not(.markdown-embed > .tag):not(.tag-summary-block > .tag)');
+			//const activeFileTagElements = await activeNoteReadingView.querySelectorAll('.mod-active .tag:not(.metadata-property):not(.markdown-embed > .tag):not(.tag-summary-block > .tag)');
 
 			//setTimeout(async () => { console.log(activeFileTagElements)}, 1000)
 			const activeFileTags = await this.getMarkdownTags(activeFile, fileContent);
@@ -566,18 +576,20 @@ export default class TagBuddy extends Plugin {
 		    tagPositions.push({tag:tag, index:match.index, source:file.name}); 
 		    //console.log(tagPositions[tagPositions.length-1])
 		}
-		//console.log('markdown tag count: ' + tagPositions.length)
+		//new Notice ('markdown tag count: ' + tagPositions[tagPositions.length-1].source)
 		//console.log(tagPositions)
 		return tagPositions;
 	}
 
-	assignMarkdownTags (tagPositions:Array, tagElements, startIndex, type) {
+	async assignMarkdownTags (tagPositions:Array, tagElements, startIndex, type) {
 		//console.log('------------------------------')
 		//console.log(startIndex)
 		//console.log(tagPositions)
 		let tagEl;
-		const tagElArray = Array.from(tagElements);
+		const tagElArray = Array.from(tagElements); 
+		//const tagElArray = tagElements; // BUG FIX?
 		let tagElIndex = 0;
+		let lastTag;
 		//tagPositions.forEach(item => console.log(item.index, item.tag));
 		tagPositions.forEach((tagPos, i) => {
 			if (tagPositions[i].index >= startIndex) {
@@ -587,11 +599,18 @@ export default class TagBuddy extends Plugin {
         			tagEl.setAttribute('md-index', tagPositions[i].index);
         			tagEl.setAttribute('file-source', tagPositions[i].source);
         			tagEl.setAttribute('type', type);
+        			lastTag = tagEl;
         			//tagElIndex++;
         		} 
         		tagElIndex++;
     		} 
 		}); 
+		//const el = tagElements[0] as HTMLElement
+		//new Notice ((el instanceof HTMLElement))
+		//setTimeout(async () => { 
+			//const clone = el.cloneNode(true); 
+		//	new Notice (el.parentNode.outerHTML)
+		//}, 1000);
 		return tagElArray; //Array.from(tagElements); 
 	}
 
