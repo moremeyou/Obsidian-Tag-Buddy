@@ -1,4 +1,3 @@
-
 import TagBuddy from "main";
 import { App, PluginSettingTab, Setting } from "obsidian";
 
@@ -9,6 +8,7 @@ export class TBSettingsTab extends PluginSettingTab {
         super(app, plugin);
         this.plugin = plugin;
     }
+    
     display(): void {
         let { containerEl } = this;
         containerEl.empty();

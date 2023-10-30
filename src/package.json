@@ -23,6 +23,7 @@
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
+		"fuse.js": "^6.6.2",
 		"string-similarity": "^4.0.4"
 	}
 }
