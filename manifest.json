@@ -1,7 +1,7 @@
 {
 	"id": "tag-buddy",
 	"name": "Tag Buddy",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"minAppVersion": "1.0.0",
 	"description": "Add, edit and remove tags and copy, move or edit tagged blocks all without leaving reading-mode.",
 	"author": "David Fasullo",

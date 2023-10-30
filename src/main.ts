@@ -6,6 +6,7 @@ import { TagProcessor } from './TagProcessor';
 import { ReadingModeTagEditor } from './ReadingModeTagEditor';
 import * as Utils from './utils';
 import * as Mobile from './Mobile';
+
 interface TBSettings {
 	removeOnClick: boolean; // ctrl
 	removeChildTagsFirst; // 
@@ -40,15 +41,9 @@ export default class TagBuddy extends Plugin {
 	tagSummary: TagSummary;
 	tagProcessor: TagProcessor;
 	tagEditor: ReadingModeTagEditor;
-	//readingViewEl: MarkdownPreviewView;
-	//containerEl: HTMLElement;
 	private activeFile: TFile;
-	//observer: MutationObserver;
 
 	onunload() { // I think all the cleanup is done automatically the way I register everything. 
-		//this.tagProcessor.observer.disconnect();
-		//this.tagProcessor.mainObserver.disconnect();
-		//if (this.tagProcessor.mutationEvent) this.tagProcessor.mutationEvent.unregisterCallback();
 	}
 
 	async onload() {
@@ -59,8 +54,6 @@ export default class TagBuddy extends Plugin {
 
 		this.addSettingTab(new TBSettingsTab(this.app, this));
 		await this.loadSettings();	
-
-		
 
 		this.app.workspace.onLayoutReady(async () => {
 
@@ -81,7 +74,7 @@ export default class TagBuddy extends Plugin {
 			);
 		    
 		    this.registerEvent( this.app.workspace.on('active-leaf-change', async () => {
-		    	console.log('active leaf change')
+		    	//console.log('active leaf change')
 		    	//await this.setView();
 				//this.tagProcessor.reset();
 		    }));
@@ -121,23 +114,18 @@ export default class TagBuddy extends Plugin {
 				console.log('renderer tags:', tags)
 		    }
 
+		    const debounceShowTags = Utils.debounce(showTags, 500)
+		    //const debouncedProcessActiveFileTagEls = Utils.debounce(this.tagProcessor.processActiveFileTags.bind(this.tagProcessor), 500)
+
 			this.registerEvent(this.app.on(
 				'layout-change', 
 				async (event: EditorEvent) => {  
 					const mode = this.app.workspace.getActiveViewOfType(MarkdownView).getMode();
-					console.log('layout-change:', mode);
+					if (this.settings.debugMode) console.log('Tag Buddy: layout-change:', mode);
 					if (mode == 'preview') {
-						this.tagProcessor.resume();
-						// we need this timeout in case there are no changes and mute handler doesn't automatically pause
-						setTimeout (this.tagProcessor.pause.bind(this.tagProcessor), 500);
-						//debounce(this.tagProcessor.reProcessActiveFileTags, 1000);
-						//this.tagProcessor.sourceMutationEvent.pause();
-						showTags(this);
+						this.tagProcessor.reset();
+						this.tagProcessor.debouncedProcessActiveFileTagEls();
 					} else if (mode == 'source') {
-						this.tagProcessor.sourceMutationEvent.resume();
-						//this.tagProcessor.sourceMutationEvent.pause();
-						//this.tagProcessor.resume() //, 100);
-					//this.tagProcessor.resume()
 					}
 				}
 			));
@@ -148,20 +136,16 @@ export default class TagBuddy extends Plugin {
 				//debounce(
 				async (event: EditorEvent) => { 
 					const activeFile = await this.app.workspace.getActiveFile();
-					console.log('last active file:', this.activeFile?.name);
-					console.log('file open:', activeFile.name)
+					if (this.settings.debugMode) console.log('Tag Buddy: last active file:', this.activeFile?.name);
+					if (this.settings.debugMode) console.log('Tag Buddy: file open:', activeFile.name)
 					//await this.setView();
-					if (activeFile.path != this.activeFile?.path && this.tagProcessor.activeFileTagsSetup) {
+					if (activeFile.path != this.activeFile?.path) {
 						this.tagProcessor.reset();
 						this.activeFile = this.app.workspace.getActiveFile();
 						if (this.tagProcessor) {
-							this.tagProcessor.processActiveFileTags(
-								this.tagProcessor.tagFileManager.getTags(
-									activeFile.path
-								)
-							);
+							this.tagProcessor.processActiveFileTags();
 						}
-						console.log('file open:', activeFile.name)
+						//console.log('file open:', activeFile.name)
 					}
 
 				}
@@ -170,13 +154,13 @@ export default class TagBuddy extends Plugin {
 
 			const debounceResumeSourceMutationEvent = Utils.debounce(()=>{
 				//console.log('debounce source event resume')
-				const mode = this.app.workspace.getActiveViewOfType(MarkdownView).getMode();
-				if (mode == 'source') this.tagProcessor.sourceMutationEvent.resume();
+				//const mode = this.app.workspace.getActiveViewOfType(MarkdownView).getMode();
+				//if (mode == 'source') this.tagProcessor.sourceMutationEvent.resume();
 			}, 500)
 
 			this.registerDomEvent(document.body, 'scroll', (event) => {
-				this.tagProcessor.sourceMutationEvent.pause();
-				debounceResumeSourceMutationEvent();
+				//this.tagProcessor.sourceMutationEvent.pause();
+				//debounceResumeSourceMutationEvent();
 			}, true);
 
 			if (!this.app.isMobile) {

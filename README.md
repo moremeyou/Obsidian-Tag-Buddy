@@ -1,20 +1,20 @@
 # Obsidian Tag Buddy 🔖
-Add, edit and remove tags. Copy, move or edit tagged blocks. All in **reading-mode**.
+Add, edit and  remove tags. Copy, move or edit tagged blocks. All in **reading-mode**.
 
-### 🫥 Use 1: Remove tags in reading-mode
+### ✏️  Use 1: Add tags to note in reading-mode
+![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
+
+Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. I’m still testing best key/click combos. Reach out if you have a preference.
+
+### 🫥 Use 2: Remove tags in reading-mode
 ![Remove Tag Demo](https://user-images.githubusercontent.com/8971804/273923015-9eb2de41-3aeb-4243-9655-efdf4fd70ace.gif)
 
 **CLICK** to remove tags in the active note, embedded note/block or generated tag summary blocks. **DOUBLE-TAP** on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search. Customize this in plugin settings. 
 
-### 🪺  Use 2: Edit nested tags in reading mode
+### 🪺  Use 3: Edit nested tags in reading mode
 ![Nested Tag Demo](https://user-images.githubusercontent.com/8971804/273923013-0b449539-cd7d-4c50-bb30-a2eb7c66dc93.gif)
 
 If there are nested tags, Tag Buddy will progressively remove these first. 
-
-### ✏️  Use 3: Add tags to note in reading-mode
-![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
-
-Add tag to texts block/areas with **CTRL/CMD+RIGHT-CLICK**. Recently added tags are saved, and you can lock this list in settings, effectively making a favorites list. I’m still testing best key/click combos. Reach out if you have a preference.
 
 ### 🧼  Use 4: Convert tags to text in reading-mode
 ![Convert Tag Demo](https://user-images.githubusercontent.com/8971804/273923003-d22b0c3e-39dc-4444-8716-fa9bcb327319.gif)
@@ -34,11 +34,10 @@ max: 3 // Limits the results in the summary (optional)
 ```
 ````
 Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the original code behind the summaries.
-
-### #️⃣  Use 6 (BETA): Copy/remove tagged blocks
+### 🔤  Use 6 (BETA): Copy/remove tagged blocks
 - Copy button: copy's paragraph to clipboard.
 - Remove-tag button: removes the queried tag from the paragraph (which also removes it from the summary).
-	- Made a mistake? Use notices to easily jump to the note the tagged note.
+	- Made a mistake? Use notices to easily jump to the tagged note.
 ![Notice Demo](https://user-images.githubusercontent.com/8971804/274208965-fb8423e7-4f64-4bf6-84e8-afe1d44d81b4.gif)
 
 Enable these buttons in plugin settings. 
@@ -70,7 +69,7 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 
 ## ⚙️ Settings
-- Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native tag search on click.
+- Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native  tag search on click.
 - Convert to tag text with **ALT/OPT+CLICK**. Toggle off to use **ALT/OPT+CLICK** to perform native tag search.
 - Remove child tags first. Toggle off to use **SHIFT+CLICK** to remove child tags first. 
 - Override native mobile tag search. Toggle on to restore mobile native tag search on tap. Tag removal will then use LONG-PRESS.
@@ -82,30 +81,32 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - Lock recently added tags
 
 ## 🗒️ Notes
-- **BETA WARNING!** Plugin is stable, but not fully tested.
+- **BETA WARNING!** Plugin is stable, but being tested.
 > **ALWAYS BACKUP YOUR VAULT BEFORE USING NEW PLUGINS THAT EDIT YOUR NOTES.**
-- Most Tag Buddy interactions are for **reading mode only**, though some features work naturally in both. Please let me know if you have a use case for multi-mode compatibility.
-- Switch to editing mode to undo any edits in the active note. 
+- Tag Buddy interactions are for **reading mode only**. Please let me know if you have a use case for multi-mode compatibility.
+- Switch to editing to undo any edits in the active note. 
 	- **Edits are permanent in embeds (unless that note is open in a tab). I'm considering undo functionality with notices.**
 - **Known limitations:**    
 	 - Editing tags within some other plugins or unknown view types is not supported, for now. Please reach out if you have a use case.
-	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin. But I should implement warnings.
-	 - Tag editing doesn’t work on first click after unfolding content. WORKAROUND: Click again - the first click was needed to reprocess the tags. Please connect if you know of any fold-state events I can listen for so I can automatically re-process the tags.
-	 - Two (or more) tag summaries in the same note referencing the same tags will lose sync with each other. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. I *can* also automatically update all the summaries in the active note, but this causes screen flicker as the codeblocks are re-rendered. I don't think the trade-off is worth it. Maybe this is a setting. Please reach out if you have a use case. 
+	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin. But I will implement warnings.
+	 - Two (or more) tag summaries or embeds in the same note referencing the same tags will lose sync with each other. Warnings have been implemented. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. 
 	
 ## ✅ To Do:
-- [ ] Cancel text selection on mobile after editing or removing a tag
-- [ ] Sometimes extra space when removing tag
 - [ ] Make add-tag popup look more like native Obsidian tag autocomplete
-- [ ] Specify copy to section prefix within the tag-summary code block Ex: (Section 1(- ))
+- [ ] Specify copy to section prefix within the tag-summary code block Ex: (Section 1(- ))  
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embedded or generated content? 
-- [ ] Add extra-long press action on mobile and/or swap convert tag function to: add tag? add tag summary?
-- [ ] Automatic tag re-processing on fold state change. Need event…
+- [ ] Swap default convert tag function on mobile with add tag. 
 - [ ] Command to add tag last at cursor position
 - [ ] Command to create tag summary
-- [ ] ON-GOING: Tweak Turndown rules to ensure html and markdown match in all cases. Please share issues if found.
-- [ ] ON-GOING: Total re-work for more robust/flexible/compatible tag processing
+- [ ] ON-GOING: Refactoring and cleanup
+- [ ] Remove double space when removing tag between words
+- [x] ~~“Swiss cheese bug” (remove extra space if removing between words)~~
+- [x] ~~Tag processing rebuilt around markdown rendering and observers~~
+- [x] ~~Add tag location defaults to end of line if near last word~~
+- [x] ~~Long-note tag rendering/processing issue~~
+- [x] ~~Mobile editing “Can’t find tag location” issue.~~
+- [x] ~~Cancel text selection on mobile after editing or removing a tag~~
 - [x] ~~Error handling when editing very small and duplicated embeds~~
 - [x] ~~Bake summary into note~~
 - [x] ~~Settings for recently used tags~~ (edit, lock)
@@ -138,4 +139,4 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - - -
 
 ## Disclaimer
-This plugin modifies your notes. And while there are multiple safety precautions, this plugin comes with no guarantee of any kind. Neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk.
+This plugin modifies your notes. And while there are multiple safety precautions, this plugin comes with no guarantee of any kind. Neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk. 

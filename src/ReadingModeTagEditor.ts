@@ -106,8 +106,8 @@ export class ReadingModeTagEditor {
 		//const newContent = Utils.insertTextInString(' ' + tag, fileContent, endIndex)//startIndex+clickedWordIndex)
 		//const newContent = Utils.insertTextInString(tag, fileContent, startIndex+clickedWordIndex)
 		
-		if (contentSourceType != 'plugin-summary' && contentSourceType != 'native-embed') 
-			this.plugin.tagProcessor.resume();
+		//if (contentSourceType != 'plugin-summary' && contentSourceType != 'native-embed') 
+			//this.plugin.tagProcessor.resume();
 
 		await this.app.vault.modify(file, newContent);
 
@@ -379,7 +379,7 @@ export class ReadingModeTagEditor {
 					//await this.app.vault.modify(file, newContent);
 				} else {
 
-					this.plugin.tagProcessor.resume();
+					//this.plugin.tagProcessor.resume();
 					
 					setTimeout(async () => { 
 						//this.plugin.tagProcessor.processNativeEmbed(tagEl.closest('.markdown-embed'));
@@ -411,6 +411,8 @@ export class ReadingModeTagEditor {
 
 				}
 			} 
+
+			this.plugin.tagProcessor.debouncedProcessActiveFileTagEls();
 
 			setTimeout(async () => { 
 				//this.plugin.tagProcessor.pause();
