@@ -4,7 +4,7 @@ Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in r
 ### ✏️  Use 1: Add tags to note in reading-mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
-Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. I’m still testing best key/click combos. Reach out if you have a preference.
+Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
 
 ### 🫥 Use 2: Remove tags in reading-mode
 ![Remove Tag Demo](https://user-images.githubusercontent.com/8971804/273923015-9eb2de41-3aeb-4243-9655-efdf4fd70ace.gif)

@@ -62,8 +62,6 @@ export default class TagBuddy extends Plugin {
 			this.tagProcessor = new TagProcessor (this.app, this);
 			this.tagEditor = new ReadingModeTagEditor (this.app, this);	
 
-			//this.setView();
-
 			this.registerMarkdownPostProcessor(
 			this.tagProcessor.renderPostProcessor.bind(this.tagProcessor)
 			)
@@ -138,7 +136,6 @@ export default class TagBuddy extends Plugin {
 					const activeFile = await this.app.workspace.getActiveFile();
 					if (this.settings.debugMode) console.log('Tag Buddy: last active file:', this.activeFile?.name);
 					if (this.settings.debugMode) console.log('Tag Buddy: file open:', activeFile.name)
-					//await this.setView();
 					if (activeFile.path != this.activeFile?.path) {
 						this.tagProcessor.reset();
 						this.activeFile = this.app.workspace.getActiveFile();
@@ -205,7 +202,6 @@ export default class TagBuddy extends Plugin {
 	):void {
 		// Support for different views? 
 		// If tag has no context properties, then try to figure out where it is?
-		// Or maybe there's a way to have obsidian add the properties globally.
 		//new Notice ('Tag Buddy event type: ' + event.type);
 
 		const target = event.target as HTMLElement;
