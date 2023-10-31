@@ -1,5 +1,5 @@
 # Obsidian Tag Buddy 🔖
-Add, edit and  remove tags. Copy, move or edit tagged blocks. All in **reading-mode**.
+Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
 
 ### ✏️  Use 1: Add tags to note in reading-mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
@@ -61,7 +61,7 @@ Enable these buttons in plugin settings. Thanks to [QuickAdd Plugin](https://git
 **Summary buttons**: Using the include, exclude, and max parameters of the tag summary code block you can easily customise and build new notes from tagged content. Copy to clipboard, create new note or bake your summaries into the active note as markdown (replaces the code block). Enable these buttons in plugin settings.
 
 ## 🧐 Why is this useful to me? 
-I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note/tag so I can review and process on-demand.  
+I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note so I can review and process on-demand.  
 
 ## 👍 Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
@@ -81,11 +81,8 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - Lock recently added tags
 
 ## 🗒️ Notes
-- **BETA WARNING!** Plugin is stable, but being tested.
-> **ALWAYS BACKUP YOUR VAULT BEFORE USING NEW PLUGINS THAT EDIT YOUR NOTES.**
-- Tag Buddy interactions are for **reading mode only**. Please let me know if you have a use case for multi-mode compatibility.
 - Switch to editing to undo any edits in the active note. 
-	- **Edits are permanent in embeds (unless that note is open in a tab). I'm considering undo functionality with notices.**
+	- **Edits are permanent in embeds/summaries (unless that note is open in a tab). I'm considering undo functionality with notices.**
 - **Known limitations:**    
 	 - Editing tags within some other plugins or unknown view types is not supported, for now. Please reach out if you have a use case.
 	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin. But I will implement warnings.
@@ -93,15 +90,14 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 	
 ## ✅ To Do:
 - [ ] Make add-tag popup look more like native Obsidian tag autocomplete
-- [ ] Specify copy to section prefix within the tag-summary code block Ex: (Section 1(- ))  
+- [ ] Specify copy to section prefix within the tag-summary code block Ex: Section 1(-)  
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embedded or generated content? 
 - [ ] Swap default convert tag function on mobile with add tag. 
-- [ ] Command to add tag last at cursor position
+- [ ] Command to add tag at cursor position
 - [ ] Command to create tag summary
+- [ ] Remove extra space if removing between words
 - [ ] ON-GOING: Refactoring and cleanup
-- [ ] Remove double space when removing tag between words
-- [x] ~~“Swiss cheese bug” (remove extra space if removing between words)~~
 - [x] ~~Tag processing rebuilt around markdown rendering and observers~~
 - [x] ~~Add tag location defaults to end of line if near last word~~
 - [x] ~~Long-note tag rendering/processing issue~~
@@ -139,4 +135,4 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - - -
 
 ## Disclaimer
-This plugin modifies your notes. And while there are multiple safety precautions, this plugin comes with no guarantee of any kind. Neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk. 
+This plugin modifies your notes. And while there are multiple safety precautions, this plugin comes with no guarantee of any kind. Neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk. [See complete license here.](https://raw.githubusercontent.com/moremeyou/Obsidian-Tag-Buddy/main/LICENSE)
