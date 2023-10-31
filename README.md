@@ -34,7 +34,7 @@ max: 3 // Limits the results in the summary (optional)
 ```
 ````
 Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the original code behind the summaries.
-### 🔤  Use 6 (BETA): Copy/remove tagged blocks
+### 🔤  Use 6: Copy/remove tagged blocks
 - Copy button: copy's paragraph to clipboard.
 - Remove-tag button: removes the queried tag from the paragraph (which also removes it from the summary).
 	- Made a mistake? Use notices to easily jump to the tagged note.
@@ -42,7 +42,7 @@ Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the o
 
 Enable these buttons in plugin settings. 
 
-### 📑   Use 7 (BETA): Copy/move tagged blocks to section
+### 📑   Use 7: Copy/move tagged blocks to section
 ![Copy To Section Demo](https://user-images.githubusercontent.com/8971804/274069666-d56b899c-1d74-411b-8b6e-c048bc8df491.gif)
 
 Buttons added to each tagged paragraph in summaries let you copy the paragraph (with a back link) to header sections in the active note. Use **CTRL/CMD** when clicking to also remove the tag, effectively moving the paragraph to the section. These buttons will appear when you add section details to the tag summary code block like this (max 3, for space):
