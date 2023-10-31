@@ -50,7 +50,6 @@ export class ReadingModeTagEditor {
 				fileContent = await this.app.vault.read(file);
 				contentSourceType = 'native-embed';
 
-				// !!!!!! we could be in some other kind of embed/view/plugin. Need to be sure about this.
 			} else { 
 //console.log('is active file')
 				file = await this.app.workspace.getActiveFile();
@@ -103,18 +102,8 @@ export class ReadingModeTagEditor {
 			new Notice ('⚠️ Can\'t find clicked word.\nPlease try again.');
 		    return;
 		}
-		//const newContent = Utils.insertTextInString(' ' + tag, fileContent, endIndex)//startIndex+clickedWordIndex)
-		//const newContent = Utils.insertTextInString(tag, fileContent, startIndex+clickedWordIndex)
 		
-		//if (contentSourceType != 'plugin-summary' && contentSourceType != 'native-embed') 
-			//this.plugin.tagProcessor.resume();
-
 		await this.app.vault.modify(file, newContent);
-
-		// we do this on debounce in the mutation handler
-		setTimeout(async () => { 
-			//this.plugin.tagProcessor.pause();
-		}, 300);
 
 		if (contentSourceType == 'plugin-summary') {
 			const summaryContainer = summaryEl.closest('.tag-summary-block')
@@ -125,10 +114,6 @@ export class ReadingModeTagEditor {
 				this.plugin.tagProcessor.processNativeEmbed(embedEl, true);
 			}, 200);
 		}
-
-		setTimeout(async () => { 
-			//this.plugin.tagProcessor.pause();
-		}, 300);
 	}
 
 	async edit (
@@ -206,9 +191,8 @@ export class ReadingModeTagEditor {
 			let newContent = '';
 
 			////////////////////////////////////////////////////////////////
-			// SUPER MESSY. NEED TO REFACTOR
+			// TO-DO: REFACTOR
 			////////////////////////////////////////////////////////////////
-
 
 			if (!event) { // then we're calling this method from a button. need to rethink how this is organized.
 				
@@ -247,7 +231,6 @@ export class ReadingModeTagEditor {
 					const removedChild = parts.pop();
 					parentTag = parts.join('/');
 					newContent = beforeTag 
-						//+ (!beforeTag.endsWith(' ') ? ' ' : '') // might be where extra space is coming from
 						+ parentTag 
 						+ afterTagChr 
 						+ afterTag;
@@ -268,8 +251,6 @@ export class ReadingModeTagEditor {
 					}
 				}
 			} 
-
-			try {
 			
 				if (tagEl.getAttribute('type') == 'plugin-summary') {
 
@@ -310,21 +291,14 @@ export class ReadingModeTagEditor {
 						
 						const tagParagraphEl = tagEl.closest('.tag-summary-paragraph');
 						const tagSummaryBlock = tagEl.closest('.tag-summary-block');
-						//const tagsToCheck = this.getTagsToCheckFromEl(tagSummaryBlock);
 						const tagsToCheck = TagSummary.getTagsToCheckFromEl(tagSummaryBlock);
 						const tagsInContent = Utils.tagsInString(tagParagraphEl.innerText);
 
 						if (tagsToCheck.includes(tag)) {
-							//let tagCount = this.tagsInString(tagParagraphEl.innerText, tag).length;
 							const tagCount = Utils.countOccurrences(tagsToCheck, tagsInContent)
 							
 							if (tagCount >= 2) {
 								this.plugin.tagSummary.update(tagSummaryBlock); 
-								//this.updateSummaries(); // causes screen flicker
-							    setTimeout(async () => { 
-							    	//this.plugin.tagProcessor.run(); 
-							    }, 200);
-
 							} else {
 								//console.log('last one, will remove paragraph')
 								const notice = new Notice (tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
@@ -336,11 +310,6 @@ export class ReadingModeTagEditor {
 				    						this.plugin.tagSummary.update(tagSummaryBlock); 
 				    						tagParagraphEl.remove(); 
 			    						}, 500);
-
-									//this.updateSummaries(); // causes screen flicker
-							    	setTimeout(async () => { 
-							    		//this.plugin.tagProcessor.run(); 
-							    	}, 800);
 								});
 
 								this.plugin.registerDomEvent(
@@ -354,46 +323,20 @@ export class ReadingModeTagEditor {
 
 						} else {
 							this.plugin.tagSummary.update(tagSummaryBlock); 
-							//this.updateSummaries(); // causes screen flicker
-						    setTimeout(async () => { 
-						    	//this.plugin.tagProcessor.run(); 
-						    }, 200);
-							// this.refreshView(); // no need for this atm
 						}
 					}, 200);
 
-					//await this.app.vault.modify(file, newContent);
-
 				} else if (tagEl.getAttribute('type') == 'native-embed') {
 
-					//await this.app.vault.modify(file, newContent);
-					//console.log('edit in native embed')
 					setTimeout(async () => { 
-						//this.plugin.tagProcessor.processNativeEmbed(tagEl.closest('.markdown-embed'));
-
-						//this.plugin.tagProcessor.run2(tagEl.closest('.markdown-embed'))
 						this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);
-
 					}, 200)
 
-					//await this.app.vault.modify(file, newContent);
-				} else {
-
-					//this.plugin.tagProcessor.resume();
-					
-					setTimeout(async () => { 
-						//this.plugin.tagProcessor.processNativeEmbed(tagEl.closest('.markdown-embed'));
-					}, 200)
 				}
-				
-				
+
+			try {
 
  				await this.app.vault.modify(file, newContent);
-
- 				// we do this on debounce in the mutation handler
- 				setTimeout(async () => { 
-					//this.plugin.tagProcessor.pause();
-				}, 300);
 
 			} catch (error) {
 
@@ -414,12 +357,7 @@ export class ReadingModeTagEditor {
 
 			this.plugin.tagProcessor.debouncedProcessActiveFileTagEls();
 
-			setTimeout(async () => { 
-				//this.plugin.tagProcessor.pause();
-			}, 300);
-
 		} else {
-			//this.plugin.tagProcessor.run();
 			new Notice('⚠️ Can\'t identify tag location. Please try again.');
 		}
 	}

@@ -430,55 +430,6 @@ export function ctrlCmdStr (): string {
     else return 'CTRL';
 }
 
-export function generateUUID() { // Public Domain/MIT
-  var d = new Date().getTime();//Timestamp
-  var d2 = (performance && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16;//random number between 0 and 16
-    if(d > 0){//Use timestamp until depleted
-      r = (d + r)%16 | 0;
-      d = Math.floor(d/16);
-    } else {//Use microseconds since page-load if supported
-      r = (d2 + r)%16 | 0;
-      d2 = Math.floor(d2/16);
-    }
-    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-  });
-}
-
-
-export function getRenderOffset (
-    searchIn: string,
-    searchFor: string
-): number {
-    
-    const data = [searchIn];
-//console.log(searchFor)
-//console.log('-------------------')
-//console.log(searchIn)
-    const options = {
-        includeScore: true,
-        includeMatches: true, // This will return matched indices
-        threshold: 0.4,
-        location: 0,
-        distance: 1000,
-        maxPatternLength: searchFor.length,
-        minMatchCharLength: 1,
-    };
-
-    const fuse = new Fuse(data, options);
-
-    const results = fuse.search(searchFor.substring(200));
-
-    // Check if there are any results
-    if (results.length > 0 && results[0].matches && results[0].matches.length > 0) {
-        const match = results[0].matches[0];
-        return match.indices[0][0]; // Return the start index of the first match
-    } else {
-        return -1; // Indicate that no match was found
-    }
-
-}
 
 export function htmlToMarkdown(
     html: string

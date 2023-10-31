@@ -13,7 +13,7 @@ export class TBSettingsTab extends PluginSettingTab {
         let { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl("h1", { text: "Tag Buddy" });
+        //containerEl.createEl("h1", { text: "Tag Buddy" });
 
         new Setting(containerEl)
         .setName("Override native tag search on click")

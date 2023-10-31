@@ -338,10 +338,9 @@ export class TagSummary {
 				paragraphEl.setAttribute('class', 'tag-summary-paragraph');
 
 				////////////////////////////////////////////////////////////////
-				//  MESSY! Lots of refactoring to be done in this function
+				//  REFACTOR
 				////////////////////////////////////////////////////////////////
 
-				// Add link to original note. Tag Buddy added deep linking.
 				const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu); 
 				let link;
         		

@@ -220,7 +220,6 @@ export class TagProcessor {
 		const tagElArray = Array.from(tagElements); 
 		let tagElIndex = 0;
 		let tagPos;
-		//for (let i = 0; i < Math.min(tagPositions.length, tagElements.length); i++) {
 		for (let i = 0; i < tagPositions.length; i++) {
 		//tagPositions.forEach((tagPos, i) => {
 			tagPos = tagPositions[i];
@@ -228,7 +227,6 @@ export class TagProcessor {
 			if (tagPos.index >= startIndex) {
 				tagEl = tagElArray[tagElIndex] as HTMLElement;
 				if (tagEl) {
-					//this.storeTag(tagEl)
 //console.log(tagEl, tagPositions[i].tag, tagPositions[i].index);
 					if (tagEl.innerText.trim() == tagPos.tag.trim()) {
 		    			tagEl.setAttribute('md-index', tagPos.index);
