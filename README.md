@@ -1,12 +1,12 @@
 # Obsidian Tag Buddy 🔖
 Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
 
-### ✏️  Use 1: Add tags to note in reading-mode
+### ✏️  Use 1: Add tags to note in reading mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
 Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. **TRIPLE-TAP** on mobile. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
 
-### 🫥 Use 2: Remove tags in reading-mode
+### 🫥 Use 2: Remove tags in reading mode
 ![Remove Tag Demo](https://user-images.githubusercontent.com/8971804/273923015-9eb2de41-3aeb-4243-9655-efdf4fd70ace.gif)
 
 **CLICK** to remove tags in the active note, embedded note/block or generated tag summary blocks. **DOUBLE-TAP** on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search. Customize this in plugin settings. 
@@ -16,7 +16,7 @@ Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. **TRIPLE-TAP** on mob
 
 If there are nested tags, Tag Buddy will progressively remove these first. 
 
-### 🧼  Use 4: Convert tags to text in reading-mode
+### 🧼  Use 4: Convert tags to text in reading mode
 ![Convert Tag Demo](https://user-images.githubusercontent.com/8971804/273923003-d22b0c3e-39dc-4444-8716-fa9bcb327319.gif)
 
 Removes the hash (converts the tag to text) with **OPT/ALT+CLICK** on desktop or **PRESS+HOLD** on mobile.
@@ -68,7 +68,7 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 ## 📦 Install now
-While waiting on the official Obsidian plugin store you can install via the Obsidian [BRAT Plugin](obsidian://show-plugin?id=obsidian42-brat)
+While waiting on the official Obsidian plugin store you can install via the approved [BRAT Plugin](obsidian://show-plugin?id=obsidian42-brat)
 1. Download the BRAT plugin from the Obsidian plugin store
 2. Enable the BRAT plugin in settings.
 3. Add this git url https://github.com/moremeyou/Obsidian-Tag-Buddy in BRAT settings
@@ -98,10 +98,11 @@ While waiting on the official Obsidian plugin store you can install via the Obsi
 - [ ] Specify copy to section prefix within the tag-summary code block Ex: Section 1(-)  
 - [ ] Mobile modal input focus
 - [ ] Remove extra space if removing between words
-- [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
-- [ ] Possible undo/redo changes to embedded or generated content? 
 - [ ] Edit tag text in note (or globally)
 - [ ] Separate nested tags 
+- [ ] Command to create a summary note from tag
+- [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
+- [ ] Possible undo/redo changes to embedded or generated content? 
 - [ ] ON-GOING: Refactoring and cleanup
 - [x] ~~Add tag on mobile~~
 - [x] ~~Tag processing rebuilt around markdown rendering and observers~~
