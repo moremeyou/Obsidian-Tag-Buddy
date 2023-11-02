@@ -106,8 +106,6 @@ While waiting on the official Obsidian plugin store you can install via the Obsi
 - [x] ~~Tag processing rebuilt around markdown rendering and observers~~
 - [x] ~~Add tag location defaults to end of line if near last word~~
 - [x] ~~Long-note tag rendering/processing issue~~
-- [x] ~~Mobile editing “Can’t find tag location” issue.~~
-- [x] ~~Cancel text selection on mobile after editing or removing a tag~~
 - [x] ~~Error handling when editing very small and duplicated embeds~~
 - [x] ~~Bake summary into note~~
 - [x] ~~Settings for recently used tags~~ (edit, lock)
@@ -117,9 +115,7 @@ While waiting on the official Obsidian plugin store you can install via the Obsi
 - [x] ~~Debug mode~~
 - [x] ~~Test functionalities in other view types (canvas, tables, etc). Errors handled!~~
 - [x] ~~Settings to customize removal and convert (alt+click removes #, cmd+click native search)~~
-- [x] ~~Bug: mobile tapping deletes tag AND opens tag search~~
 - [x] ~~Remove child tags before parent~~
-- [x] ~~More optimizations~~
 - [x] ~~Full mobile support (double tap to remove/edit, hold to convert)~~
 - [x] ~~Deep editing: Remove/edit tags in embeded notes and from rendered code block tag summary~~
 - [x] ~~Integrate parts of [Tag Summary Plugin](https://github.com/macrojd/tag-summary) into this plugin~~
@@ -130,8 +126,6 @@ While waiting on the official Obsidian plugin store you can install via the Obsi
 - [x] ~~CMD/CTRL+Click Copy To Section button also removes the tag (and paragraph) from the summary~~
 - [x] ~~Setting for tag summary buttons~~
 - [x] ~~Limit tag summary results~~
-- [x] ~~Bug: ctrl+click on windows breaks the plugin - fixed!~~
-- [x] ~~Optimizations~~ 
 
 ## 👍 Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
