@@ -100,7 +100,8 @@ While waiting on the official Obsidian plugin store you can install via the Obsi
 - [ ] Remove extra space if removing between words
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embedded or generated content? 
-- [ ] Separate nested tags with click+? Inspired by [this plugin.](https://github.com/HananoshikaYomaru/obsidian-tag-generator)
+- [ ] Edit tag text in note (or globally)
+- [ ] Separate nested tags 
 - [ ] ON-GOING: Refactoring and cleanup
 - [x] ~~Add tag on mobile~~
 - [x] ~~Tag processing rebuilt around markdown rendering and observers~~
