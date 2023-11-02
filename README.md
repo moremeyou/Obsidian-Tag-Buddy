@@ -67,6 +67,12 @@ I use tags to connect ideas, but also as a flexible I/O or state/status manageme
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
+## 📦 Install now
+While waiting on the official Obsidian plugin store you can install via the Obsidian [BRAT Plugin](obsidian://show-plugin?id=obsidian42-brat)
+1. Download the BRAT plugin from the Obsidian plugin store
+2. Enable the BRAT plugin in settings.
+3. Add this git url https://github.com/moremeyou/Obsidian-Tag-Buddy in BRAT settings
+4. And specify the latest release (0.6.2 as of this writing).
 
 ## ⚙️ Settings
 - Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native  tag search on click.
@@ -94,6 +100,7 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - [ ] Remove extra space if removing between words
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embedded or generated content? 
+- [ ] Separate nested tags with click+? Inspired by [this plugin.](https://github.com/HananoshikaYomaru/obsidian-tag-generator)
 - [ ] ON-GOING: Refactoring and cleanup
 - [x] ~~Add tag on mobile~~
 - [x] ~~Tag processing rebuilt around markdown rendering and observers~~
