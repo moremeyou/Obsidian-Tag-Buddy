@@ -33,6 +33,57 @@ export class DoubleTapHandler {
 	  }
 }
 
+export class TripleTapHandler {
+	
+  private plugin: any;
+  private element: HTMLElement;
+  private callback: Function;
+  private lastTap: number;
+  private timeout: any;
+  private tapCount: number;
+
+  constructor(plugin: any, element: HTMLElement, callback: Function){
+    this.plugin = plugin; // Store the plugin instance
+    this.element = element;
+    this.callback = callback;
+    this.lastTap = 0;
+    this.tapCount = 0; // Initialize tap count
+    
+    this.plugin.registerDomEvent(
+      this.element,
+      'touchend', 
+      this.handleTouchEnd.bind(this), 
+      true
+    );
+  }
+
+  handleTouchEnd(event: Event) {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - this.lastTap;
+    clearTimeout(this.timeout);
+    
+    if (tapLength < 500 && tapLength > 0) {
+      this.tapCount++; // Increment tap count
+
+      // If triple tap is detected, trigger the callback and reset tapCount
+      if (this.tapCount === 2) {
+        this.callback(event);
+        this.tapCount = 0;
+      }
+    } else {
+      this.tapCount = 0; // Reset tap count if time between taps is too long
+    }
+
+    this.timeout = setTimeout(() => {
+      clearTimeout(this.timeout);
+      this.tapCount = 0; // Reset tap count when timeout is reached
+    }, 500);
+
+    this.lastTap = currentTime;
+  }
+}
+
+
 export class PressAndHoldHandler {
 	
 	constructor(

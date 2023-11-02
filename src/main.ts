@@ -90,11 +90,13 @@ export default class TagBuddy extends Plugin {
 			        	(view.getMode() == 'preview')
 		        	) {         
 			            event.preventDefault();
-			            this.gui.showTagSelector(event.pageX, event.pageY);
+			            //this.gui.showTagSelector(event.pageX, event.pageY);
+
+			        	this.gui.showTagSelector(event)
 			        }
 		    }); 
 
-		    async function showTags(_this) {
+		   /* async function showTags(_this) {
     			const view = await _this.app.workspace.getActiveViewOfType(MarkdownView);
 				const preView = await view.containerEl.querySelector('.markdown-reading-view');
 				let tags = [];
@@ -112,13 +114,13 @@ export default class TagBuddy extends Plugin {
 				console.log('renderer tags:', tags)
 		    }
 
-		    const debounceShowTags = Utils.debounce(showTags, 500)
+		    const debounceShowTags = Utils.debounce(showTags, 500)*/
 		    //const debouncedProcessActiveFileTagEls = Utils.debounce(this.tagProcessor.processActiveFileTags.bind(this.tagProcessor), 500)
 
 			this.registerEvent(this.app.on(
 				'layout-change', 
 				async (event: EditorEvent) => {  
-					const mode = this.app.workspace.getActiveViewOfType(MarkdownView).getMode();
+					const mode = this.app.workspace.getActiveViewOfType(MarkdownView)?.getMode();
 					if (this.settings.debugMode) console.log('Tag Buddy: layout-change:', mode);
 					if (mode == 'preview') {
 						this.tagProcessor.reset();
@@ -175,9 +177,13 @@ export default class TagBuddy extends Plugin {
 					document, 
 					'click', 
 					(e:Event) => { 
+//console.log(e.target)
+//console.log(document.caretRangeFromPoint(event.clientX, event.clientY))
+//console.log(event.clientX, event.clientY)
 						const isTag = e.target.classList.contains('tag');
 						if (isTag && !this.settings.mobileTagSearch) {
 							e.stopPropagation();
+						} else {	
 						}
 					}, true
 				);
@@ -191,6 +197,11 @@ export default class TagBuddy extends Plugin {
 					this, 
 					document, 
 					this.onClickEvent.bind(this)
+				);
+				new Mobile.TripleTapHandler(
+					this, 
+					document, 
+					this.gui.showTagSelector.bind(this.gui)
 				);
 			}	
 
@@ -233,7 +244,7 @@ export default class TagBuddy extends Plugin {
 			setTimeout(() => { 
 				const selection = window.getSelection();
 				if (selection) selection.removeAllRanges();
-			}, 500)
+			}, 400)
 			
 			
 			if (this.settings.mobileTagSearch && event.type == 'touchend') {
@@ -322,6 +333,7 @@ export default class TagBuddy extends Plugin {
 		tag:string
 	):void {
 		if (Utils.isTagValid(tag)) {
+			console.log('accepted:', tag)
 			const recentTagsString = this.settings.recentlyAddedTags;
 			let recentTags:Array;
 			if (recentTagsString == '') {
@@ -340,6 +352,8 @@ export default class TagBuddy extends Plugin {
 			recentTags = recentTags.slice(0, 3);
 			this.settings.recentlyAddedTags = recentTags.join(', ');
 			this.saveSettings();
+		} else {
+			console.log('rejected:', tag)
 		}
 	}
 

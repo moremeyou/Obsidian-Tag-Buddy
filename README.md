@@ -4,7 +4,7 @@ Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in r
 ### ✏️  Use 1: Add tags to note in reading-mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
-Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
+Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. **TRIPLE-TAP** on mobile. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
 
 ### 🫥 Use 2: Remove tags in reading-mode
 ![Remove Tag Demo](https://user-images.githubusercontent.com/8971804/273923015-9eb2de41-3aeb-4243-9655-efdf4fd70ace.gif)
@@ -78,7 +78,7 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - Enable tag summary paragraph action buttons. 
 - Disable tag summary buttons.
 - Edit recently added tags.
-- Lock recently added tags
+- Lock recently added tags: Makes this a favorites list.
 
 ## 🗒️ Notes
 - Switch to editing to undo any edits in the active note. 
@@ -89,15 +89,13 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 	 - Two (or more) tag summaries or embeds in the same note referencing the same tags will lose sync with each other. Warnings have been implemented. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. 
 	
 ## ✅ To Do:
-- [ ] Make add-tag popup look more like native Obsidian tag autocomplete
 - [ ] Specify copy to section prefix within the tag-summary code block Ex: Section 1(-)  
+- [ ] Mobile modal input focus
+- [ ] Remove extra space if removing between words
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embedded or generated content? 
-- [ ] Swap default convert tag function on mobile with add tag. 
-- [ ] Command to add tag at cursor position
-- [ ] Command to create tag summary
-- [ ] Remove extra space if removing between words
 - [ ] ON-GOING: Refactoring and cleanup
+- [x] ~~Add tag on mobile~~
 - [x] ~~Tag processing rebuilt around markdown rendering and observers~~
 - [x] ~~Add tag location defaults to end of line if near last word~~
 - [x] ~~Long-note tag rendering/processing issue~~

@@ -18,25 +18,29 @@ export class ReadingModeTagEditor {
 
 	async add (
 		tag: string, 
-		x:number, 
-		y:number
+		x: number, 
+		y: number//,
+		//mobileObj: Object
 	):void {
-		if (this.plugin.settings.debugMode) { console.log('Tag Buddy add ' + tag + ' at (' + x + ', ' + y); }
+		if (this.plugin.settings.debugMode) { console.log('Tag Buddy add ' + tag + ' at (' + x + ', ' + y + ')'); }
 
 		let fileContent: string;
 		let file: TFile;
-		const clickedTextObj = Utils.getClickedTextObjFromDoc (x, y);
+		const clickedTextObj = Utils.getClickedTextObjFromDoc(x, y);
 		const clickedText: string = clickedTextObj?.text;
 		const clickedTextIndex:number = clickedTextObj?.index; // this is the index in document, for narrowing down to the clicked word.
 		const clickedTextEl: HTMLElement = clickedTextObj?.el;
 		let contentSourceType: string = null
-		let summaryEl: HTMLElement;
-		let embedEl: HTMLElement;
+		let summaryEl: HTMLElement = undefined;
+		let embedEl: HTMLElement = undefined;
 
+//console.log(clickedTextObj)		
 		if (clickedTextObj) {
-
-			summaryEl = clickedTextEl.closest('.tag-summary-paragraph');
-			embedEl = clickedTextEl.closest('.markdown-embed');
+			try {
+				summaryEl = clickedTextEl?.closest('.tag-summary-paragraph');
+				embedEl = clickedTextEl?.closest('.markdown-embed');
+			} catch {
+			}
 
 			if (summaryEl) {
 //console.log('is summary')

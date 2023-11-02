@@ -23,6 +23,7 @@ export class TagProcessor {
 	}
 
 	reset() {
+//console.log('tag processor reset');
 		this.outOfSync = false;
 	}
 
@@ -58,7 +59,6 @@ export class TagProcessor {
 		return filteredTagElements;
 	}
 
-	// This method is just for the initial processing.
 	async renderPostProcessor (
 		el: HTMLElement, 
 		ctx: MarkdownPostProcessorContext
@@ -105,7 +105,7 @@ export class TagProcessor {
 		if (this.plugin.settings.debugMode) console.log('Tag Buddy: processing active file tags')		
 
 		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
-		const mode = view.getMode();
+		const mode = view?.getMode();
 		//const preView = await view.containerEl.querySelector('.markdown-reading-view');
 		if (mode == 'preview') {
 			const activeFile = await this.app.workspace.getActiveFile();
@@ -168,11 +168,13 @@ export class TagProcessor {
 
 		const tagPositions = [];
 		let match;
+		// Obsidian tag spec: https://help.obsidian.md/Editing+and+formatting/Tags#Tag+format
 		//const regex = /(?:^|\s)#[^\s#]+|```/g; // BUG: wrong match.index. matches the space before the tag.
 		//const regex = /(?<=^|\s)#[^\s#]+|```/g // FIX. But still matching punctuation after
 		//const regex = /(?<=^|\s)(#[^\s#.,;!?:]+)(?=[.,;!?:\s]|$)|```/g  // matches punctuation after, but not included in the match
 		//const regex = /(?<=^|\s)(#[^\s#.,;!?:]+)(?=[.,;!?:\s]|$)|(?<!`)```(?!`)/g; // Fix for matching ```` 
-		const regex = /(?<=^|\s)(#[^\s#.',;!?:]+)(?=[.,;!?:'\s]|$)|(?<!`)```(?!`)/g; // Fix for matching but excluding ''s' in '#tag's'
+		//const regex = /(?<=^|\s)(#[^\s#.',;!?:]+)(?=[.,;!?:'\s]|$)|(?<!`)```(?!`)/g; // Fix for matching but excluding ''s' in '#tag's'
+		const regex = /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g; // fix for number-only and typographic apostrophy's
 
 		let insideCodeBlock = false;
 
@@ -184,6 +186,7 @@ export class TagProcessor {
 		    if (insideCodeBlock) continue;
 		    const tag = match[0].trim();
 		    tagPositions.push({tag:tag, index:match.index, source:file.name}); 
+//console.log(tag)
 		}
 		return tagPositions;
 	}

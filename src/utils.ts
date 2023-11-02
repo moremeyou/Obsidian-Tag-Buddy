@@ -18,12 +18,6 @@ export function getTagElement(
     return null;
 }
 
-export function outerHTMLToElement(outerHTML: string): HTMLElement | null {
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = outerHTML;
-  return tempDiv.firstChild as HTMLElement;
-}
-
 export function isWordNearEnd(
     str: string, 
     word: string, 
@@ -76,9 +70,9 @@ export function getClickedTextObjFromDoc(
     // Get the word under the click position
     let range, nodeText, offset;
 
-    // This method is better supported and gives us a range object
     if (document.caretRangeFromPoint) {
         range = document.caretRangeFromPoint(x, y);
+//console.log(x, y, range)
         if (range.startContainer.nodeType === Node.TEXT_NODE) {
             nodeText = range.startContainer.nodeValue.trim();
         } else {
@@ -90,7 +84,7 @@ export function getClickedTextObjFromDoc(
     if (nodeText.length < minNodeLength) {
         return null;
     }
-
+//console.log(nodeText, offset, range.startContainer.parentNode)
     return {
         text: nodeText, 
         index: offset, 
@@ -401,6 +395,36 @@ export function countOccurrences(
     return count;
 }
 
+export function outerHTMLToElement(outerHTML: string): HTMLElement | null {
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = outerHTML;
+  return tempDiv.firstChild as HTMLElement;
+}
+
+export function getDeepestNode(node) {
+  //console.log(node)
+  if (node.hasChildNodes()) {
+    return getDeepestNode(node.lastChild);
+  } else {
+    return node;
+  }
+}
+
+export function getDeepestTextNode(node) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node;
+  }
+
+  if (node.hasChildNodes()) {
+    for (let i = node.childNodes.length - 1; i >= 0; i--) {
+      const child = node.childNodes[i];
+      const result = getDeepestTextNode(child);
+      if (result) return result;
+    }
+  }
+  return null;
+}
+
 export function escapeRegExp(
     string: string
 ):string {
@@ -418,9 +442,10 @@ export async function getEmbedFile (
 }
 
 export function isTagValid (
-tag:string
+    tag:string
 ):boolean { // including the #
-    const tagPattern = /^#[\w]+$/;
+    //const tagPattern = /^#[\w]+$/;
+    const tagPattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g
     return tagPattern.test(tag);
 }
 

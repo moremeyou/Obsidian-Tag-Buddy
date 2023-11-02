@@ -2,6 +2,7 @@ import { App, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Noti
 import TagBuddy from "main";
 import type { App } from "obsidian";
 import * as Utils from './utils';
+import { TagSelector } from './Modal'
 
 export class GUI {
 	app: App; 
@@ -295,7 +296,54 @@ export class GUI {
 		return button;
 	}
 
-	showTagSelector(
+	showTagSelector(event){
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		const mode = view?.getMode();
+		let pageX, pageY
+		let nodeType
+		let deepestNode;
+		let range
+		if (this.app.isMobile) {
+			const touch = event.touches[0] || event.changedTouches[0];
+			pageX = Math.round(touch.pageX);
+			pageY = Math.round(touch.pageY);
+			//const el = Utils.getDeepestTextNode(document.elementFromPoint(pageX, pageY))
+			//const el = document.elementFromPoint(pageX, pageY);
+			//deepestNode = Utils.getDeepestNode(el);
+			range = document.caretRangeFromPoint(pageX, pageY)
+			nodeType = range.startContainer.nodeType //deepestNode.nodeType;
+		} else {
+			pageX = event.pageX;
+			pageY = event.pageY;
+			range = document.caretRangeFromPoint(pageX, pageY)
+			nodeType = range.startContainer.nodeType;
+		}
+//console.log(event)
+//console.log(pageX, pageY)
+//console.log(range)
+//console.log('deepestNode:', deepestNode)
+		//const targetClasses = ['tag'];
+        //if (mode == 'preview' && !targetClasses.some(cls => event.target.classList.contains(cls))) {
+       	if (mode == 'preview') {
+			if (nodeType === Node.TEXT_NODE) {
+				const tagSelector: TagSelector = new TagSelector(
+					this.app, 
+					this.plugin, 
+					event, (tag)=>{
+						//console.log(tag)
+						this.plugin.tagEditor.add(
+			        		'#' + tag, 
+			        		pageX, 
+			        		pageY//,
+			        		//{range: range, el: deepestNode}
+	        			)
+					}
+				).open();
+			}
+		}
+	}
+
+	_showTagSelector(
 		x: number, 
 		y: number
 	):void {
