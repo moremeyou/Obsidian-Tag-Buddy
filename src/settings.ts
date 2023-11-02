@@ -76,7 +76,7 @@ export class TBSettingsTab extends PluginSettingTab {
         );
 
         new Setting(containerEl)
-        .setName("BETA: Show tag summary paragraph buttons")
+        .setName("Show tag summary paragraph buttons")
         .setDesc("Show buttons below each tagged paragraph that let you copy, remove, and move the paragraph.")
         .addToggle((toggle) =>
             toggle
@@ -88,7 +88,7 @@ export class TBSettingsTab extends PluginSettingTab {
         );
 
         new Setting(containerEl)
-        .setName("BETA: Show tag summary buttons")
+        .setName("Show tag summary buttons")
         .setDesc("Show buttons below each summary that let you copy or make a note from the summary.")
         .addToggle((toggle) =>
             toggle
