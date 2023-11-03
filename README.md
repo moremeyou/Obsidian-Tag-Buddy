@@ -98,8 +98,8 @@ While waiting on the official Obsidian plugin store you can install via the appr
 - [ ] Specify copy to section prefix within the tag-summary code block Ex: Section 1(-)  
 - [ ] Mobile modal input focus
 - [ ] Remove extra space if removing between words
-- [ ] Edit tag text in note (or globally)
-- [ ] Separate nested tags 
+- [ ] Edit tag text modal (options for this instance, all in note, across vault?)
+- [ ] Separate nested tags (part of the edit modal above?)
 - [ ] Command to create a summary note from tag
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embedded or generated content? 
