@@ -35,8 +35,8 @@ max: 3 // Limits the results in the summary (optional)
 ````
 Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the original code behind the summaries.
 ### 🔤  Use 6: Copy/remove tagged blocks
-- Copy button: copy's paragraph to clipboard.
-- Remove-tag button: removes the queried tag from the paragraph (which also removes it from the summary).
+- **Copy button:** copy's paragraph to clipboard.
+- **Remove-tag button:** removes the queried tag from the paragraph (which also removes it from the summary).
 	- Made a mistake? Use notices to easily jump to the tagged note.
 ![Notice Demo](https://user-images.githubusercontent.com/8971804/274208965-fb8423e7-4f64-4bf6-84e8-afe1d44d81b4.gif)
 
@@ -89,6 +89,7 @@ While waiting on the official Obsidian plugin store you can install via the appr
 ## 🗒️ Notes
 - Switch to editing to undo any edits in the active note. 
 	- **Edits are permanent in embeds/summaries (unless that note is open in a tab). I'm considering undo functionality with notices.**
+- **Design rationale:** Tag Buddy is about helping you maintain a specific state of mind when reviewing/annotating/processing your notes. For example, I don't want to switch to editing to simply remove “new” from a “book/highlight/new” tag, or if I want to quickly add a “todo” tag somewhere. Also, I think Obsidian already makes it super easy add/edit/remove tag. So there are no plans to bring those Tag Buddy functions to edit mode. That said, please let me know if you have a use case.
 - **Known limitations:**    
 	 - Editing tags within some other plugins or unknown view types is not supported, for now. Please reach out if you have a use case.
 	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin. But I will implement warnings.
