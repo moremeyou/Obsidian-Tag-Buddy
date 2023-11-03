@@ -101,7 +101,8 @@ While waiting on the official Obsidian plugin store you can install via the appr
 - [ ] Remove extra space if removing between words
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
 - [ ] Separate nested tags (part of the edit modal above?)
-- [ ] Command to create a summary note from tag
+- [ ] Command/modal to edit regardless of mode
+- [ ] Command/modal to create a summary note from tag
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embedded or generated content? 
 - [ ] ON-GOING: Refactoring and cleanup
