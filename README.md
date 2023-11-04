@@ -27,8 +27,8 @@ Removes the hash (converts the tag to text) with **OPT/ALT+CLICK** on desktop or
 Tags are editable in the active note, native embeds and when rendered using a tag summary code block. Use this syntax:
 ````markdown
 ```tag-summary
-tags: #tag1 #tag2 // Find notes that have these tags (required)
-include: #tag3 #tag4 // Results must also have these tags (optional)
+tags: #tag1 #tag2 // Results can have either of these tags 
+include: #tag3 #tag4 // Results must have both these tags (optional)
 exclude: #tag5 #tag6 // But not have these tags (optional)
 max: 3 // Limits the results in the summary (optional)
 ```
