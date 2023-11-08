@@ -1,25 +1,26 @@
 .tagsummary-notags {
-	color: var(--link-color) !important;
-	font-weight: 500 !important;
-	border: 1px solid var(--link-color) !important; 
-	border-radius: 5px !important;
-	padding: 10px 10px;
+    color: var(--link-color) !important;
+    font-weight: 500 !important;
+    border: 1px solid var(--link-color) !important; 
+    border-radius: 3px !important;
+    padding: 10px 10px;
 }
 
 .tagsummary-button {
 
-    color: var(--text-primary);
-    border: 1px solid var(--text-quote);  // Assuming this is the block quote color
-    border-radius: var(--border-radius);
-    padding: 2.5px 5px;  // Reduced padding
-    font-size: 50%;  // Reduced font size
-    transition: background-color 0.3s;
-    margin: 0px 3px 0px 0px;
-    min-width: 40px !important;
+   color: var(--text-primary) !important;
+   /*border: .5px solid var(--text-quote) !important;*/
+   border-radius: 5px !important;
+   padding: 2.5px 2.5px !important;
+   font-size: 65% !important;
+   /*transition: background-color 0.3s !important;*/
+   margin: 0px 3px 0px 0px !important;
+   min-width: 40px !important;
 
    color: var(--link-color) !important;
    border: 1px solid var(--link-color) !important; 
    background-color: var(--background-primary) !important;
+
 }
 
 .tagsummary-button:hover {
@@ -36,109 +37,40 @@
     text-align: right !important;
 }
 
-/*@keyframes slideUp {
-  from {
-    height: initial;
-    opacity: 1;
-  }
-  to {
-    height: 0;
-    opacity: 0;
-  }
-}
-
-blockquote.tag-summary-paragraph.removing {
-  animation: slideUp 0.9s forwards;
-} */
-
-.blockquote.tag-summary-paragraph {
-  /*transition: height 0.2s, opacity 0.2s;*/
-  transition: height 0.3s ease, margin 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
-  overflow: hidden;
+blockquote.tag-summary-paragraph {
+    transition: height 0.3s, opacity 0.3s;
+    /*transition: height 0.3s ease, margin 0.3s ease, padding 0.3s ease, opacity 0.3s ease;*/
+    overflow: hidden;
 }
 
 .removing {
-  height: 0 !important;  /* Important to ensure override */
-  opacity: 0;
-  margin: 0;
-  padding: 0;
+    height: 0 !important; 
+    opacity: 0 !important; 
+    margin: 0 !important; 
+    padding: 0 !important; 
 }
 
 @media only screen and (max-device-width: 480px), 
    only screen and (max-width: 480px) and (orientation: landscape),
    only screen and (max-device-width: 1024px), 
    only screen and (min-width: 481px) and (max-width: 1024px) and (orientation: landscape) {
+   
    .tagsummary-button {
        display: inline-block !important;
        font-size: 12px !important;
        padding: 5px 5px;
        box-shadow: none;  /* remove shadows if they look off */
-       border-radius: 4px;
+       border-radius: 5px;
        color: var(--link-color) !important;
        border: 1px solid var(--link-color); 
        width: auto !important;            /* auto adjusts width based on content */
-	   /*max-width: 60px !important;  */  
-	   max-height: 30px !important;
-	   min-width: 40px !important;
-	   white-space: nowrap;
-	   /*text-align: left !important;*/
-	   overflow: hidden;
-	   background-color: var(--background-primary) !important;
+       /*max-width: 60px !important;  */  
+       max-height: 30px !important;
+       min-width: 40px !important;
+       white-space: nowrap;
+       /*text-align: left !important;*/
+       overflow: hidden;
+       background-color: var(--background-primary) !important;
    }
-}
 
-.addtag-menu {
-	position: absolute !important;
-    background-color: var(--background-primary) !important;
-    color: white !important;
-    border: 2px solid var(--divider-color) !important;
-    z-index: 10000 !important;
-    overflow-y: auto !important;
-    /*max-height: 150px !important;*/
-    width: 150px !important;
-    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2) !important;
-    border-radius: 8px !important;  // Rounded corners
-    font-family: Arial, sans-serif;  // Common OS font
-    font-size: 12px !important;
-    overflow: hidden !important;  // Hide overflow
-	padding-right: 10px !important;  // Adjust padding to make space for scrollbar
 }
-
-.tag-list {
-	overflow-y: auto !important;
-    overflow-x: hidden !important; 
-    padding-right: 8px !important;  // Adjust padding to give space for scrollbar
-    margin-right: -8px !important;  // Adjust margin to move scrollbar into the padding
-}
-
-.tag-item {
-	padding: 5px 10px 5px 10px !important;  // Adjusted padding
-    cursor: pointer !important;
-    border-bottom: 1px solid var(--divider-color) !important;  // Separator line
-    font-size: 14px !important;
-    width: 150px !important;
-    text-overflow: ellipsis !important;  // Indicate content that overflows with an ellipsis
-	white-space: nowrap !important;  // Ensure content does not wrap
-}
-
-.tag-item:hover {
-    background-color: var(--interactive-accent) !important; // Added ,1 for opacity
-    color: white !important;
-}
-.tag-item.active {
-    background-color: var(--interactive-accent) !important;
-    color: white !important;
-}
-
-#addtag-menu .disable-hover .tag-item:hover {
-    background-color: inherit !important;
-    color: inherit !important;
-}
-
-.tag-search {
- 	width: 100% !important;
-    padding: 2.5px 5px !important;
-    border: none !important;
-    font-family: Arial, sans-serif;
-    font-size: 14px !important;
-    box-sizing: border-box !important;  // Ensure padding doesn't expand width

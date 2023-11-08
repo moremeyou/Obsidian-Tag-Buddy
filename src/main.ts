@@ -71,11 +71,7 @@ export default class TagBuddy extends Plugin {
 				this.tagSummary.codeBlockProcessor.bind(this.tagSummary)
 			);
 		    
-		    this.registerEvent( this.app.workspace.on('active-leaf-change', async () => {
-		    	//console.log('active leaf change')
-		    	//await this.setView();
-				//this.tagProcessor.reset();
-		    }));
+		    //this.registerEvent( this.app.workspace.on('active-leaf-change', async () => { console.log('active leaf change') }));
 		    //this.registerEvent(this.app.workspace.on('editor-change', async () => { console.log('editor change');  }, true));
 		    //this.registerEvent(this.app.workspace.on('editor-change', debounce(async () => { console.log('editor change'); this.processTags(); }, 3000, true)));
 		    
@@ -91,7 +87,6 @@ export default class TagBuddy extends Plugin {
 		        	) {         
 			            event.preventDefault();
 			            //this.gui.showTagSelector(event.pageX, event.pageY);
-
 			        	this.gui.showTagSelector(event)
 			        }
 		    }); 
@@ -113,10 +108,8 @@ export default class TagBuddy extends Plugin {
 				})
 				console.log('renderer tags:', tags)
 		    }
-
-		    const debounceShowTags = Utils.debounce(showTags, 500)*/
-		    //const debouncedProcessActiveFileTagEls = Utils.debounce(this.tagProcessor.processActiveFileTags.bind(this.tagProcessor), 500)
-
+		    const debounceShowTags = debounce(showTags, 500)*/
+		   
 			this.registerEvent(this.app.on(
 				'layout-change', 
 				async (event: EditorEvent) => {  
@@ -151,16 +144,7 @@ export default class TagBuddy extends Plugin {
 				//, 3000, true)
 			));
 
-			const debounceResumeSourceMutationEvent = Utils.debounce(()=>{
-				//console.log('debounce source event resume')
-				//const mode = this.app.workspace.getActiveViewOfType(MarkdownView).getMode();
-				//if (mode == 'source') this.tagProcessor.sourceMutationEvent.resume();
-			}, 500)
-
-			this.registerDomEvent(document.body, 'scroll', (event) => {
-				//this.tagProcessor.sourceMutationEvent.pause();
-				//debounceResumeSourceMutationEvent();
-			}, true);
+			//this.registerDomEvent(document.body, 'scroll', (event) => {}, true);
 
 			if (!this.app.isMobile) {
 				// This event handles all the interactions on desktop
@@ -333,7 +317,7 @@ export default class TagBuddy extends Plugin {
 		tag:string
 	):void {
 		if (Utils.isTagValid(tag)) {
-			console.log('accepted:', tag)
+			//console.log('accepted:', tag)
 			const recentTagsString = this.settings.recentlyAddedTags;
 			let recentTags:Array;
 			if (recentTagsString == '') {
@@ -353,7 +337,7 @@ export default class TagBuddy extends Plugin {
 			this.settings.recentlyAddedTags = recentTags.join(', ');
 			this.saveSettings();
 		} else {
-			console.log('rejected:', tag)
+			//console.log('rejected:', tag)
 		}
 	}
 

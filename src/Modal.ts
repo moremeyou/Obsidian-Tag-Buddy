@@ -1,4 +1,4 @@
-import { App, FuzzySuggestModal, Modal, Setting, Notice, TFile, renderResults, prepareFuzzySearch, FuzzyMatch, fuzzySearch, prepareQuery } from "obsidian";
+import { App, FuzzySuggestModal, SuggestModal, Modal, Setting, Notice, TFile, renderResults, prepareFuzzySearch, FuzzyMatch, fuzzySearch, prepareQuery } from "obsidian";
 import TagBuddy from "main";
 import * as Utils from './utils';
 
@@ -27,7 +27,13 @@ export class TagSelector extends FuzzySuggestModal<string> {
         this.tagCache = []
         this.location = {x: event.pageX, y: event.pageY}
         //this.limit = 10
-
+        //this.emptyStateText = 'Add new tag'
+        // to add a brand new tag we'd either need to:
+        // - SHIFT already works. but for mobile?
+        // - have another button on far right on input to add (for mobile)
+        // this selector is also where we can add an edit icon next to each tag. 
+        // clicking this would bring up the edit modal
+       
     }
 
     onOpen() {
@@ -69,6 +75,20 @@ export class TagSelector extends FuzzySuggestModal<string> {
         }
     }
 
+    /*getSuggestions(query: string) : string[]{
+        const filteredTags = Utils.getTagsFromApp(
+            this.app, 
+            this.plugin.getRecentTags()).filter(tag => 
+            //tag.toLowerCase().includes(query.toLowerCase())
+            query == '' ? true : tag.toLowerCase() == query.toLowerCase()
+        );
+        return filteredTags;
+    }
+
+    renderSuggestion(header: string, el: HTMLElement) {
+        el.createEl("div", { text: header });
+    }*/
+
     onNoSuggestion(){
         super.onNoSuggestion()
         this.noSelection = true;
@@ -89,6 +109,7 @@ export class TagSelector extends FuzzySuggestModal<string> {
     }
 
     async onChooseItem(result: string) {
+//console.log(result)
         if (!this.app.isMobile) {
             this.onChooseItemCallback(result)
         } else {

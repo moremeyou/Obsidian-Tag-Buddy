@@ -16,7 +16,7 @@ export class TagProcessor {
 		this.app = app;
 		this.plugin = plugin;
 
-		this.debouncedProcessActiveFileTagEls = Utils.debounce(this.processActiveFileTags.bind(this), 500)
+		this.debouncedProcessActiveFileTagEls = debounce(this.processActiveFileTags.bind(this), 500)
 
 		this.debouncedProcessActiveFileTagEls();
 

@@ -1,5 +1,4 @@
-import { TFile } from 'obsidian';
-import Fuse from 'fuse.js';
+import { TFile, Platform } from 'obsidian';
 
 export function getTagElement(
     paragraphEl: HTMLElement, 
@@ -347,13 +346,13 @@ export async function validateFilePath (
 export function ctrlCmdKey (
     event: Event
 ): boolean {
-    const isMac = (navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+    const isMac = Platform.isMacOS // (navigator.platform.toUpperCase().indexOf('MAC') >= 0);
 
     if (isMac) return event.metaKey;
     else return event.ctrlKey;
 }
 
-export function debounce(
+/*export function debounce(
     func: Function, 
     wait: number
 ): Function {
@@ -365,7 +364,7 @@ export function debounce(
             func.apply(context, args);
         }, wait);
     };
-}
+}*/
 
 export function tagsInString(
     string: string, 
@@ -401,30 +400,6 @@ export function outerHTMLToElement(outerHTML: string): HTMLElement | null {
   return tempDiv.firstChild as HTMLElement;
 }
 
-export function getDeepestNode(node) {
-  //console.log(node)
-  if (node.hasChildNodes()) {
-    return getDeepestNode(node.lastChild);
-  } else {
-    return node;
-  }
-}
-
-export function getDeepestTextNode(node) {
-  if (node.nodeType === Node.TEXT_NODE) {
-    return node;
-  }
-
-  if (node.hasChildNodes()) {
-    for (let i = node.childNodes.length - 1; i >= 0; i--) {
-      const child = node.childNodes[i];
-      const result = getDeepestTextNode(child);
-      if (result) return result;
-    }
-  }
-  return null;
-}
-
 export function escapeRegExp(
     string: string
 ):string {
@@ -450,67 +425,7 @@ export function isTagValid (
 }
 
 export function ctrlCmdStr (): string {
-    const isMac = (navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+    const isMac = Platform.isMacOS //(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
     if (isMac) return 'CMD';
     else return 'CTRL';
-}
-
-
-export function htmlToMarkdown(
-    html: string
-):string {
-    const turndownService = new TurndownService();
-
-    // Add custom rules here
-    turndownService.addRule('ignoreHashTags', {
-        filter: function(node) {
-            return node.nodeName === 'A' && node.getAttribute('href') === `#${node.textContent.slice(1)}`;
-        },
-        replacement: function(content) {
-            return content;
-        }
-    });
-
-    turndownService.addRule('ignoreInternalLinks', {
-        filter: function(node) {
-            // Check if the node is an anchor tag with the class "internal-link"
-            return node.nodeName === 'A' && node.classList.contains('internal-link');
-        },
-        replacement: function(content, node) {
-            // Return the content wrapped in [[...]]
-            return `[[${content}]]`;
-        }
-	});
-
-	// Rule for task lists
-	turndownService.addRule('taskLists', {
-	    filter: function(node) {
-	        // Check if the node is a list item containing a checkbox
-	        return node.nodeName === 'LI' && node.querySelector('input[type="checkbox"]');
-	    },
-	    replacement: function(content, node) {
-	        const checkbox = node.querySelector('input[type="checkbox"]');
-	        return checkbox.checked 
-	            ? `- [*] ${content.replace(/\[x\]\s*/, '')}`  // remove any [*] Turndown might have added
-	            : `- [ ] ${content.replace(/\[\]\s*/, '')}`;  // remove any [ ] Turndown might have added
-	    }
-	});
-
-    // Rule for strikethrough
-    turndownService.addRule('strikethrough', {
-        filter: ['del', 's'],
-        replacement: function(content) {
-            return `~~${content}~~`;
-        }
-    });
-
-    // Rule for italics
-	turndownService.addRule('italics', {
-		filter: ['i', 'em'],
-		replacement: function(content) {
-    		return `*${content}*`;
-		}
-	});
-
-    return turndownService.turndown(html);
 }

@@ -72,7 +72,7 @@ While waiting on the official Obsidian plugin store you can install via the appr
 1. Download the BRAT plugin from the Obsidian plugin store
 2. Enable the BRAT plugin in settings.
 3. Add this git url https://github.com/moremeyou/Obsidian-Tag-Buddy in BRAT settings
-4. And specify the latest release (0.6.2 as of this writing).
+4. And specify the latest release (0.6.3 as of this writing).
 
 ## ⚙️ Settings
 - Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native  tag search on click.
@@ -97,11 +97,11 @@ While waiting on the official Obsidian plugin store you can install via the appr
 	
 ## ✅ To Do:
 - [ ] BUG: Mobile modal input focus
-- [ ] BUG: Adding new tag fights with fuzzy search similarities
 - [ ] BUG: Remove extra space if removing between words
 - [ ] Specify copy to section prefix in tag-summary code block Ex: Section 1(-)  
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
 - [ ] Separate nested tags (part of the edit modal above?)
+- [ ] Add tag modal can also have the edit button for each tag
 - [ ] Command/modal to create a summary note from tag
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] ON-GOING: Refactoring and cleanup
