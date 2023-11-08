@@ -89,19 +89,19 @@ While waiting on the official Obsidian plugin store you can install via the appr
 ## 🗒️ Notes
 - Switch to editing to undo any edits in the active note. 
 	- **Edits are permanent in embeds/summaries (unless that note is open in a tab). I'm considering undo functionality with notices.**
-- **Design rationale:** Tag Buddy is about helping you maintain a specific state of mind when reviewing/annotating/processing your notes. For example, I don't want to switch to editing to simply remove “new” from a “book/highlight/new” tag, or if I want to quickly add a “todo” tag somewhere. Also, I think Obsidian already makes it super easy add/edit/remove tag. So there are no plans to bring those Tag Buddy functions to edit mode. That said, please let me know if you have a use case.
+- **Design rationale:** Tag Buddy is about helping you maintain a specific state of mind when reviewing/annotating/processing your notes. For example, I don't want to switch to editing to simply remove “new” from a “book/highlight/new” tag, or if I want to quickly add a “todo” tag somewhere. Also, I think Obsidian already makes it super easy add/edit/remove tags. So there are no plans to bring those Tag Buddy functions to edit mode. That said, please let me know if you have a use case.
 - **Known limitations:**    
 	 - Editing tags within some other plugins or unknown view types is not supported, for now. Please reach out if you have a use case.
 	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin. But I will implement warnings.
 	 - Two (or more) tag summaries or embeds in the same note referencing the same tags will lose sync with each other. Warnings have been implemented. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. 
 	
 ## ✅ To Do:
-- [ ] Specify copy to section prefix within the tag-summary code block Ex: Section 1(-)  
-- [ ] Mobile modal input focus
-- [ ] Remove extra space if removing between words
+- [ ] BUG: Mobile modal input focus
+- [ ] BUG: Adding new tag fights with fuzzy search similarities
+- [ ] BUG: Remove extra space if removing between words
+- [ ] Specify copy to section prefix in tag-summary code block Ex: Section 1(-)  
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
 - [ ] Separate nested tags (part of the edit modal above?)
-- [ ] Command/modal to edit regardless of mode
 - [ ] Command/modal to create a summary note from tag
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] Possible undo/redo changes to embedded or generated content? 
