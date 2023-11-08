@@ -151,9 +151,14 @@ export class TBSettingsTab extends PluginSettingTab {
 
         containerEl.createEl('hr');
         containerEl.createEl("h1", { text: "Support a buddy" });
-        const donateButton = containerEl.createEl('a');
-        donateButton.setAttribute('href', 'https://www.buymeacoffee.com/moremeyou');
-        donateButton.innerHTML = `<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>`;
+        const donateLink = containerEl.createEl('a');
+        donateLink.setAttribute('href', 'https://www.buymeacoffee.com/moremeyou');
+        const donateButton = createEl('img');
+        donateButton.setAttribute('src', 'https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png');
+        donateButton.setAttribute('alt', 'Buy Me A Coffee');
+        donateButton.style = 'height: 40px !important;width: 150px !important;'
+        donateLink.appendChild(donateButton)
+        //.innerHTML = `<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>`;
 
         containerEl.createEl('br');
         containerEl.createEl('br');
