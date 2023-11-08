@@ -104,7 +104,6 @@ While waiting on the official Obsidian plugin store you can install via the appr
 - [ ] Separate nested tags (part of the edit modal above?)
 - [ ] Command/modal to create a summary note from tag
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
-- [ ] Possible undo/redo changes to embedded or generated content? 
 - [ ] ON-GOING: Refactoring and cleanup
 - [x] ~~Add tag on mobile~~
 - [x] ~~Tag processing rebuilt around markdown rendering and observers~~
