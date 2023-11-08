@@ -11,7 +11,7 @@
    color: var(--text-primary) !important;
    /*border: .5px solid var(--text-quote) !important;*/
    border-radius: 5px !important;
-   padding: 2.5px 2.5px !important;
+   padding: 2.5px 5px !important;
    font-size: 65% !important;
    /*transition: background-color 0.3s !important;*/
    margin: 0px 3px 0px 0px !important;
