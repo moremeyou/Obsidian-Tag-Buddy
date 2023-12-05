@@ -83,7 +83,8 @@ export default class TagBuddy extends Plugin {
 			        
 			        if (view && 
 			        	Utils.ctrlCmdKey (event) &&
-			        	(view.getMode() == 'preview')
+			        	(view.getMode() == 'preview') &&
+			        	(view.containerEl.contains(event.target))
 		        	) {         
 			            event.preventDefault();
 			            //this.gui.showTagSelector(event.pageX, event.pageY);
@@ -161,9 +162,6 @@ export default class TagBuddy extends Plugin {
 					document, 
 					'click', 
 					(e:Event) => { 
-//console.log(e.target)
-//console.log(document.caretRangeFromPoint(event.clientX, event.clientY))
-//console.log(event.clientX, event.clientY)
 						const isTag = e.target.classList.contains('tag');
 						if (isTag && !this.settings.mobileTagSearch) {
 							e.stopPropagation();
@@ -183,9 +181,19 @@ export default class TagBuddy extends Plugin {
 					this.onClickEvent.bind(this)
 				);
 				new Mobile.TripleTapHandler(
-					this, 
+					this,
 					document, 
-					this.gui.showTagSelector.bind(this.gui)
+					async (event: MouseEvent) => {	
+		    			const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
+				        if (view && 
+				        	(view.getMode() == 'preview') &&
+				        	(view.containerEl.contains(event.target))
+			        	) {         
+				        	event.preventDefault();
+				        	this.gui.showTagSelector(event)
+				        }
+		    		}, true
+					//this.gui.showTagSelector.bind(this.gui)
 				);
 			}	
 
@@ -210,7 +218,7 @@ export default class TagBuddy extends Plugin {
 		}
 
 		if (view) { 
-			if (view.getMode() != 'preview') return;
+			if (view.getMode() != 'preview' || !view.containerEl.contains(event.target)) return;
 		} 
 		
 		if (!this.app.isMobile) {

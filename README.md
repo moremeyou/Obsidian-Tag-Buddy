@@ -72,7 +72,7 @@ While waiting on the official Obsidian plugin store you can install via the appr
 1. Download the BRAT plugin from the Obsidian plugin store
 2. Enable the BRAT plugin in settings.
 3. Add this git url https://github.com/moremeyou/Obsidian-Tag-Buddy in BRAT settings
-4. And specify the latest release (0.6.3 as of this writing).
+4. And specify the latest release (0.6.4 as of this writing).
 
 ## ⚙️ Settings
 - Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native  tag search on click.
