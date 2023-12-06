@@ -68,11 +68,14 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 ## 📦 Install now
-While waiting on the official Obsidian plugin store you can install via the approved [BRAT Plugin](obsidian://show-plugin?id=obsidian42-brat)
-1. Download the BRAT plugin from the Obsidian plugin store
-2. Enable the BRAT plugin in settings.
-3. Add this git url https://github.com/moremeyou/Obsidian-Tag-Buddy in BRAT settings
-4. And specify the latest release (0.6.4 as of this writing).
+Obsidian approved December 6th, 2023! 🤘
+1. Download free from the official Obsidian plugin store.
+2. Open Settings > Community Plugins
+3. Tap “Turn on Community Plugins” to access the store
+4. Search for **Tag Buddy**.
+5. Tap **Install**.
+6. After installation, tap **Enable**.
+7. Enjoy!
 
 ## ⚙️ Settings
 - Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native  tag search on click.
@@ -101,7 +104,6 @@ While waiting on the official Obsidian plugin store you can install via the appr
 - [ ] Specify copy to section prefix in tag-summary code block Ex: Section 1(-)  
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
 - [ ] Separate nested tags (part of the edit modal above?)
-- [ ] Add tag modal can also have the edit button for each tag
 - [ ] Command/modal to create a summary note from tag
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] ON-GOING: Refactoring and cleanup
