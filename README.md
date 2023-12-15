@@ -101,6 +101,9 @@ Obsidian approved December 6th, 2023! 🤘
 ## ✅ To Do:
 - [ ] BUG: Mobile modal input focus
 - [ ] BUG: Remove extra space if removing between words
+- [ ] BUG: Summaries aren’t showing tagged lists
+- [ ] Icon buttons in summaries
+- [ ] Use drop-down instead of copy-to-section buttons
 - [ ] Specify copy to section prefix in tag-summary code block Ex: Section 1(-)  
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
 - [ ] Separate nested tags (part of the edit modal above?)
