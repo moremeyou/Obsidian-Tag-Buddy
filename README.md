@@ -102,12 +102,16 @@ Obsidian approved December 6th, 2023! 🤘
 - [ ] BUG: Mobile modal input focus
 - [ ] BUG: Remove extra space if removing between words
 - [ ] BUG: Summaries aren’t showing tagged lists
-- [ ] Icon buttons in summaries
-- [ ] Use drop-down instead of copy-to-section buttons
+- [ ] Sort tag summary dropdown option
 - [ ] Specify copy to section prefix in tag-summary code block Ex: Section 1(-)  
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
+- [ ] Simple actions like ‘convert all tags to lower case’
 - [ ] Separate nested tags (part of the edit modal above?)
+- [ ] Add checkboxes for summary items. Check these to batch move/copy/bake/remove items
+- [ ] Refactor settings 
+- [ ] If tag in a header, add paragraph immediatley below to summary
 - [ ] Command/modal to create a summary note from tag
+- [ ] Add to section functionality checks for selected text
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] ON-GOING: Refactoring and cleanup
 - [x] ~~Add tag on mobile~~
