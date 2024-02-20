@@ -102,42 +102,21 @@ Obsidian approved December 6th, 2023! 🤘
 - [ ] BUG: Mobile modal input focus
 - [ ] BUG: Remove extra space if removing between words
 - [ ] BUG: Summaries aren’t showing tagged lists
+- [ ] BUG: New note tag issue
 - [ ] Sort tag summary dropdown option
 - [ ] Specify copy to section prefix in tag-summary code block Ex: Section 1(-)  
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
 - [ ] Simple actions like ‘convert all tags to lower case’
 - [ ] Separate nested tags (part of the edit modal above?)
 - [ ] Add checkboxes for summary items. Check these to batch move/copy/bake/remove items
+- [ ] Add move to file option and/or header, as well as header section like now
 - [ ] Refactor settings 
+- [ ] Add sort type (recent) option in codeblock
 - [ ] If tag in a header, add paragraph immediatley below to summary
 - [ ] Command/modal to create a summary note from tag
 - [ ] Add to section functionality checks for selected text
 - [ ] Possible undo/redo without switching to edit mode? Notices or buttons.
 - [ ] ON-GOING: Refactoring and cleanup
-- [x] ~~Add tag on mobile~~
-- [x] ~~Tag processing rebuilt around markdown rendering and observers~~
-- [x] ~~Add tag location defaults to end of line if near last word~~
-- [x] ~~Long-note tag rendering/processing issue~~
-- [x] ~~Error handling when editing very small and duplicated embeds~~
-- [x] ~~Bake summary into note~~
-- [x] ~~Settings for recently used tags~~ (edit, lock)
-- [x] ~~Copy/make note from summary~~
-- [x] ~~Add tags to content with CTRL/CMD+Right-click~~
-- [x] ~~Option to remove tags from source note tagged block when copying~~
-- [x] ~~Debug mode~~
-- [x] ~~Test functionalities in other view types (canvas, tables, etc). Errors handled!~~
-- [x] ~~Settings to customize removal and convert (alt+click removes #, cmd+click native search)~~
-- [x] ~~Remove child tags before parent~~
-- [x] ~~Full mobile support (double tap to remove/edit, hold to convert)~~
-- [x] ~~Deep editing: Remove/edit tags in embeded notes and from rendered code block tag summary~~
-- [x] ~~Integrate parts of [Tag Summary Plugin](https://github.com/macrojd/tag-summary) into this plugin~~
-- [x] ~~Setting to disable notices on mobile~~
-- [x] ~~Restore native tag search functionality on single tap on mobile.~~
-- [x] ~~Summary paragraph buttons: Copy summary paragraph, remove tag (removes the paragraph from summary), Copy To Section~~
-- [x] ~~Notices when removing tags with buttons let you load and deep links you to the paragraph in the source note~~
-- [x] ~~CMD/CTRL+Click Copy To Section button also removes the tag (and paragraph) from the summary~~
-- [x] ~~Setting for tag summary buttons~~
-- [x] ~~Limit tag summary results~~
 
 ## 👍 Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 

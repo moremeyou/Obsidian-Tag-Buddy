@@ -205,7 +205,8 @@ export class TagSummary {
         });
 
 		// Sort files alphabetically
-		listFiles = listFiles.sort((file1, file2) => {
+		// make this a property of the code block. but default to modified date
+		/*listFiles = listFiles.sort((file1, file2) => {
 			if (file1.path < file2.path) {
 				return -1;
 			} else if (file1.path > file2.path) {
@@ -213,6 +214,13 @@ export class TagSummary {
 			} else {
 				return 0;
 			}
+		});*/
+ 
+
+		listFiles = listFiles.sort((file1, file2) => {
+		    // Since mtime is a Unix timestamp in milliseconds, we can directly subtract them
+		    //console.log(file2.stat.ctime - file1.stat.ctime)
+		    return file2.stat.ctime - file1.stat.ctime;
 		});
 
 		// Get files content
@@ -246,67 +254,73 @@ export class TagSummary {
 				let listTags = paragraph.match(/(?<=^|\s)(#[^\s#.,;!?:]+)/g); // revised to not match hash in middle of word
 				
 				if (listTags != null && listTags.length > 0) {
-					if (!paragraph.contains("```")) {
+					if (!paragraph.contains("```") && !paragraph.contains("---")) {
 						valid = this.isValidText(listTags, tags, include, exclude);
 					}
 				}
 
-				if (valid) {
-					// Add paragraphs and the items of a list
-					let listItems: string[] = Array();
-					let itemText = "";
+				if (valid) {  
 
-					paragraph.split('\n\s*\n').forEach((line) => {
-						// if (count++ >= max) return;
-						// console.log(count, max)
-						
-						let isList = false;
-						isList = line.search(/(\s*[\-\+\*]){1}|([0-9]\.){1}\s+/) != -1
+					//if (true) {
+						// Add all paragraphs
+						listParagraphs.push(paragraph);  
+					/*} else {
+						// Add paragraphs and the items of a list 
+						let listItems: string[] = Array();
+						let itemText = "";
 
-						if (!isList) {
-							// Add normal paragraphs
-							listParagraphs.push(line);
-							itemText = "";
-						} else {
-							line.split('\n').forEach((itemLine) => {
-								// Get the item's level
-								let level = 0;
-								const endIndex = itemLine.search(/[\-\+\*]{1}|([0-9]\.){1}\s+/);
-								const tabText = itemLine.slice(0, endIndex);
-								const tabs = tabText.match(/\t/g);
-								if (tabs) {
-									level = tabs.length;
-								}
-								// Get items tree
-								if (level == 0) {
-									if (itemText != "") {
-										listItems.push(itemText);
-										itemText = "";
-									}
-									itemText = "" + itemText.concat(itemLine + "\n");
-									// Removed include children setting
-								} else if (level > 0 && itemText != "") {
-									itemText = itemText.concat(itemLine + "\n");
-								}
-							});
-						}
-						//count++
-					});
+						paragraph.split('\n\s*\n').forEach((line) => {
+							// if (count++ >= max) return;
+							// console.log(count, max)
+							
+							let isList = false;
+							isList = line.search(/(\s*[\-\+\*]){1}|([0-9]\.){1}\s+/) != -1
 
-					if (itemText != "") {
-						listItems.push(itemText);
-						itemText = "";
-					}
-
-					// Check tags on the items
-					listItems.forEach((line) => {
-						listTags = line.match(/#[\p{L}0-9_\-/#]+/gu);
-						if (listTags != null && listTags.length > 0) {
-							if (this.isValidText(listTags, tags, include, exclude)) {
+							if (!isList) {
+								// Add normal paragraphs
 								listParagraphs.push(line);
+								itemText = "";
+							} else {
+								line.split('\n').forEach((itemLine) => {
+									// Get the item's level
+									let level = 0;
+									const endIndex = itemLine.search(/[\-\+\*]{1}|([0-9]\.){1}\s+/);
+									const tabText = itemLine.slice(0, endIndex);
+									const tabs = tabText.match(/\t/g);
+									if (tabs) {
+										level = tabs.length;
+									}
+									// Get items tree
+									if (level == 0) {
+										if (itemText != "") {
+											listItems.push(itemText);
+											itemText = "";
+										}
+										itemText = "" + itemText.concat(itemLine + "\n");
+										// Removed include children setting
+									} else if (level > 0 && itemText != "") {
+										itemText = itemText.concat(itemLine + "\n");
+									}
+								});
 							}
+							//count++
+						});
+
+						if (itemText != "") {
+							listItems.push(itemText);
+							itemText = "";
 						}
-					});
+
+						// Check tags on the items
+						listItems.forEach((line) => {
+							listTags = line.match(/#[\p{L}0-9_\-/#]+/gu);
+							if (listTags != null && listTags.length > 0) {
+								if (this.isValidText(listTags, tags, include, exclude)) {
+									listParagraphs.push(line);
+								}
+							}
+						});
+					}*/
 				}
 			})
 
@@ -318,6 +332,7 @@ export class TagSummary {
 
 				// Restore newline at the end
 				paragraph += "\n";
+
 				var regex = new RegExp;
 
 				// Check which tag matches in this paragraph.

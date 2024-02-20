@@ -65,11 +65,12 @@ export default class TagBuddy extends Plugin {
 			this.registerMarkdownPostProcessor(
 			this.tagProcessor.renderPostProcessor.bind(this.tagProcessor)
 			)
-
-			this.registerMarkdownCodeBlockProcessor(
-				'tag-summary', 
-				this.tagSummary.codeBlockProcessor.bind(this.tagSummary)
-			);
+			//try {
+				this.registerMarkdownCodeBlockProcessor(
+					'tag-summary', 
+					this.tagSummary.codeBlockProcessor.bind(this.tagSummary)
+				);
+			//} catch {}
 		    
 		    //this.registerEvent( this.app.workspace.on('active-leaf-change', async () => { console.log('active leaf change') }));
 		    //this.registerEvent(this.app.workspace.on('editor-change', async () => { console.log('editor change');  }, true));
