@@ -101,7 +101,7 @@ Obsidian approved December 6th, 2023! 🤘
 ## ✅ To Do:
 - [ ] BUG: Mobile modal input focus
 - [ ] BUG: Remove extra space if removing between words
-- [x] BUG: Summaries aren’t showing tagged lists
+- [x] ~~BUG: Summaries aren’t showing tagged lists~~
 - [ ] BUG: New note tag issue
 - [ ] Better button/icons
 - [ ] Summary improvments
