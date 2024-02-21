@@ -109,13 +109,13 @@ Obsidian approved December 6th, 2023! 🤘
 	- [ ] Copy to section prefix in tag-summary code block Ex: Section 1(-)  
 	- [ ] Add checkboxes for summary items. Check these to batch move/copy/bake/remove items
 	- [ ] Add move to file option and/or header, as well as header section like now
+	- [ ] Add to section functionality checks for selected text
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
 	- [ ] Simple actions like ‘convert all tags to lower case’
 	- [ ] Separate nested tags (part of the edit modal above?)
 - [ ] Refactor settings 
-- [ ] If tag in a header, add paragraph immediatley below to summary
+- [x] If tag in a header, add paragraph immediatley below to summary
 - [ ] Command/modal to create a summary note from tag
-- [ ] Add to section functionality checks for selected text
 - [ ] ON-GOING: Refactoring and cleanup
 
 ## 👍 Support a buddy
