@@ -114,7 +114,7 @@ Obsidian approved December 6th, 2023! 🤘
 	- [ ] Simple actions like ‘convert all tags to lower case’
 	- [ ] Separate nested tags (part of the edit modal above?)
 - [ ] Refactor settings 
-- [x] If tag in a header, add paragraph immediatley below to summary
+- [x] ~~If tag in a header, add paragraph immediatley below to summary~~
 - [ ] Command/modal to create a summary note from tag
 - [ ] ON-GOING: Refactoring and cleanup
 
