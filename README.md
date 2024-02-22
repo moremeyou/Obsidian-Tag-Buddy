@@ -69,7 +69,7 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 ## 📦 Install now
 Obsidian approved December 6th, 2023! 🤘
-1. Download free from the official Obsidian plugin store.
+1. Download free from the [official Obsidian plugin store.](https://obsidian.md/plugins?id=tag-buddy)
 2. Open Settings > Community Plugins
 3. Tap “Turn on Community Plugins” to access the store
 4. Search for **Tag Buddy**.
