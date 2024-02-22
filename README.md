@@ -100,11 +100,12 @@ Obsidian approved December 6th, 2023! 🤘
 	
 ## ✅ To Do:
 - [ ] BUG: Mobile modal input focus
-- [ ] BUG: Remove extra space if removing between words
+- [ ] BUG: Remove extra space if removing between words 👨🏻‍💻
 - [x] ~~BUG: Summaries aren’t showing tagged lists~~
 - [ ] BUG: New note tag issue
-- [ ] Better button/icons
-- [ ] Summary improvments
+- [ ] BUG: honor obsidian exclude folders in summaries
+- [ ] Better button/icons 👨🏻‍💻
+- [ ] Summary improvements
 	- [ ] Move to section is a dropdown of headers
 	- [ ] Copy to section prefix in tag-summary code block Ex: Section 1(-)  
 	- [ ] Add checkboxes for summary items. Check these to batch move/copy/bake/remove items
@@ -116,7 +117,7 @@ Obsidian approved December 6th, 2023! 🤘
 - [ ] Refactor settings 
 - [x] ~~If tag in a header, add paragraph immediatley below to summary~~
 - [ ] Command/modal to create a summary note from tag
-- [ ] ON-GOING: Refactoring and cleanup
+- [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
 
 ## 👍 Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 

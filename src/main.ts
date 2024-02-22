@@ -43,7 +43,8 @@ export default class TagBuddy extends Plugin {
 	tagEditor: ReadingModeTagEditor;
 	private activeFile: TFile;
 
-	onunload() { // I think all the cleanup is done automatically the way I register everything. 
+	onunload() { 
+		// I think all the cleanup is done automatically the way I register everything. 
 	}
 
 	async onload() {
@@ -65,12 +66,12 @@ export default class TagBuddy extends Plugin {
 			this.registerMarkdownPostProcessor(
 			this.tagProcessor.renderPostProcessor.bind(this.tagProcessor)
 			)
-			//try {
+			try {
 				this.registerMarkdownCodeBlockProcessor(
 					'tag-summary', 
 					this.tagSummary.codeBlockProcessor.bind(this.tagSummary)
 				);
-			//} catch {}
+			} catch {}
 		    
 		    //this.registerEvent( this.app.workspace.on('active-leaf-change', async () => { console.log('active leaf change') }));
 		    //this.registerEvent(this.app.workspace.on('editor-change', async () => { console.log('editor change');  }, true));
