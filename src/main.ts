@@ -43,9 +43,7 @@ export default class TagBuddy extends Plugin {
 	tagEditor: ReadingModeTagEditor;
 	private activeFile: TFile;
 
-	onunload() { 
-		// I think all the cleanup is done automatically the way I register everything. 
-	}
+	// onunload() { I think all the cleanup is done automatically the way I register everything. } 
 
 	async onload() {
 		

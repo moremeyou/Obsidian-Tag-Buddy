@@ -1,7 +1,8 @@
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/moremeyou/Obsidian-Tag-Buddy?style=for-the-badge&sort=semver)  ![GitHub All Releases](https://img.shields.io/github/downloads/moremeyou/Obsidian-Tag-Buddy/total?style=for-the-badge)  ![Static Badge](https://img.shields.io/badge/New_Version-In--Progress-green?style=for-the-badge)
 # Obsidian Tag Buddy 🔖
 Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
 
-### ✏️  Use 1: Add tags to note in reading mode
+### ✏️  Use 1: . dd tags to note in reading mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
 Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. **TRIPLE-TAP** on mobile. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
@@ -69,13 +70,14 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 ## 📦 Install now
 Obsidian approved December 6th, 2023! 🤘
-1. Download free from the [official Obsidian plugin store.](https://obsidian.md/plugins?id=tag-buddy)
-2. Open Settings > Community Plugins
-3. Tap “Turn on Community Plugins” to access the store
-4. Search for **Tag Buddy**.
-5. Tap **Install**.
-6. After installation, tap **Enable**.
-7. Enjoy!
+- If you're already using community plugins, click here to install from the [Obsidian plugin store.](https://obsidian.md/plugins?id=tag-buddy)
+- If you're new to Obsidian:
+	1. Open Settings > Community Plugins
+	2. Tap “Turn on Community Plugins” to access the store
+	3. Search for **Tag Buddy**.
+	4. Tap **Install**.
+	5. After installation, tap **Enable**.
+	6. Enjoy!
 
 ## ⚙️ Settings
 - Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native  tag search on click.
