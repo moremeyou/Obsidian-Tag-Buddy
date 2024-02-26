@@ -1,4 +1,4 @@
-import { App, DropdownComponent, setIcon, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, DropdownComponent, setIcon, MarkdownRenderer, DropdownComponent, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
 import TagBuddy from "main";
 import type { App } from "obsidian";
 import * as Utils from './utils';
@@ -63,7 +63,7 @@ export class GUI {
 	): HTMLElement {	
 		
 		const button = this.makeButton(
-			'search', 
+			'refresh-ccw', 
 			(e) => { 
 				e.stopPropagation();
 				
@@ -84,46 +84,63 @@ export class GUI {
 	makeCopyToSection (
 		content: string, 
 		sections: string[], 
-		paragraph: string, 
 		tags: Array, 
 		filePath: string, 
 		paragraphEl: HTMLElement, 
 		summaryEl: HTMLElement
 	): HTMLElement {
-		const containerEl: HTMLElement = createEl('span');
-		const selector: HTMLSelectElement = createEl('selectEl');
-		const prefix: HTMLInputElement = createEl('inputEl');
-		const button: HTMLElement = this.makeCopyToButton (content, sections, paragraph, tags, filePath, paragraphEl, summaryEl);
-		containerEl.appendChild(selector);
-		containerEl.appendChild(prefix);
-		containerEl.appendChild(button);
-		//selector.addOptions(sections);
-		prefix.value = '- ';
-		return containerEl;
+
+		// can't pass this to the select value. it only takes strings. so will need to pass and pull it elsewhere
+		// 'prefix':this.plugin.settings.taggedParagraphCopyPrefix
+
+		const copyToEl: HTMLElement = createEl('span');
+		const selectEl: HTMLSelectElement = createEl('selectEl');
+		let dropdown = new DropdownComponent(selectEl);
+		sections.forEach((sec) => {
+			dropdown.addOption(sec, Utils.truncateStringAtWord(sec, 16)); 
+		});
+		
+		selectEl.querySelector('select').className = 'tagsummary-dropdown';
+		//selectEl.classId = 'tagsummary-dropdown';
+		//dropdown.className = 'tagsummary-dropdown';
+		//dropdown.classId = 'tagsummary-dropdown';
+
+
+		copyToEl.appendChild(
+			this.makeCopyToButton (
+				dropdown,
+				paragraphEl, 
+				summaryEl,
+				content,
+				tags,
+				filePath 
+			)
+		)
+
+		copyToEl.appendChild(selectEl);
+		/*const arrow = createEl('span');
+		setIcon(arrow, 'chevron-down')
+		copyToEl.appendChild(arrow)*/
+
+		return copyToEl;
 	}
 
 	makeCopyToButton (
-		content: string, 
-		section: string, 
-		paragraph: string, 
+		dropdown: DropdownComponent,
+		paragraphEl: HTMLElement, 
+		summaryEl: HTMLElement,
+		content: string,  
 		tags: Array, 
 		filePath: string, 
-		paragraphEl: HTMLElement, 
-		summaryEl: HTMLElement
 	): HTMLElement {
-
-		const buttonLabel = ('copy')// + 
-			//Utils.truncateStringAtWord(section, 16));
-			//this.truncateStringAtWord(section, 16));
+		
+		const buttonLabel = ('chevron-right-square')
 
 		const button = this.makeButton(
 			buttonLabel, 
 			async(e) => { 
 				e.stopPropagation();
-
 				let newContent = content;
-				const prefix = this.plugin.settings.taggedParagraphCopyPrefix;
-
 				if (Utils.ctrlCmdKey(e)) {
 					tags.forEach((tag, i) => {
 						//newContent = this.removeTagFromString(newContent, tag).trim();
@@ -131,11 +148,11 @@ export class GUI {
 					});
 				} 
 
-				//const copySuccess = this.copyTextToSection(
 				const copySuccess = this.plugin.tagSummary.copyTextToSection(
-						prefix + newContent, 
-						section, 
-						filePath);
+					this.plugin.settings.taggedParagraphCopyPrefix + newContent, 
+					dropdown.getValue(), 
+					filePath
+				);
 				
 				if (copySuccess) {
 					if (Utils.ctrlCmdKey(e) && e.shiftKey) {
@@ -154,7 +171,7 @@ export class GUI {
 							this.app.vault.modify(file, newFileContent);
 							
 							const notice = new Notice(
-								'Paragraph moved to ' + section +
+								'Paragraph moved to ' + dropdown.getValue() +
 								'.\n🔗 Open source note.', 
 								5000);
 
@@ -173,12 +190,12 @@ export class GUI {
 			 				});
 
 						} else {
-							new Notice ('Tag Buddy: Paragraph copied to ' + section 
+							new Notice ('Tag Buddy: Paragraph copied to ' + dropdown.getValue() 
 								+ '.\nBut can\'t update source file.');
 						}
 						
 					} else {
-						new Notice ('Tag Buddy: Paragraph copied to ' + section + '.');
+						new Notice ('Tag Buddy: Paragraph copied to ' + dropdown.getValue() + '.');
 					}
 				} else {
 					// errors 
@@ -186,7 +203,7 @@ export class GUI {
 			}
 		);
 
-		button.title = 'Copy paragraph to ' + section + 
+		button.title = 'Copy paragraph to section' + //dropdown.getValue() + 
 			'.\n' + Utils.ctrlCmdStr() + '+CLICK to remove tag(s) then copy.\n';
 
 		button.title += 'SHIFT+' + Utils.ctrlCmdStr() + '+CLICK to remove tags from source note paragraph.'

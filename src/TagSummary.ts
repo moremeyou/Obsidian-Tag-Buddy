@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, MarkdownPostProcessorContext, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, MarkdownRenderer, MarkdownPostProcessorContext, DropdownComponent, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
 import TagBuddy from "main";
 import * as Utils from './utils';
 
@@ -259,69 +259,8 @@ export class TagSummary {
 					}
 				}
 
-				if (valid) {  
+				if (valid) listParagraphs.push(paragraph);  
 
-					//if (true) {
-						// Add all paragraphs
-						listParagraphs.push(paragraph);  
-					/*} else {
-						// Add paragraphs and the items of a list 
-						let listItems: string[] = Array();
-						let itemText = "";
-
-						paragraph.split('\n\s*\n').forEach((line) => {
-							// if (count++ >= max) return;
-							// console.log(count, max)
-							
-							let isList = false;
-							isList = line.search(/(\s*[\-\+\*]){1}|([0-9]\.){1}\s+/) != -1
-
-							if (!isList) {
-								// Add normal paragraphs
-								listParagraphs.push(line);
-								itemText = "";
-							} else {
-								line.split('\n').forEach((itemLine) => {
-									// Get the item's level
-									let level = 0;
-									const endIndex = itemLine.search(/[\-\+\*]{1}|([0-9]\.){1}\s+/);
-									const tabText = itemLine.slice(0, endIndex);
-									const tabs = tabText.match(/\t/g);
-									if (tabs) {
-										level = tabs.length;
-									}
-									// Get items tree
-									if (level == 0) {
-										if (itemText != "") {
-											listItems.push(itemText);
-											itemText = "";
-										}
-										itemText = "" + itemText.concat(itemLine + "\n");
-										// Removed include children setting
-									} else if (level > 0 && itemText != "") {
-										itemText = itemText.concat(itemLine + "\n");
-									}
-								});
-							}
-							//count++
-						});
-
-						if (itemText != "") {
-							listItems.push(itemText);
-							itemText = "";
-						}
-
-						// Check tags on the items
-						listItems.forEach((line) => {
-							listTags = line.match(/#[\p{L}0-9_\-/#]+/gu);
-							if (listTags != null && listTags.length > 0) {
-								if (this.isValidText(listTags, tags, include, exclude)) {
-									listParagraphs.push(line);
-								}
-							}
-						});
-					}*/
-				}
 			})
 
 			// There is also some redundancy here because we are processing a lot of content that we don't need, if a max is set. 
@@ -352,96 +291,40 @@ export class TagSummary {
 				paragraphEl.setAttribute('file-source', filePath);
 				paragraphEl.setAttribute('class', 'tag-summary-paragraph');
 
-				////////////////////////////////////////////////////////////////
-				//  REFACTOR
-				////////////////////////////////////////////////////////////////
-
 				const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu); 
 				let link;
         		
-        		if (blockLink) { // remove the !
-        			link = '[[' + filePath + '#' + blockLink + '|' + fileName + ']]';
-        			console.log('make selector')
-        			buttonContainer.appendChild(
-        				this.plugin.gui.makeCopyToSection(
-							paragraph, 
-							sections, 
-							paragraphEl, 
-							tags, 
-							(filePath + '#' + blockLink), 
-							paragraphEl, 
-							summaryContainer
-						)
-        			);
-						/*
-        			let buttonCount = 0;
-					sections.forEach((sec) => {
-						//if (buttonCount++ > 3) return; // limit to 4 section buttons for now, for space.
+        		if (blockLink) link = '[[' + filePath + '#' + blockLink + '|' + fileName + ']]';
+        		else link = '[[' + filePath + '|' + fileName + ']]';
+						
+        		if (this.plugin.settings.tagSummaryBlockButtons) {
+
+					if (sections.length >= 1) {
 						buttonContainer.appendChild(
-							//this.plugin.gui.makeCopyToButton(
 							this.plugin.gui.makeCopyToSection(
 								paragraph, 
-								sec, 
-								paragraphEl, 
-								tags, 
-								(filePath + '#' + blockLink), 
+								sections, 
+								tags,
+								(blockLink ? (filePath + '#' + blockLink[0]) : filePath), 
 								paragraphEl, 
 								summaryContainer
 							)
 						);
-					});
+					}
+					buttonContainer.appendChild(
+						this.plugin.gui.makeCopyButton(
+							paragraph.trim()
+						)
+					);
+    				buttonContainer.appendChild(
+    					this.plugin.gui.makeRemoveTagButton(
+    						paragraphEl, 
+    						tagSection, 
+    						(blockLink ? (filePath + '#' + blockLink[0]) : filePath)
+						)
+					);
 
-					if (this.plugin.settings.tagSummaryBlockButtons) {
-						buttonContainer.appendChild(
-							this.plugin.gui.makeCopyButton(
-								paragraph.trim())
-							);
-        				buttonContainer.appendChild(
-        					this.plugin.gui.makeRemoveTagButton(
-        						paragraphEl, 
-        						tagSection, 
-        						(filePath + '#' + blockLink)
-    						)
-    					);
-        			}*/
-
-        		} else { 
-
-        			link = '[[' + filePath + '|' + fileName + ']]';
-
-					let buttonCount = 0;
-					sections.forEach((sec) => {
-						if (buttonCount++ > 3) return; // limit to 4 section buttons for now, for space.
-						if (this.plugin.settings.tagSummaryBlockButtons) {
-							buttonContainer.appendChild(
-								this.plugin.gui.makeCopyToButton (
-									paragraph, 
-									sec, 
-									paragraphEl, 
-									tags,
-									filePath, 
-									paragraphEl, 
-									summaryContainer
-								)
-							)
-						};
-					});
-
-					if (this.plugin.settings.tagSummaryBlockButtons) {
-						buttonContainer.appendChild(
-							this.plugin.gui.makeCopyButton(
-								paragraph.trim()
-							)
-						);
-        				buttonContainer.appendChild(
-        					this.plugin.gui.makeRemoveTagButton(
-        						paragraphEl, 
-        						tagSection, 
-        						filePath
-    						)
-						);
-        			}
-        		}
+    			}
 
         		const mdParagraph = paragraph;
         		paragraph = '**' + link + '**\n' + paragraph;

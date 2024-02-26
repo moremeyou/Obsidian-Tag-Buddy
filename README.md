@@ -2,7 +2,7 @@
 # Obsidian Tag Buddy 🔖
 Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
 
-### ✏️  Use 1: Add tags to note in reading mode
+### ✏️  Use 1: . dd tags to note in reading mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
 Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. **TRIPLE-TAP** on mobile. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
@@ -100,24 +100,24 @@ Obsidian approved December 6th, 2023! 🤘
 	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin. But I will implement warnings.
 	 - Two (or more) tag summaries or embeds in the same note referencing the same tags will lose sync with each other. Warnings have been implemented. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. 
 	
-## ✅ To Do:
+## ✅ #ToDo :
 - [ ] BUG: Mobile modal input focus
 - [ ] BUG: Remove extra space if removing between words 👨🏻‍💻
 - [x] ~~BUG: Summaries aren’t showing tagged lists~~
-- [ ] BUG: New note tag issue
-- [ ] BUG: honor obsidian exclude folders in summaries
-- [ ] Better button/icons 👨🏻‍💻
+- [ ] BUG: New note tag issue 👨🏻‍💻
+- [ ] BUG: honor obsidian exclude folders in summaries 👨🏻‍💻
+- [x] ~~Better button/icons~~
 - [ ] Summary improvements
-	- [ ] Move to section is a dropdown of headers
+	- [x] ~~Move to section is a dropdown of headers~~
 	- [ ] Copy to section prefix in tag-summary code block Ex: Section 1(-)  
-	- [ ] Add checkboxes for summary items. Check these to batch move/copy/bake/remove items
+	- [ ] Add checkboxes for summary items. Check these to batch move/copy/bake/remove items 👨🏻‍💻
 	- [ ] Add move to file option and/or header, as well as header section like now
-	- [ ] Add to section functionality checks for selected text
+	- [ ] Add to section functionality checks for selected text 👨🏻‍💻
 - [ ] Edit tag text modal (options for this instance, all in note, across vault?)
 	- [ ] Simple actions like ‘convert all tags to lower case’
 	- [ ] Separate nested tags (part of the edit modal above?)
 - [ ] Refactor settings 
-- [x] ~~If tag in a header, add paragraph immediatley below to summary~~
+- [x] ~~If tag in a header, add paragraph immediately below to summary~~
 - [ ] Command/modal to create a summary note from tag
 - [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
 

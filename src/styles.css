@@ -21,7 +21,7 @@
    display: inline-flex !important;
    align-items: center !important;
    justify-content: center !important;
-   --icon-size: var(--icon-size-xl) !important;
+   --icon-size: var(--icon-size-l) !important;
    /*line-height: 25px !important;
    border-radius: 5px !important;
    width: auto !important;
@@ -38,41 +38,51 @@
     background-color: var(--link-color) !important;
     color: var(--background-secondary) !important;
 }
-.tagsummary-button svg {
-    /*width: auto !important;
-    height: auto !important;
-    min-width: 0 !important;
-   min-height: 0 !important;
-   width: 20px !important;
-   height: 25px !important;*/
-}
 
-/*color: var(--text-primary) !important;
+.tagsummary-dropdown {
+   /*color: var(--text-primary) !important;
+   background: none;
+   border: 2px solid var(--text-quote) !important;
    border-radius: 5px !important;
-   border: 0px solid var(--link-color) !important; 
+   padding: 0px 0px 10px 0px !important;
+   font-size: 65% !important;
+   margin: 2px !important;
+   color: var(--link-color) !important;
+   border: 1px solid var(--link-color) !important; 
+   background-color: var(--background-primary) !important;*/
+   color: var(--link-color) !important;
+   background: transparent;
+   border: 2px solid var(--text-quote) !important;
+   border-radius: 5px !important;
+   box-shadow: none !important;
+   vertical-align: top !important;
+   border: 2px solid var(--link-color) !important; 
    background-color: var(--background-primary) !important;
-   background-color: var(--link-color) !important;
-   color: var(--background-secondary) !important;
-
-.tagsummary-button {
-   background-color: #FFFFFF !important;
-   color: #000000 !important;
-   border: none !important;
-   box-shadow: none !important;
-   outline: none !important;
-   cursor: pointer !important;
-   box-shadow: none !important;
-   margin: 0 !important;
-   padding: 2px !important;
+   min-height: 0px !important;
+   padding: 2px 5px 2px 5px !important;
+   margin: 0px 10px 0px -5px !important;
+   
+  /*
    display: inline-flex !important;
    align-items: center !important;
    justify-content: center !important;
-   opacity: 0.75 !important;
+   margin: 0px 0px 10px 0px !important;
+   appearance: none; Remove default styling 
+    -webkit-appearance: none; For Safari 
+    -moz-appearance: none; For Firefox 
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill='var(--text-primary)' width="24" height="24" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: calc(100% - 5px) center;
+    background-size: 1.5rem;
+    padding-right: 2rem;  Ensure there's enough padding to not overlap text */
 }
 
-.tagsummary-button:hover {
-    opacity: 1;
-}*/
+.tagsummary-dropdown:hover {
+    background-color: transparent !important;
+    background-color: var(--link-color) !important;
+    color: var(--background-secondary) !important;
+}
+
 
 
 .tagsummary-item-title {
