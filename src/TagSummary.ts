@@ -359,14 +359,27 @@ export class TagSummary {
 				const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu); 
 				let link;
         		
-        		if (blockLink) { 
+        		if (blockLink) { // remove the !
         			link = '[[' + filePath + '#' + blockLink + '|' + fileName + ']]';
-
+        			console.log('make selector')
+        			buttonContainer.appendChild(
+        				this.plugin.gui.makeCopyToSection(
+							paragraph, 
+							sections, 
+							paragraphEl, 
+							tags, 
+							(filePath + '#' + blockLink), 
+							paragraphEl, 
+							summaryContainer
+						)
+        			);
+						/*
         			let buttonCount = 0;
 					sections.forEach((sec) => {
-						if (buttonCount++ > 3) return; // limit to 4 section buttons for now, for space.
+						//if (buttonCount++ > 3) return; // limit to 4 section buttons for now, for space.
 						buttonContainer.appendChild(
-							this.plugin.gui.makeCopyToButton(
+							//this.plugin.gui.makeCopyToButton(
+							this.plugin.gui.makeCopyToSection(
 								paragraph, 
 								sec, 
 								paragraphEl, 
@@ -390,7 +403,7 @@ export class TagSummary {
         						(filePath + '#' + blockLink)
     						)
     					);
-        			}
+        			}*/
 
         		} else { 
 

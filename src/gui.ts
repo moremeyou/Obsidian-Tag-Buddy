@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, DropdownComponent, setIcon, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
 import TagBuddy from "main";
 import type { App } from "obsidian";
 import * as Utils from './utils';
@@ -30,7 +30,8 @@ export class GUI {
 	): HTMLElement {
 
 		const button = createEl('button');
-	    button.innerText = lable;
+	    //button.innerText = lable;
+    	setIcon(button, lable);
 	    button.className = classId;
 
 		this.plugin.registerDomEvent(
@@ -47,7 +48,7 @@ export class GUI {
 		tag: string, 
 		filePath: string
 	):HTMLButtonElement {
-		const button = this.makeButton (' ⌗ˣ ', (e) => { 
+		const button = this.makeButton ('list-x', (e) => { 
 			e.stopPropagation();
 
 			const tagEl = Utils.getTagElement(paragraphEl, tag);
@@ -62,7 +63,7 @@ export class GUI {
 	): HTMLElement {	
 		
 		const button = this.makeButton(
-			' ↺  ', 
+			'search', 
 			(e) => { 
 				e.stopPropagation();
 				
@@ -80,6 +81,27 @@ export class GUI {
 		return button;
 	}
 
+	makeCopyToSection (
+		content: string, 
+		sections: string[], 
+		paragraph: string, 
+		tags: Array, 
+		filePath: string, 
+		paragraphEl: HTMLElement, 
+		summaryEl: HTMLElement
+	): HTMLElement {
+		const containerEl: HTMLElement = createEl('span');
+		const selector: HTMLSelectElement = createEl('selectEl');
+		const prefix: HTMLInputElement = createEl('inputEl');
+		const button: HTMLElement = this.makeCopyToButton (content, sections, paragraph, tags, filePath, paragraphEl, summaryEl);
+		containerEl.appendChild(selector);
+		containerEl.appendChild(prefix);
+		containerEl.appendChild(button);
+		//selector.addOptions(sections);
+		prefix.value = '- ';
+		return containerEl;
+	}
+
 	makeCopyToButton (
 		content: string, 
 		section: string, 
@@ -90,9 +112,8 @@ export class GUI {
 		summaryEl: HTMLElement
 	): HTMLElement {
 
-		const buttonLabel = (
-			' ❏   ' + 
-			Utils.truncateStringAtWord(section, 16));
+		const buttonLabel = ('copy')// + 
+			//Utils.truncateStringAtWord(section, 16));
 			//this.truncateStringAtWord(section, 16));
 
 		const button = this.makeButton(
@@ -180,7 +201,7 @@ export class GUI {
 	): HTMLElement {	
 		
 		const button = this.makeButton (
-			'Bake', 
+			'stamp', 
 			async(e) => { 
 				e.stopPropagation();
 				
@@ -214,7 +235,7 @@ export class GUI {
 	makeCopyButton (
 		content
 	): HTMLElement {	
-		const button = this.makeButton (' ❏ ', (e) => { 
+		const button = this.makeButton ('copy', (e) => { 
 			e.stopPropagation();
 
 			navigator.clipboard.writeText(content);
@@ -231,7 +252,7 @@ export class GUI {
 	:HTMLElement {
 
 		const button = this.makeButton (
-			' ❏  ', 
+			'clipboard-list', 
 			(e) => { 
 				e.stopPropagation();
 				
@@ -251,7 +272,7 @@ export class GUI {
 	): HTMLElement {
 
 		const button = this.makeButton (
-			'Note', 
+			'file-plus-2', 
 			async (e) => {
 
 			e.stopPropagation();
