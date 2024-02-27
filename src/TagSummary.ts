@@ -472,7 +472,8 @@ export class TagSummary {
 	async copyTextToSection(
 	    text: string, 
 	    section: string, 
-	    filePath: string)
+	    filePath: string,
+	    addLink: Boolean = true)
 	:Promise<boolean>{
 
 	    const file = await this.app.workspace.getActiveFile();
@@ -482,7 +483,7 @@ export class TagSummary {
 	    if (mdHeadings.length > 0) { // if there are any headings
 	        const headingObj = mdHeadings.find(heading => heading.text.trim() === section);
 	        if (headingObj) {
-	            const textWithLink = text + ` [[${filePath}|🔗]]`
+	            const textWithLink = text + (addLink?(` [[${filePath}|🔗]]`):'');
 	            //let newContent = this.insertTextAfterLine(text, fileContent, headingObj.line);
 	            let newContent = Utils.insertTextAfterLine(textWithLink, fileContent, headingObj.line);
 	            await this.app.vault.modify(file, newContent);

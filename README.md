@@ -101,24 +101,24 @@ Obsidian approved December 6th, 2023! 🤘
 	 - Two (or more) tag summaries or embeds in the same note referencing the same tags will lose sync with each other. Warnings have been implemented. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. 
 	
 ## ✅ #ToDo :
-- [ ] BUG: Mobile modal input focus
 - [ ] BUG: Remove extra space if removing between words 👨🏻‍💻
 - [x] ~~BUG: Summaries aren’t showing tagged lists~~
-- [ ] BUG: New note tag issue 👨🏻‍💻
 - [ ] BUG: honor obsidian exclude folders in summaries 👨🏻‍💻
 - [x] ~~Better button/icons~~
-- [ ] Summary improvements
+- [ ] Summary improvements 👨🏻‍💻
 	- [x] ~~Move to section is a dropdown of headers~~
-	- [ ] Copy to section prefix in tag-summary code block Ex: Section 1(-)  
+	- [ ] Copy to section prefix in tag-summary code block Ex: Section 1(-) 👨🏻‍💻
 	- [ ] Add checkboxes for summary items. Check these to batch move/copy/bake/remove items 👨🏻‍💻
-	- [ ] Add move to file option and/or header, as well as header section like now
-	- [ ] Add to section functionality checks for selected text 👨🏻‍💻
-- [ ] Edit tag text modal (options for this instance, all in note, across vault?)
-	- [ ] Simple actions like ‘convert all tags to lower case’
-	- [ ] Separate nested tags (part of the edit modal above?)
+	- [x] ~~Add to section functionality checks for selected text~~
+	- [x] ~~Add only link to section~~
+	- [x] ~~Copy and move to section now buttons (not mod keys)~~
+- [ ] Edit tag text modal (options for this note, across vault?)
+	- [ ] Rename (useful for changing all to lower case)
+	- [ ] convert to text
+	- [ ] create summary (in place or new note)
 - [ ] Refactor settings 
 - [x] ~~If tag in a header, add paragraph immediately below to summary~~
-- [ ] Command/modal to create a summary note from tag
+- [ ] BUG: Mobile modal input focus
 - [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
 
 ## 👍 Support a buddy
@@ -128,4 +128,4 @@ There’s lots to do and I’d like this plugin to grow with Obsidian and the co
 - - -
 
 ## Disclaimer
-This plugin modifies your notes. And while there are multiple safety precautions, this plugin comes with no guarantee of any kind. Neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk. [See complete license here.](https://raw.githubusercontent.com/moremeyou/Obsidian-Tag-Buddy/main/LICENSE)
+This plugin modifies your notes. And while there are multiple safety precautions, this plugin comes with no guarantee of any kind. Neither the author nor Obsidian are responsible for any loss of data or inconvenience. Use this plugin at your own risk. [See complete license here.](https://raw.githubusercontent.com/moremeyou/Obsidian-Tag-Buddy/main/LICENSE)	

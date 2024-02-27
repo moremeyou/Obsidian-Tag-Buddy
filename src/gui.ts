@@ -101,13 +101,44 @@ export class GUI {
 		});
 		
 		selectEl.querySelector('select').className = 'tagsummary-dropdown';
-		//selectEl.classId = 'tagsummary-dropdown';
-		//dropdown.className = 'tagsummary-dropdown';
-		//dropdown.classId = 'tagsummary-dropdown';
 
-
+		// have these as settings "show x, etc"
+		// link-2
+		// copy-plus - copy's to
+		// copy-check - moves
+/*
+		copyToEl.appendChild(
+			this.makeButton ('link-2', async(e) => { })
+		);
+		copyToEl.appendChild(
+			this.makeButton ('copy-plus', async(e) => { })
+		);
+*/
 		copyToEl.appendChild(
 			this.makeCopyToButton (
+				'link',	
+				dropdown,
+				paragraphEl, 
+				summaryEl,
+				content,
+				tags,
+				filePath 
+			)
+		)
+		copyToEl.appendChild(
+			this.makeCopyToButton (
+				'copy',
+				dropdown,
+				paragraphEl, 
+				summaryEl,
+				content,
+				tags,
+				filePath 
+			)
+		)
+		copyToEl.appendChild(
+			this.makeCopyToButton (
+				'move',
 				dropdown,
 				paragraphEl, 
 				summaryEl,
@@ -118,14 +149,13 @@ export class GUI {
 		)
 
 		copyToEl.appendChild(selectEl);
-		/*const arrow = createEl('span');
-		setIcon(arrow, 'chevron-down')
-		copyToEl.appendChild(arrow)*/
+
 
 		return copyToEl;
 	}
 
 	makeCopyToButton (
+		mode: String,
 		dropdown: DropdownComponent,
 		paragraphEl: HTMLElement, 
 		summaryEl: HTMLElement,
@@ -134,45 +164,71 @@ export class GUI {
 		filePath: string, 
 	): HTMLElement {
 		
-		const buttonLabel = ('chevron-right-square')
+		//const buttonLabel = ('chevron-right-square')
+		let buttonLabel;
+		if (mode == 'link') buttonLabel = 'link-2';
+		else if (mode == 'copy') buttonLabel = 'copy-plus';
+		else if (mode == 'move') buttonLabel = 'copy-check';
 
 		const button = this.makeButton(
 			buttonLabel, 
 			async(e) => { 
 				e.stopPropagation();
-				let newContent = content;
-				if (Utils.ctrlCmdKey(e)) {
-					tags.forEach((tag, i) => {
-						//newContent = this.removeTagFromString(newContent, tag).trim();
-						newContent = Utils.removeTagFromString(newContent, tag).trim();
-					});
+
+				// content to copy
+
+				let newContent
+				const selection = window.getSelection().toString();
+				
+				if (selection == '') newContent = content;
+				else newContent = selection;
+				let notice;
+					
+				if (mode == 'link') {
+				
+					const fileName = filePath.split('/').pop().replace(/\.md$/, '');
+					newContent = '[[' + filePath + '|' + fileName + ']]';
+				
 				} 
 
+				if (mode != 'link' && !selection) {
+					tags.forEach((tag, i) => {
+						// make this a setting. we'll default to always for now
+						newContent = Utils.removeTagFromString(newContent, tag).trim();
+					});
+				}
+
+//console.log('content=' + newContent)
 				const copySuccess = this.plugin.tagSummary.copyTextToSection(
 					this.plugin.settings.taggedParagraphCopyPrefix + newContent, 
 					dropdown.getValue(), 
-					filePath
+					filePath,
+					(mode!='link')
 				);
-				
+
 				if (copySuccess) {
-					if (Utils.ctrlCmdKey(e) && e.shiftKey) {
-						
+
+//console.log('mode=' + mode + '\nselection=' + selection + '<')
+
+					if (mode == 'move' && !selection) {
+
+//console.log('mode == move && no selection')
+
 						const file = this.app.vault.getAbstractFileByPath(filePath);
 						let fileContent = await this.app.vault.read(file);
 						fileContent = fileContent.trim();
-						//const newFileContent = this.replaceTextInString (content.trim(), 
 						const newFileContent = Utils.replaceTextInString(
 							content.trim(), 
 							fileContent, 
 							newContent).trim();
-						
 						if (fileContent != newFileContent) {
 							
 							this.app.vault.modify(file, newFileContent);
 							
-							const notice = new Notice(
-								'Paragraph moved to ' + dropdown.getValue() +
-								'.\n🔗 Open source note.', 
+							notice = new Notice(
+								//'Moved to section: ' + dropdown.getValue() +
+								//'.\n🔗 Open source note.', 
+								'Copied to section: ' + dropdown.getValue() + '. 🔗',	
 								5000);
 
 							this.removeElementWithAnimation(paragraphEl, () => {
@@ -186,27 +242,32 @@ export class GUI {
 							});
 
 							this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-								this.app.workspace.openLinkText(filePath, '');
+								//this.app.workspace.openLinkText(filePath, '');
+								this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
 			 				});
 
 						} else {
-							new Notice ('Tag Buddy: Paragraph copied to ' + dropdown.getValue() 
-								+ '.\nBut can\'t update source file.');
+							new Notice ('Copied to section: ' + dropdown.getValue() 
+								+ '.\nCan\'t update source file.');
 						}
-						
-					} else {
-						new Notice ('Tag Buddy: Paragraph copied to ' + dropdown.getValue() + '.');
+
+					} else if (mode == 'copy' || mode == 'link') {
+						notice = new Notice ('Copied to section: ' + dropdown.getValue() + '. 🔗');
+						this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+							this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
+ 						});
 					}
-				} else {
-					// errors 
 				}
+				
 			}
-		);
+		)
 
-		button.title = 'Copy paragraph to section' + //dropdown.getValue() + 
-			'.\n' + Utils.ctrlCmdStr() + '+CLICK to remove tag(s) then copy.\n';
+		let buttonHoverText;
+		if (mode == 'link') buttonHoverText = 'Copy paragraph link to section.' ;
+		else if (mode == 'copy') buttonHoverText = 'Copy paragraph to section.';
+		else if (mode == 'move') buttonHoverText = 'Move paragraph to section.';
 
-		button.title += 'SHIFT+' + Utils.ctrlCmdStr() + '+CLICK to remove tags from source note paragraph.'
+		button.title = buttonHoverText;
 
 		return button;
 	}
@@ -252,11 +313,22 @@ export class GUI {
 	makeCopyButton (
 		content
 	): HTMLElement {	
-		const button = this.makeButton ('copy', (e) => { 
+		const button = this.makeButton ('clipboard-list', (e) => { 
 			e.stopPropagation();
 
-			navigator.clipboard.writeText(content);
-			const notice = new Notice ('Tag Buddy: Copied to clipboard.');
+			const selection = window.getSelection().toString();
+			let notice;
+
+			if (selection != '') {
+				navigator.clipboard.writeText(selection);
+				notice = new Notice ('Tag Buddy: Selection copied to clipboard.');
+			} else {
+				navigator.clipboard.writeText(content);
+				notice = new Notice ('Tag Buddy: Tagged paragraph copied to clipboard.');
+			}
+
+			//navigator.clipboard.writeText(content);
+			//const notice = new Notice ('Tag Buddy: Copied to clipboard.');
 		});
 
 		button.title = 'Copy paragraph';

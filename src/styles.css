@@ -7,10 +7,10 @@
 }
 
 .tagsummary-button {
-   min-width: 0px !important;
-   min-height: 0px !important;
-   width: 30px !important;
-   height: 30px !important;
+
+   width: 25px !important;
+
+   max-height: 25px !important;
    border: none !important;
    box-shadow: none !important;
    outline: none !important;
@@ -49,19 +49,22 @@
    margin: 2px !important;
    color: var(--link-color) !important;
    border: 1px solid var(--link-color) !important; 
-   background-color: var(--background-primary) !important;*/
+   background-color: var(--background-primary) !important;
+   border: 1.75px solid var(--text-quote) !important;*/
    color: var(--link-color) !important;
    background: transparent;
-   border: 2px solid var(--text-quote) !important;
    border-radius: 5px !important;
    box-shadow: none !important;
    vertical-align: top !important;
    border: 2px solid var(--link-color) !important; 
    background-color: var(--background-primary) !important;
-   min-height: 0px !important;
+   max-height: 25px !important;
+   white-space: nowrap;
+   overflow: hidden;
    padding: 2px 5px 2px 5px !important;
-   margin: 0px 10px 0px -5px !important;
-   
+   /*margin: 0px 10px 0px -5px !important;chevron-right*/
+   margin: 0px 10px 0px 0px !important;
+
   /*
    display: inline-flex !important;
    align-items: center !important;
@@ -122,12 +125,38 @@ blockquote.tag-summary-paragraph {
        /*border: 1px solid var(--link-color); 
        width: auto !important;            /* auto adjusts width based on content */
        /*max-width: 60px !important;  */  
-       max-height: 40px !important;
-       min-width: 40px !important;
+       max-height: 25px !important;
+       min-width: 25px !important;
        white-space: nowrap;
        /*text-align: left !important;*/
        overflow: hidden;
        background-color: var(--background-primary) !important;
    }
+
+   .tagsummary-dropdown {
+   appearance: none; 
+   color: var(--link-color) !important;
+   background: transparent;
+   border-radius: 5px !important;
+   box-shadow: none !important;
+   vertical-align: top !important;
+   border: 1.75px solid var(--link-color) !important; 
+   background-color: var(--background-primary) !important;
+   max-height: 25px !important;
+   min-width: 40px !important;
+   white-space: nowrap;
+   overflow: hidden;
+   padding: 2px 5px 2px 5px !important;
+   /*margin: 0px 10px 0px -5px !important;*/
+   margin: 0px 10px 0px 0px !important;
+   font-size: 12px !important;
+   
+}
+
+.tagsummary-dropdown:hover {
+    background-color: transparent !important;
+    background-color: var(--link-color) !important;
+    color: var(--background-secondary) !important;
+}
 
 }
