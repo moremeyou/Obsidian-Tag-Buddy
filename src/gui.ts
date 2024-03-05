@@ -3,6 +3,7 @@ import TagBuddy from "main";
 import type { App } from "obsidian";
 import * as Utils from './utils';
 import { TagSelector } from './Modal'
+import { TBTagEditorModal } from './TagEditorModal'
 
 export class GUI {
 	app: App; 
@@ -16,6 +17,33 @@ export class GUI {
 		this.plugin = plugin;
 
 		//this.injectStyles();
+	}
+
+	showTagEditor (tag) {
+
+//console.log('GUI.showTagEditor')
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		const mode = view?.getMode();
+	
+		if (this.app.isMobile) {
+			
+		} else {
+		
+		}
+
+       	if (mode == 'preview') {
+			
+			const tagEditorModal: TBTagEditorModal = new TBTagEditorModal(
+				this.app, 
+				tag,
+				(tag)=>{
+					console.log(tag)
+				}
+			).open();
+
+		}
+
+
 	}
 
 	isTagValid (tag:string):boolean { // including the #
@@ -41,6 +69,51 @@ export class GUI {
 		);
 
 	    return button;
+	}
+
+
+	makeBlockSelector (
+		index: Number
+	): HTMLElement {
+		
+		const checkboxEl = createEl ('div');
+		//checkboxEl.setAttribute('class', 'tagsummary-checkbox')
+		checkboxEl.setAttribute('index', index)
+
+		let checkedBtn;
+		let uncheckedBtn;
+
+		const checkBox = function (bool: Boolean) {
+			//console.log(checkboxEl.getAttribute('index'))
+
+			this.plugin.tagSummary.updateSelection (parseInt(checkboxEl.getAttribute('index')), bool);
+			if (bool) {
+				uncheckedBtn.remove();
+				checkboxEl.appendChild(checkedBtn);
+			} else {
+				checkedBtn.remove();
+				checkboxEl.appendChild(uncheckedBtn);
+			} 
+		}.bind(this);
+
+		checkedBtn = this.makeButton ('check-square', (e) => { 
+			e.stopPropagation();
+			checkBox(false)
+
+		}, 'tagsummary-button tagsummary-checkbox checked');
+		checkedBtn.title = 'Unselect this paragraph.';
+		
+		uncheckedBtn = this.makeButton ('square', (e) => { 
+			e.stopPropagation();
+			checkBox(true)
+
+		}, 'tagsummary-button tagsummary-checkbox');
+		uncheckedBtn.title = 'Select this paragraph.';
+
+		checkBox (false)
+
+		return checkboxEl;
+
 	}
 
 	makeRemoveTagButton (
@@ -148,6 +221,11 @@ export class GUI {
 			)
 		)
 
+		//////
+		// copy to file button
+		// prompts for a file. then tries to put the content under the specified header in that file
+		//////
+
 		copyToEl.appendChild(selectEl);
 
 
@@ -166,9 +244,9 @@ export class GUI {
 		
 		//const buttonLabel = ('chevron-right-square')
 		let buttonLabel;
-		if (mode == 'link') buttonLabel = 'link-2';
+		if (mode == 'link') buttonLabel = 'link';
 		else if (mode == 'copy') buttonLabel = 'copy-plus';
-		else if (mode == 'move') buttonLabel = 'copy-check';
+		else if (mode == 'move') buttonLabel = 'replace'; //'copy-check';
 
 		const button = this.makeButton(
 			buttonLabel, 
@@ -198,9 +276,11 @@ export class GUI {
 					});
 				}
 
+
 //console.log('content=' + newContent)
 				const copySuccess = this.plugin.tagSummary.copyTextToSection(
-					this.plugin.settings.taggedParagraphCopyPrefix + newContent, 
+					//this.plugin.settings.taggedParagraphCopyPrefix + 
+					newContent, 
 					dropdown.getValue(), 
 					filePath,
 					(mode!='link')
@@ -228,7 +308,7 @@ export class GUI {
 							notice = new Notice(
 								//'Moved to section: ' + dropdown.getValue() +
 								//'.\n🔗 Open source note.', 
-								'Copied to section: ' + dropdown.getValue() + '. 🔗',	
+								'Copied to section: ' + dropdown.getValue() + '. 🔗',
 								5000);
 
 							this.removeElementWithAnimation(paragraphEl, () => {
@@ -293,9 +373,11 @@ export class GUI {
 					const newFileContent = Utils.replaceTextInString (
 						mdSource, 
 						fileContent, 
-						summaryMd
+						summaryMd // this is where we call back to tag summary. 
+						// we should be passing the index of this block
+						// tag summary should return the selection or this index block
 					)
-
+//console.log(newFileContent)
 					this.app.vault.modify(file, newFileContent);
 
 					const notice = new Notice ('Tag summary flattened to active note.');
@@ -321,10 +403,10 @@ export class GUI {
 
 			if (selection != '') {
 				navigator.clipboard.writeText(selection);
-				notice = new Notice ('Tag Buddy: Selection copied to clipboard.');
+				notice = new Notice ('Selection copied to clipboard.');
 			} else {
 				navigator.clipboard.writeText(content);
-				notice = new Notice ('Tag Buddy: Tagged paragraph copied to clipboard.');
+				notice = new Notice ('Tagged paragraph copied to clipboard.');
 			}
 
 			//navigator.clipboard.writeText(content);

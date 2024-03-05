@@ -5,6 +5,8 @@ import * as Utils from './utils';
 export class TagSummary {
 	app: App; 
 	plugin: TagBuddy;
+	selectedBlocks: Number[];
+	blocks: String[];
 
 	constructor(
 		app: App, 
@@ -13,6 +15,46 @@ export class TagSummary {
 		this.app = app;
 		this.plugin = plugin;
 	}
+
+	updateSelection (
+		index: Number, 
+		bool: Boolean
+	): void {
+
+		// If isSelected is true, add the index if it's not already in the array
+		if (bool) {
+		    if (!this.selectedBlocks.includes(index)) {
+		        this.selectedBlocks.push(index);
+		    }
+		} else {
+		    // If isSelected is false, remove the index from the array
+		    this.selectedBlocks = this.selectedBlocks.filter(itemIndex => itemIndex !== index);
+		}
+
+console.log(this.selectedBlocks)
+
+	}
+
+
+	getSelectedMarkdownBlocks (): String[] {
+		
+		// if no selection, just send 
+		// grab the md-source from each block
+		// always show a warning when doing any action with a selection
+
+		// when doing any of the button actions, it should call back to a function here
+		// if there's a selection, use that.
+		// if not use what it has.
+		// we'll have to define defaults if we're combining blocks
+		// move: I don't think we can remove in bulk? maybe just do it without motion.
+		// bake should be easy
+		// copy, easy
+		// new note
+		// copy to: easy, but need to add the bullet to each
+		// i guess link is the same easy
+	}
+
+
 
 	async codeBlockProcessor (
 		source: string, 
@@ -179,11 +221,14 @@ export class TagSummary {
 		mdSource:string
 	): void {
 		
+//console.log('create summary')
 		const activeFile = await this.app.workspace.getActiveFile();
 		const validTags = tags.concat(include);
 		const tempComponent = new TempComponent();
 		const summaryContainer = createEl('div');
-		
+		this.selectedBlocks = [];
+		this.blocks = [];
+
 		summaryContainer.setAttribute(
 			'class', 
 			'tag-summary-block'
@@ -286,9 +331,13 @@ export class TagSummary {
             	});
           		
           		const buttonContainer = createEl('div');
+          		//const selectContainer = createEl('div');
           		buttonContainer.setAttribute('class', 'tagsummary-buttons')
           		const paragraphEl = createEl("blockquote");
 				paragraphEl.setAttribute('file-source', filePath);
+
+				paragraphEl.setAttribute('index', count-1);
+
 				paragraphEl.setAttribute('class', 'tag-summary-paragraph');
 
 				const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu); 
@@ -298,6 +347,12 @@ export class TagSummary {
         		else link = '[[' + filePath + '|' + fileName + ']]';
 						
         		if (this.plugin.settings.tagSummaryBlockButtons) {
+
+        			/*buttonContainer.appendChild(
+						this.plugin.gui.makeBlockSelector(
+							count-1
+						)
+					);*/
 
 					if (sections.length >= 1) {
 						buttonContainer.appendChild(
@@ -330,7 +385,9 @@ export class TagSummary {
         		paragraph = '**' + link + '**\n' + paragraph;
           		summary += paragraph + '\n'; 
 
-          		paragraphEl.setAttribute('md-source', mdParagraph); // need to do this here, so it is Mableton process in the post processor
+          		paragraphEl.setAttribute('md-source', mdParagraph); 
+          		blocks.push(mdParagraph)
+
           		await MarkdownRenderer.renderMarkdown(
           			paragraph, 
           			paragraphEl, 
@@ -342,7 +399,15 @@ export class TagSummary {
           		
           		const titleEl = createEl('span');
           		titleEl.setAttribute('class', 'tagsummary-item-title');
+
+				titleEl.appendChild(
+					this.plugin.gui.makeBlockSelector(
+						parseInt (paragraphEl.getAttribute('index'))
+					)
+				);
+
           		titleEl.appendChild(paragraphEl.querySelector('strong').cloneNode(true))
+
           		if (this.plugin.settings.tagSummaryBlockButtons) paragraphEl.appendChild(buttonContainer);
           		paragraphEl.querySelector('strong').replaceWith(titleEl)
           		//paragraphEl.setAttribute('md-source', mdParagraph)
@@ -483,7 +548,13 @@ export class TagSummary {
 	    if (mdHeadings.length > 0) { // if there are any headings
 	        const headingObj = mdHeadings.find(heading => heading.text.trim() === section);
 	        if (headingObj) {
-	            const textWithLink = text + (addLink?(` [[${filePath}|🔗]]`):'');
+
+//console.log(headingObj.line)
+				const linePrefix: String = Utils.getListTypeFromLineNumber(fileContent, headingObj.line+1);
+				//console.log(linePrefix)
+
+
+	            const textWithLink = linePrefix + text + (addLink?(` [[${filePath}|🔗]]`):'');
 	            //let newContent = this.insertTextAfterLine(text, fileContent, headingObj.line);
 	            let newContent = Utils.insertTextAfterLine(textWithLink, fileContent, headingObj.line);
 	            await this.app.vault.modify(file, newContent);

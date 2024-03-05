@@ -2,9 +2,7 @@ import { App, FuzzySuggestModal, SuggestModal, Modal, Setting, Notice, TFile, re
 import TagBuddy from "main";
 import * as Utils from './utils';
 
-/** This modal class handles selecting a tag and should pass a tag back to the main function.
- * 
- */
+
 export class TagSelector extends FuzzySuggestModal<string> {
     plugin: TagBuddy
     app: App;

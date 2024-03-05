@@ -91,25 +91,6 @@ export default class TagBuddy extends Plugin {
 			        	this.gui.showTagSelector(event)
 			        }
 		    }); 
-
-		   /* async function showTags(_this) {
-    			const view = await _this.app.workspace.getActiveViewOfType(MarkdownView);
-				const preView = await view.containerEl.querySelector('.markdown-reading-view');
-				let tags = [];
-				Array.from(preView.querySelectorAll('.tag')).forEach(tag => {
-					tags.push(tag.innerText);
-				})
-				console.log('rendered tags:', tags)
-				const sections = view.currentMode.renderer.sections;
-				tags = [];
-				sections.forEach(section => {
-					Array.from(section.el.querySelectorAll('.tag')).forEach(tag => {
-						tags.push(tag.innerText);
-					})
-				})
-				console.log('renderer tags:', tags)
-		    }
-		    const debounceShowTags = debounce(showTags, 500)*/
 		   
 			this.registerEvent(this.app.on(
 				'layout-change', 
@@ -220,13 +201,22 @@ export default class TagBuddy extends Plugin {
 		if (view) { 
 			if (view.getMode() != 'preview' || !view.containerEl.contains(event.target)) return;
 		} 
-		
+	
+
 		if (!this.app.isMobile) {
 			//new Notice ('Tag Buddy event type: ' + event.type);
 			if ((this.settings.removeOnClick && Utils.ctrlCmdKey(event)) 
 				|| (!this.settings.removeOnClick && !Utils.ctrlCmdKey(event))) { 
 				return; 
-			} else if (event.altKey && !this.settings.optToConvert) {  
+			//} else if (event.altKey && !this.settings.optToConvert) {  
+			} else if (event.altKey && target && target.matches('.tag')) {  
+
+//console.log(event.target.closest('.tag').innerText)
+				// get the tag via: event.target.closest('.tag').innerText
+				event.stopPropagation();
+				event.preventDefault();
+				this.gui.showTagEditor(event.target.closest('.tag').innerText)
+			
 				return; 
 			}
 
@@ -238,7 +228,18 @@ export default class TagBuddy extends Plugin {
 				if (selection) selection.removeAllRanges();
 			}, 400)
 			
-			
+
+
+
+			 event.stopPropagation();
+				event.preventDefault();
+				this.gui.showTagEditor(event.target.closest('.tag').innerText)
+				return;
+				//
+
+
+
+
 			if (this.settings.mobileTagSearch && event.type == 'touchend') {
 				// if we get this far, this is a double tap
 				return;

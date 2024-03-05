@@ -1,3 +1,106 @@
+.tag-editor-hr {
+    padding-top: 0px; /* Adjusts space above the hr */
+    padding-bottom: 0px; /* Adjusts space below the hr */
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.tag-editor-options {
+    padding-top: 0px; /* Adjusts space above the hr */
+    padding-bottom: 0px; /* Adjusts space below the hr */
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.tag-editor-input {
+    /*background: var(--background-modifier-form-field);
+    border: var(--input-border-width) solid var(--background-modifier-border);
+    color: var(--text-normal);
+    font-family: inherit;
+    padding: var(--size-4-1) var(--size-4-2);
+    font-size: var(--font-ui-small);
+    border-radius: var(--input-radius);
+    outline: none;*/
+    margin: 10px 10px 10px 0;
+}
+
+.tag-editor-input-div {
+    margin: 10px 0px 10px 0px;
+    display: inline;
+}
+
+.tag-editor-edit-div {
+    margin: 0px 0px 0px 0px;
+}
+
+.tag-editor-label {
+    color: var(--text-normal);
+    font-size: var(--font-ui-medium);
+    line-height: var(--line-height-tight);
+    margin: 20px;
+
+}
+
+.tag-editor-desc {
+    color: var(--text-muted);
+    font-size: var(--font-ui-smaller);
+    padding-top: var(--size-4-1);
+    line-height: var(--line-height-tight);
+    margin: 0px 5px 0px 5px;
+}
+
+.tag-editor-submit {
+    float: right;
+    /*text-align: right;*/
+    /*align-self: self-end;*/
+    margin: 10px 0px 0px 0px;
+}
+
+.tag-editor-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-normal);
+    font-size: var(--font-ui-small);
+    border-radius: var(--button-radius);
+    border: 0;
+    padding: var(--size-4-1) var(--size-4-3);
+    margin: 0px 5px 0px 5px;
+    height: var(--input-height);
+    font-weight: var(--input-font-weight);
+    cursor: var(--cursor);
+    font-family: inherit;
+    outline: none;
+    user-select: initial; 
+    white-space: nowrap;
+    text-align: right !important;
+    align-self: right;
+    
+}
+
+.tag-editor-dropdown {
+    /*height: var(--input-height);
+    font-size: var(--font-ui-small);
+    font-family: inherit;
+    font-weight: var(--input-font-weight);
+    color: var(--text-normal);
+    line-height: var(--line-height-tight);
+    padding: 0 1.9em 0 0.8em;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    border: 0;
+    box-shadow: var(--input-shadow);
+    border-radius: var(--input-radius);
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: var(--interactive-normal);
+    background-repeat: no-repeat, repeat;
+    background-position: right 0.7em top 50%, 0 0;
+    background-size: 0.65em auto, 100%;*/
+    margin: 10px 20px 10px 0px;
+}
+
 .tagsummary-notags {
     color: var(--link-color) !important;
     font-weight: 500 !important;
@@ -33,10 +136,28 @@
    color: var(--link-color) !important;
    /*border: 1px solid var(--link-color) !important;*/ 
    background-color: var(--background-primary) !important;
+   opacity: 0.5;
 }
 .tagsummary-button:hover {
-    background-color: var(--link-color) !important;
-    color: var(--background-secondary) !important;
+    /*background-color: var(--link-color) !important;
+    color: var(--background-secondary) !important;*/
+    opacity: 1;
+}
+
+.tagsummary-checkbox {
+    float: right;
+    /*text-align: left !important;*/
+    opacity: 0.5 !important;
+}
+
+.checked {
+    opacity: 1 !important;
+}
+
+.tagsummary-button.tagsummary-checkbox:hover {
+    /*background-color: var(--link-color) !important;
+    color: var(--background-secondary) !important;*/
+    opacity: 1;
 }
 
 .tagsummary-dropdown {
@@ -64,6 +185,7 @@
    padding: 2px 5px 2px 5px !important;
    /*margin: 0px 10px 0px -5px !important;chevron-right*/
    margin: 0px 10px 0px 0px !important;
+   opacity: 0.5;
 
   /*
    display: inline-flex !important;
@@ -84,6 +206,7 @@
     background-color: transparent !important;
     background-color: var(--link-color) !important;
     color: var(--background-secondary) !important;
+    opacity: 1;
 }
 
 
@@ -148,7 +271,7 @@ blockquote.tag-summary-paragraph {
    overflow: hidden;
    padding: 2px 5px 2px 5px !important;
    /*margin: 0px 10px 0px -5px !important;*/
-   margin: 0px 10px 0px 0px !important;
+   margin: 0px 10px 0px 0px !important;s
    font-size: 12px !important;
    
 }

@@ -12,7 +12,7 @@ export function getTagElement(
         if (tagElText === tagText) {
             return el
         }
-    }   
+    }    
     //console.warn(`Element with text "${tagText}" not found`);
     return null;
 }
@@ -173,6 +173,45 @@ export function insertTextAfterLine(
     return `${pre}\n${text}\n${post}`;
 }
 
+export function getListTypeFromLineNumber(fullText: string, lineNumber: number): string {
+    const lines = fullText.split("\n");
+    if (lineNumber >= 0 && lineNumber < lines.length) {
+        const line = lines[lineNumber];
+
+        const leadingWhitespace = line.match(/^\s*/)[0];
+
+        // Check for unchecked checkbox list items first
+        if (/^\s*-\s\[\s\]\s/.test(line)) {
+            //console.log("Detected an unchecked checkbox");
+            return leadingWhitespace + "- [ ] ";
+        } 
+        // Check for a "checked" checkbox
+        else if (/^\s*-\s\[x\]\s/.test(line)) {
+            //console.log("Detected a checked checkbox, converting to unchecked");
+            return leadingWhitespace + "- [ ] ";
+        } 
+        // Then check for normal dash list items
+        else if (/^\s*-\s/.test(line)) {
+            //console.log("Detected a normal bullet");
+            return leadingWhitespace + "- ";
+        } 
+        // Check for numbered list items
+        else if (/^\s*\d+\.\s/.test(line)) {
+            const num = parseInt(line.match(/^\s*(\d+)\./)[1], 10);
+            return leadingWhitespace + `${num}. `;
+            //return leadingWhitespace + `${num + 1}. `;
+        } 
+        // Check for arrow items
+        else if (/^\s*>\s/.test(line)) {
+            return leadingWhitespace + "> ";
+        }
+    } else {
+    }
+    return ""; 
+}
+
+
+
 export function removeTagFromString(
     inputText, 
     hashtagToRemove, 
@@ -214,8 +253,22 @@ export function replaceTextInString (
     newText: string, 
     all: boolean = false
 ):string {
-        const regex = new RegExp(escapeRegExp(replaceText), all ? "gi" : "i");
-        return sourceText.replace(regex, newText).trim();
+/*console.log('REPLACE TEXT');
+console.log('>>'+escapeRegExp(replaceText.trim())+'<<');
+console.log('------------------------------');
+console.log('SOURCE TEXT');
+console.log('>>'+sourceText+'<<')
+console.log('------------------------------');
+console.log('NEW TEXT');
+console.log('>>'+newText+'<<')*/
+//console.log(escapeRegExp(replaceText.trim()))
+        const escapedReplaceText = escapeRegExp(replaceText.trim()).replace(/\n/g, '\\s*\\n\\s*');
+
+        //const regex = new RegExp(escapeRegExp(replaceText.trim()), all ? "gi" : "i");
+        const regex = new RegExp(escapedReplaceText, all ? "gsi" : "si");
+
+        return sourceText.trim().replace(regex, newText.trim()).trim();
+        //return sourceText.replace(regex, newText);
 }
 
 export function truncateStringAtWord(
@@ -260,7 +313,8 @@ export function fileObjFromTags(
     const datePart = currentDate.getDate().toString().padStart(2, '0') + '-' +
                      (currentDate.getMonth() + 1).toString().padStart(2, '0') + '-' +
                      currentDate.getFullYear().toString().slice(-2);
-    const fileName = `Tag Summary (${tagsPart}) (${datePart}).md`;
+    //const fileName = `Tag Summary (${tagsPart}) (${datePart}).md`;
+    const fileName = `Tag Summary (${datePart}).md`;
 
     // Construct the title
     const titleTagsPart = tagsArray.map(tag => tag.charAt(0).toUpperCase() + tag.slice(1)).join(' + ');
