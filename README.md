@@ -2,7 +2,7 @@
 # Obsidian Tag Buddy 🔖
 Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
 
-### ✏️  Use 1: . dd tags to note in reading mode
+### ✏️  Use 1: Add tags to note in reading mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
 Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. **TRIPLE-TAP** on mobile. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
