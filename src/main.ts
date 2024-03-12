@@ -126,6 +126,18 @@ export default class TagBuddy extends Plugin {
 				//, 3000, true)
 			));
 
+			// Not doing this because they need to opt+click on a tag to pass it
+			// I don't want to have to add a tag selector in the editor
+			// think on mobile... too many layers of modals.
+			/*this.addCommand({
+				id: "tagbuddy-tag-actions",
+				name: "Tag Action",
+				callback: () => {
+					//this.gui.showTagEditor()
+					this.gui.showTagEditor()
+				},
+			});*/
+
 			//this.registerDomEvent(document.body, 'scroll', (event) => {}, true);
 
 			if (!this.app.isMobile) {

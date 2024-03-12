@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, MarkdownPostProcessorContext, DropdownComponent, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, MarkdownRenderer, CachedMetadata, MarkdownPostProcessorContext, DropdownComponent, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
 import TagBuddy from "main";
 import * as Utils from './utils';
 
@@ -16,45 +16,136 @@ export class TagSummary {
 		this.plugin = plugin;
 	}
 
-	updateSelection (
-		index: Number, 
-		bool: Boolean
-	): void {
+	copyBtnHandler (e, content):void {
 
-		// If isSelected is true, add the index if it's not already in the array
-		if (bool) {
-		    if (!this.selectedBlocks.includes(index)) {
-		        this.selectedBlocks.push(index);
-		    }
+		//e.stopPropagation();
+
+		const selection = window.getSelection().toString();
+		let notice;
+
+		if (selection != '') {
+			navigator.clipboard.writeText(selection);
+			notice = new Notice ('Selection copied to clipboard.');
 		} else {
-		    // If isSelected is false, remove the index from the array
-		    this.selectedBlocks = this.selectedBlocks.filter(itemIndex => itemIndex !== index);
+			navigator.clipboard.writeText(content);
+			notice = new Notice ('Tagged paragraph copied to clipboard.');
 		}
 
-console.log(this.selectedBlocks)
+		//navigator.clipboard.writeText(content);
+		//const notice = new Notice ('Tag Buddy: Copied to clipboard.');
 
 	}
 
+	removeTagBtnHandler (e, paragraphEl, tag):void {
+		const tagEl = Utils.getTagElement(paragraphEl, tag);
+		this.plugin.tagEditor.edit(tagEl);
+	}
 
-	getSelectedMarkdownBlocks (): String[] {
+	async copyToBtnHandler (
+		e: Event, 
+		mode: String,
+		dropdown: DropdownComponent,
+		paragraphEl: HTMLElement, 
+		summaryEl: HTMLElement,
+		content: string,  
+		tags: Array, 
+		filePath: string,
+		selectedFile: TFile
+	) {
+		let newContent
+		const selection = window.getSelection().toString();
 		
-		// if no selection, just send 
-		// grab the md-source from each block
-		// always show a warning when doing any action with a selection
+		if (selection == '') newContent = content;
+		else newContent = selection;
+		let notice;
+				
+		if (mode == 'link') {
+		
+			const fileName = filePath.split('/').pop().replace(/\.md$/, '');
+			newContent = '[[' + filePath + '|' + fileName + ']]';
+		
+		} 
 
-		// when doing any of the button actions, it should call back to a function here
-		// if there's a selection, use that.
-		// if not use what it has.
-		// we'll have to define defaults if we're combining blocks
-		// move: I don't think we can remove in bulk? maybe just do it without motion.
-		// bake should be easy
-		// copy, easy
-		// new note
-		// copy to: easy, but need to add the bullet to each
-		// i guess link is the same easy
+		if (mode != 'link' && !selection) {
+			tags.forEach((tag, i) => {
+				// make this a setting. we'll default to always for now
+				newContent = Utils.removeTagFromString(newContent, tag).trim();
+			});
+		}
+
+		const copySuccess = this.copyTextToSection(
+			//this.plugin.settings.taggedParagraphCopyPrefix + 
+			newContent, 
+			dropdown.getValue(), 
+			filePath,
+			(mode!='link'),
+			selectedFile
+		);
+
+		if (copySuccess) {
+
+			if (mode == 'note') {
+
+				notice = new Notice(
+					'Copied to section: ' + dropdown.getValue() + ' in ' + selectedFile.name + ' 🔗',
+					5000);
+				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+					this.app.workspace.openLinkText(selectedFile.path+'#'+dropdown.getValue(), '');
+ 				});
+
+			} else if (mode == 'move' && !selection) {
+
+
+				const file = this.app.vault.getAbstractFileByPath(filePath);
+				let fileContent = await this.app.vault.read(file);
+				fileContent = fileContent.trim();
+				const newFileContent = Utils.replaceTextInString(
+					content.trim(), 
+					fileContent, 
+					newContent).trim();
+				if (fileContent != newFileContent) {
+					// renive the tag before copying
+					this.app.vault.modify(file, newFileContent);
+					
+					const copiedToWhere: String = dropdown.getValue()=='top' ? 'top of note' : dropdown.getValue()=='end' ? 'end of note' : dropdown.getValue()
+					notice = new Notice(
+						//'Moved to section: ' + dropdown.getValue() +
+						//'.\n🔗 Open source note.', 
+						'Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue()=='top' || dropdown.getValue()=='end') ? '' : '🔗'),
+						5000);
+
+					this.plugin.gui.removeElementWithAnimation(paragraphEl, () => {
+	    				setTimeout(async () => { 
+	    					this.update(summaryEl); 
+	    					paragraphEl.remove(); 
+	    				}, 500);						
+				    	setTimeout(async () => { 
+				    		//this.plugin.tagProcessor.run(); 
+				    	}, 800);
+					});
+
+					if (dropdown.getValue() != 'top' || dropdown.getValue() != 'end') {
+
+						this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+							//this.app.workspace.openLinkText(filePath, '');
+							this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
+		 				});
+					}
+
+				} else {
+					new Notice ('Copied to section: ' + dropdown.getValue() 
+						+ '.\nCan\'t update source file.');
+				}
+
+			} else if (mode == 'copy' || mode == 'link') {
+				notice = new Notice ('Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue()=='top' || dropdown.getValue()=='end') ? '' : '🔗'));
+				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+					this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
+					});
+			}
+		}
+			
 	}
-
-
 
 	async codeBlockProcessor (
 		source: string, 
@@ -357,6 +448,7 @@ console.log(this.selectedBlocks)
 					if (sections.length >= 1) {
 						buttonContainer.appendChild(
 							this.plugin.gui.makeCopyToSection(
+								this.copyToBtnHandler.bind(this),
 								paragraph, 
 								sections, 
 								tags,
@@ -368,14 +460,16 @@ console.log(this.selectedBlocks)
 					}
 					buttonContainer.appendChild(
 						this.plugin.gui.makeCopyButton(
+							this.copyBtnHandler.bind(this),
 							paragraph.trim()
 						)
 					);
     				buttonContainer.appendChild(
     					this.plugin.gui.makeRemoveTagButton(
+    						this.removeTagBtnHandler.bind(this),
     						paragraphEl, 
-    						tagSection, 
-    						(blockLink ? (filePath + '#' + blockLink[0]) : filePath)
+    						tagSection//, 
+    						//(blockLink ? (filePath + '#' + blockLink[0]) : filePath)
 						)
 					);
 
@@ -400,11 +494,13 @@ console.log(this.selectedBlocks)
           		const titleEl = createEl('span');
           		titleEl.setAttribute('class', 'tagsummary-item-title');
 
-				titleEl.appendChild(
+          		// Not doing this until/when/if we ever clean up all the copyTo methods
+          		// as described in the getSelection method.
+				/*titleEl.appendChild(
 					this.plugin.gui.makeBlockSelector(
 						parseInt (paragraphEl.getAttribute('index'))
 					)
-				);
+				);*/
 
           		titleEl.appendChild(paragraphEl.querySelector('strong').cloneNode(true))
 
@@ -538,35 +634,42 @@ console.log(this.selectedBlocks)
 	    text: string, 
 	    section: string, 
 	    filePath: string,
-	    addLink: Boolean = true)
+	    addLink: Boolean = true,
+	    selectedFile: TFile)
 	:Promise<boolean>{
 
-	    const file = await this.app.workspace.getActiveFile();
-	    const fileContent = await this.app.vault.read(file);
+	    const file = selectedFile ? selectedFile : (await this.app.workspace.getActiveFile());
+	    let fileContent = await this.app.vault.read(file);
 	    const fileContentLines: string[] = Utils.getLinesInString(fileContent);
 	    const mdHeadings = Utils.getMarkdownHeadings(fileContentLines);
-	    if (mdHeadings.length > 0) { // if there are any headings
+	    let targetLine;
+
+	    if (mdHeadings.length <= 0 || section == 'end' || section == 'top') {
+	    	if (section == 'top') {	    	
+		    	targetLine = Utils.findFirstLineAfterFrontMatter(fileContent)
+		    	if (targetLine == 0) fileContent = '\n' + fileContent
+				//console.log(targetLine)
+		    } else if (section == 'end' || mdHeadings.length <= 0) {
+		    	// util function to find last line in file
+		    	targetLine = fileContentLines.length-1
+		    }
+	    } else if (mdHeadings.length > 0) { // if there are any headings
 	        const headingObj = mdHeadings.find(heading => heading.text.trim() === section);
 	        if (headingObj) {
-
-//console.log(headingObj.line)
-				const linePrefix: String = Utils.getListTypeFromLineNumber(fileContent, headingObj.line+1);
-				//console.log(linePrefix)
-
-
-	            const textWithLink = linePrefix + text + (addLink?(` [[${filePath}|🔗]]`):'');
-	            //let newContent = this.insertTextAfterLine(text, fileContent, headingObj.line);
-	            let newContent = Utils.insertTextAfterLine(textWithLink, fileContent, headingObj.line);
-	            await this.app.vault.modify(file, newContent);
-	            return true;
+	        	targetLine = headingObj.line;
 	        } else {
-	            new Notice (`Tag Buddy: ${section} not found.`);
+	            new Notice (`${section} not found.`);
 	            return false;
 	        }
-	    } else {
-	        new Notice ('Tag Buddy: There are no header sections in this note.');
-	        return false;
 	    }
+
+		const linePrefix: String = Utils.getListTypeFromLineNumber(fileContent, targetLine+1);
+
+        const textWithLink = linePrefix + text + (addLink?(` [[${filePath}|🔗]]`):'');
+        //let newContent = this.insertTextAfterLine(text, fileContent, headingObj.line);
+        let newContent = Utils.insertTextAfterLine(textWithLink, fileContent, targetLine);
+        await this.app.vault.modify(file, newContent);
+        return true;
 	}
 
 	async readFiles(
@@ -623,6 +726,40 @@ console.log(this.selectedBlocks)
 		const filePath = el.getAttribute('file-source'); 
 		const file = await this.app.vault.getAbstractFileByPath(filePath);
 		return file;
+	}
+
+	updateSelection (
+		index: Number, 
+		bool: Boolean
+	): void {
+
+		// If isSelected is true, add the index if it's not already in the array
+		if (bool) {
+		    if (!this.selectedBlocks.includes(index)) {
+		        this.selectedBlocks.push(index);
+		    }
+		} else {
+		    // If isSelected is false, remove the index from the array
+		    this.selectedBlocks = this.selectedBlocks.filter(itemIndex => itemIndex !== index);
+		}
+
+//console.log(this.selectedBlocks)
+
+	}
+
+
+	getSelectedMarkdownBlocks (): String[] {
+		
+		// This is too messy with current implmentation.
+		// To make this work, we need to break out all the copyTo, getPrefix, addLink, etc methods/props
+		// we need to be building the content as we select.
+
+		// move: I don't think we can remove in bulk? maybe just do it without motion.
+		// bake should be easy
+		// copy, easy
+		// new note
+		// copy to: easy, but need to add the bullet to each
+		// i guess link is the same easy
 	}
 
 }

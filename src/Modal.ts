@@ -23,7 +23,7 @@ export class TagSelector extends FuzzySuggestModal<string> {
         this.onChooseItemCallback = onChooseItemCallback
         this.inputListener = this.listenInput.bind(this)
         this.tagCache = []
-        this.location = {x: event.pageX, y: event.pageY}
+        if (event != null) this.location = {x: event.pageX, y: event.pageY}
         //this.limit = 10
         //this.emptyStateText = 'Add new tag'
         // to add a brand new tag we'd either need to:

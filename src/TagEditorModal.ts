@@ -40,20 +40,22 @@ export class TBTagEditorModal extends Modal {
     
     // Edit tag options
     function showEditTagOptions (originalTag: String, editType: String) {
+
+
         optionsDiv.empty();
 
         input.setValue(originalTag);
         input.setDisabled(true)
 
         if (editType == 'rename') {
-            new Setting(optionsDiv)
+            const newName = new Setting(optionsDiv)
                 .setName("New name")
                 .setDesc("Tags can include letters, numbers, underscores (_), hyphens (-), and forward slashes (/) for nested tags.")
                 .addText((opt) =>
                     opt
                     .setValue(originalTag)
                     .onChange((value) => {
-                       // validate
+                       // validate if proper tag. use native input restrictions
                        console.log(value);
 
                     }
@@ -116,15 +118,84 @@ export class TBTagEditorModal extends Modal {
         ); 
     } 
 
+    async function gatherFiles (
+        tag: String, 
+        vaultToggle: Boolean = false
+    ):void {
+        
+        if (vaultToggle) {
+
+        } else {
+
+        }
+
+        /*let listFiles = this.app.vault.getMarkdownFiles();
+
+        listFiles = listFiles.filter((file) => {
+            // Remove files that do not contain the tags selected by the user
+            const cache = this.app.metadataCache.getFileCache(file);
+            const tagsInFile = getAllTags(cache);
+
+            if (validTags.some((value) => tagsInFile?.includes(value))) {
+                return true;
+            }
+            return false;
+        });
+
+
+        /*
+        // Get files content
+        let listContents: [TFile, string][] = await this.readFiles(listFiles);
+        let count = 0;
+
+        // Create summary
+        let summary: string = "";
+        listContents.forEach((item) => {
+            */
+    }
+
+    async function renameTag (tag, vaultToggle: Boolean = false) {
+
+
+        if (vaultToggle) {
+            //let listFiles = this.app.vault.getMarkdownFiles();
+            //this.app.plugin.tagSummary.readFiles()
+        } else {
+            this.renameTagInFile (tag, newName, await this.app.workspace.getActiveFile());
+        }
+
+    }
+
+    async function renameTagInFile (tag, newName, file:TFile) {
+        // this will be used for remove hash, rename, and lowercase
+        let fileContent = await this.app.vault.read(file);
+        fileContent = fileContent.trim();
+        const newFileContent = Utils.replaceTextInString(
+            tag.trim(), 
+            fileContent, 
+            newName,
+            true).trim();
+        this.app.vault.modify(file, newFileContent);
+    }
+
     function submitTagEdit (modal, action) {
         // do stuff
         //contentEl.empty();
         // show a breakdown of the actions?
+        console.log(action)
         if (action == 'summary') {
+            // create summary
+            modal.close();
+        } else if (action == 'rename') {
             console.log(action)
-            // do it
+            // gather file list
+            //this.renameTag (this.originalTag, newName.getValue(),vaultToggle);
+
+
             modal.close();
         } else if (vaultToggle) {
+            
+            // make this into a function // call it from the action function
             contentEl.empty();
             titleEl.setText("Applying edit")
             //submitBtn.setDisabled(true)
@@ -215,99 +286,3 @@ export class TBTagEditorModal extends Modal {
 
 }
 
-
-
-/*
-
-export class TagSelector extends FuzzySuggestModal<string> {
-    plugin: TagBuddy
-    app: App;
-    onChooseItemCallback: (result: string) => void
-    tag: string
-    inputListener: EventListener
-    tagCache: string[]
-    location: Object;
-    height = 215;
-    noSelection = false;
-    
-    
-    constructor (app: App, plugin: TagBuddy, event:Event, onChooseItemCallback: (result: string) => void){
-        super(app)
-        this.app = app;
-        this.plugin = plugin
-        this.tag = ''
-        this.onChooseItemCallback = onChooseItemCallback
-        this.inputListener = this.listenInput.bind(this)
-        this.tagCache = []
-        this.location = {x: event.pageX, y: event.pageY}
-       
-    }
-
-    onOpen() {
-        this.setPlaceholder("")
-        this.inputEl.addEventListener('keyup', this.inputListener)
-        if (!this.app.isMobile) {
-            this.resultContainerEl.parentNode.style.width = '200px';
-            this.resultContainerEl.style.height = '215px';
-            this.resultContainerEl.parentNode.style.left = `${this.location.x}px`;
-            this.resultContainerEl.parentNode.style.top = `${this.location.y}px`;
-        } else {
-            setTimeout(()=>{ this.inputEl.focus() }, 500); // not working?
-        }
-        super.onOpen()
-    }
-
-    onClose() {
-        this.inputEl.removeEventListener('keyup', this.inputListener)
-        super.onClose()
-    }
-
-    listenInput(event: KeyboardEvent){
-        this.noSelection = false;
-        if (!this.app.isMobile) {
-            const itemsHeight = this.getSuggestions(this.inputEl.value).length * 42;
-            const height = Math.min(this.height, Math.max(65, itemsHeight))
-            this.resultContainerEl.style.height = `${height}px`;
-        }
-
-        if (event.key == "Enter" && !this.noSelection) {
-            const text = this.inputEl.value.trim();
-            const pattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g
-            if (pattern.test(text)) {
-                this.close();
-                this.onChooseItem(this.inputEl.value);
-            } else {
-                new Notice('Invalid tag.');
-            }
-        }
-    }
-
-    onNoSuggestion(){
-        super.onNoSuggestion()
-        this.noSelection = true;
-        //console.log('no suggestions')
-    }
-
-    getItems(): string[] {
-       const filteredTags = Utils.getTagsFromApp(
-            this.app, 
-            this.plugin.getRecentTags()
-        );
-        
-        return filteredTags;
-    }
-
-    getItemText(tag: string): string {
-        return tag
-    }
-
-    async onChooseItem(result: string) {
-//console.log(result)
-        if (!this.app.isMobile) {
-            this.onChooseItemCallback(result)
-        } else {
-            setTimeout(()=>{this.onChooseItemCallback(result)}, 250)
-        }
-    }
-}
-*/

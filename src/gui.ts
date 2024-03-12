@@ -4,6 +4,7 @@ import type { App } from "obsidian";
 import * as Utils from './utils';
 import { TagSelector } from './Modal'
 import { TBTagEditorModal } from './TagEditorModal'
+import { SelectFileModal } from './FindFileModal'
 
 export class GUI {
 	app: App; 
@@ -19,7 +20,7 @@ export class GUI {
 		//this.injectStyles();
 	}
 
-	showTagEditor (tag) {
+	showTagEditor (tag = '') {
 
 //console.log('GUI.showTagEditor')
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -65,7 +66,7 @@ export class GUI {
 		this.plugin.registerDomEvent(
 			button, 
 			'click', 
-			clickFn.bind(this)
+			clickFn
 		);
 
 	    return button;
@@ -117,17 +118,20 @@ export class GUI {
 	}
 
 	makeRemoveTagButton (
+		clickFn: Function,
 		paragraphEl: Element, 
-		tag: string, 
-		filePath: string
+		tag: string//, 
+		//filePath: string
 	):HTMLButtonElement {
 		const button = this.makeButton ('list-x', (e) => { 
 			e.stopPropagation();
 
-			const tagEl = Utils.getTagElement(paragraphEl, tag);
-			this.plugin.tagEditor.edit(tagEl);
+			clickFn(e, paragraphEl, tag)
+
+			//const tagEl = Utils.getTagElement(paragraphEl, tag);
+			//this.plugin.tagEditor.edit(tagEl);
 		});
-		button.title = 'Remove ' + tag + ' from paragraph (and from this summary).';
+		button.title = 'Removed ' + tag + ' from paragraph.';
 		return button;
 	}
 
@@ -155,6 +159,7 @@ export class GUI {
 	}
 
 	makeCopyToSection (
+		clickFn:Function,
 		content: string, 
 		sections: string[], 
 		tags: Array, 
@@ -163,15 +168,14 @@ export class GUI {
 		summaryEl: HTMLElement
 	): HTMLElement {
 
-		// can't pass this to the select value. it only takes strings. so will need to pass and pull it elsewhere
-		// 'prefix':this.plugin.settings.taggedParagraphCopyPrefix
-
 		const copyToEl: HTMLElement = createEl('span');
 		const selectEl: HTMLSelectElement = createEl('selectEl');
 		let dropdown = new DropdownComponent(selectEl);
 		sections.forEach((sec) => {
 			dropdown.addOption(sec, Utils.truncateStringAtWord(sec, 16)); 
 		});
+		dropdown.addOption('top', 'Top of note'); 
+		dropdown.addOption('end', 'End of note'); 
 		
 		selectEl.querySelector('select').className = 'tagsummary-dropdown';
 
@@ -189,6 +193,19 @@ export class GUI {
 */
 		copyToEl.appendChild(
 			this.makeCopyToButton (
+				clickFn,
+				'note',	
+				dropdown,
+				paragraphEl, 
+				summaryEl,
+				content,
+				tags,
+				filePath 
+			)
+		)
+		copyToEl.appendChild(
+			this.makeCopyToButton (
+				clickFn,
 				'link',	
 				dropdown,
 				paragraphEl, 
@@ -200,6 +217,7 @@ export class GUI {
 		)
 		copyToEl.appendChild(
 			this.makeCopyToButton (
+				clickFn,
 				'copy',
 				dropdown,
 				paragraphEl, 
@@ -211,6 +229,7 @@ export class GUI {
 		)
 		copyToEl.appendChild(
 			this.makeCopyToButton (
+				clickFn,
 				'move',
 				dropdown,
 				paragraphEl, 
@@ -233,17 +252,71 @@ export class GUI {
 	}
 
 	makeCopyToButton (
+		clickFn: Function,
 		mode: String,
 		dropdown: DropdownComponent,
 		paragraphEl: HTMLElement, 
 		summaryEl: HTMLElement,
 		content: string,  
 		tags: Array, 
-		filePath: string, 
+		filePath: string 
 	): HTMLElement {
+
+		let buttonLabel;
+		if (mode == 'link') buttonLabel = 'link';
+		else if (mode == 'copy') buttonLabel = 'copy-plus';
+		else if (mode == 'move') buttonLabel = 'replace'; //'copy-check';
+		else if (mode == 'note') buttonLabel = 'file-plus-2';
+
+		const button = this.makeButton (buttonLabel, (e) => { 
+			e.stopPropagation();
+
+			if (mode == 'note') {
+
+				new SelectFileModal(this.app, (result) => {
+
+  					//new Notice(`File: ${result.name}`);
+
+  					clickFn(
+						e, 
+						mode,
+						dropdown,
+						paragraphEl, 
+						summaryEl,
+						content,  
+						tags, 
+						filePath,
+						result
+					);
+
+				}).open();
+
+			} else {
+
+				clickFn(
+					e, 
+					mode,
+					dropdown,
+					paragraphEl, 
+					summaryEl,
+					content,  
+					tags, 
+					filePath
+				);
+			}
+		});
+		let buttonHoverText;
+		if (mode == 'link') buttonHoverText = 'Copy paragraph link to section.' ;
+		else if (mode == 'copy') buttonHoverText = 'Copy paragraph to section.';
+		else if (mode == 'move') buttonHoverText = 'Move paragraph to section.';
+		else if (mode == 'note') buttonHoverText = 'Move paragraph to section in note.';
+
+		button.title = buttonHoverText;
+
+		return button;
 		
 		//const buttonLabel = ('chevron-right-square')
-		let buttonLabel;
+		/*let buttonLabel;
 		if (mode == 'link') buttonLabel = 'link';
 		else if (mode == 'copy') buttonLabel = 'copy-plus';
 		else if (mode == 'move') buttonLabel = 'replace'; //'copy-check';
@@ -349,7 +422,7 @@ export class GUI {
 
 		button.title = buttonHoverText;
 
-		return button;
+		return button;*/
 	}
 
 	makeBakeButton (
@@ -376,6 +449,10 @@ export class GUI {
 						summaryMd // this is where we call back to tag summary. 
 						// we should be passing the index of this block
 						// tag summary should return the selection or this index block
+						// pass the function instead of the data to run it here. 
+						// the function is in tag summary.
+						// this is the view and controller.
+						// tag summary is the model.
 					)
 //console.log(newFileContent)
 					this.app.vault.modify(file, newFileContent);
@@ -393,26 +470,13 @@ export class GUI {
 	}
 
 	makeCopyButton (
+		clickFn,
 		content
 	): HTMLElement {	
 		const button = this.makeButton ('clipboard-list', (e) => { 
 			e.stopPropagation();
-
-			const selection = window.getSelection().toString();
-			let notice;
-
-			if (selection != '') {
-				navigator.clipboard.writeText(selection);
-				notice = new Notice ('Selection copied to clipboard.');
-			} else {
-				navigator.clipboard.writeText(content);
-				notice = new Notice ('Tagged paragraph copied to clipboard.');
-			}
-
-			//navigator.clipboard.writeText(content);
-			//const notice = new Notice ('Tag Buddy: Copied to clipboard.');
+			clickFn(e, content);
 		});
-
 		button.title = 'Copy paragraph';
 
 		return button;

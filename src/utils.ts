@@ -128,10 +128,36 @@ export function fileContainsHeading(
     return (mdHeadings.length > 0)
 }
 
+export function findFirstLineAfterFrontMatter(markdown: String): Number {
+    // Split the markdown string into lines.
+    const lines = getLinesInString(markdown); //markdown.split('\n');
+
+    let inFrontMatter = false;
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        // Check if the current line is a front matter delimiter.
+        if (line === '---') {
+            // If we encounter the start of the front matter, set the flag.
+            // If we're already in the front matter, this marks its end.
+            inFrontMatter = !inFrontMatter;
+
+            // If we just ended the front matter, return the next line's number.
+            if (!inFrontMatter) {
+                return i //+ 2; // +2 to adjust for zero-based indexing and to get the line after the closing delimiter.
+            }
+        }
+    }
+
+    // If there's no front matter or we didn't find a closing delimiter, return 1 (the first line).
+    return 0;
+}
+
+
 export function getLinesInString(
     input: string
 ): Array {
-    const lines: string[] = [];
+    /*const lines: string[] = [];
     let tempString = input;
 
     while (tempString.includes("\n")) {
@@ -140,6 +166,15 @@ export function getLinesInString(
         tempString = tempString.slice(lineEndIndex + 1);
     }
     lines.push(tempString);
+
+    return lines;*/
+
+    const lines = input.split('\n');
+
+    // Check if the last line is empty and remove it if necessary.
+    if (lines.length > 0 && lines[lines.length - 1] === '') {
+        lines.pop();
+    }
 
     return lines;
 }
