@@ -34,12 +34,13 @@ export class GUI {
 
        	if (mode == 'preview') {
 			
-			const tagEditorModal: TBTagEditorModal = new TBTagEditorModal(
+			const tagEditorModal: TBTagEditorModal = new TBTagEditorModal (
 				this.app, 
-				tag,
-				(tag)=>{
-					console.log(tag)
-				}
+				this.plugin,
+				tag//,
+				//(tag)=>{
+				//	console.log(tag) 
+				//}
 			).open();
 
 		}

@@ -506,11 +506,26 @@ export async function getEmbedFile (
 }
 
 export function isTagValid (
-    tag:string
-):boolean { // including the #
-    //const tagPattern = /^#[\w]+$/;
-    const tagPattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g
+    tag: String,
+    fullTag: Boolean = false
+):boolean { 
+    let tagPattern 
+    if (fullTag) tagPattern = /^#[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
+    //else tagPattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g
+    else tagPattern = /^[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
     return tagPattern.test(tag);
+}
+
+export function extractValidTags(tagsString: string): string[] {
+    // Split the string by commas to get individual tags
+    const potentialTags = tagsString.split(',');
+
+    // Filter out valid tags
+    const validTags = potentialTags
+        .map(tag => tag.trim()) // Trim each tag
+        .filter(tag => isTagValid(tag, true)); // Use the isTagValid function to check validity
+
+    return validTags;
 }
 
 export function ctrlCmdStr (): string {

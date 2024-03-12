@@ -3,79 +3,207 @@ import TagBuddy from "main";
 import * as Utils from './utils';
 
 export class TBTagEditorModal extends Modal {
-    originalTag: Strings
+    //originalTag: Strings
+    optionsDiv: HTMLElement;
+    editDiv: HTMLElement;
+    input: TextComponent;
+    //submitBtn: ButtonComponent;
+    tagActionDropdown: DropdownComponent;
+    plugin: TagBuddy;
 
-    constructor(app: App, tag: String, onSubmit: (result: string) => void) {
-    super(app);
-    this.originalTag = tag;
-    this.onSubmit = onSubmit;
-  }
+    settings = {
+        originalTag: '',
+        vaultToggle: false,
+        newName: '',
+        summaryPos: 'top',
+        action: 'rename'
+    };
 
-  onOpen() {
-    let { contentEl, titleEl , modalEl, containerEl } = this;
+    //constructor(app: App, tag: String, onSubmit: (result: string) => void) {
+    constructor(app: App, plugin: TagBuddy, tag: String) {
+        super(app);
+        this.plugin = plugin;
+        this.settings.originalTag = tag;
+        //this.originalTag = tag;
+        //this.onSubmit = onSubmit;
+    }
 
-    let vaultToggle: Boolean = false;
+    onOpen () {
+        let { contentEl, titleEl , modalEl, containerEl } = this;
 
-    //titleEl.createEl("h3", { text: "Edit Tag" });
-    //inputDiv.createEl("h3", { text: "#" });
-    titleEl.setText("Tag Actions")
+        titleEl.setText("Tag Actions")
 
-    const editDiv = createEl('div')
-    editDiv.classList.add ('tag-editor-edit-div')
+        this.editDiv = createEl('div')
+        this.editDiv.classList.add ('tag-editor-edit-div')
 
-    const optionsDiv = createEl ('div');
-    optionsDiv.classList.add ('tag-editor-options')
+        this.optionsDiv = createEl ('div');
+        this.optionsDiv.classList.add ('tag-editor-options')
 
-    //const progressDiv = createEl ('div');
+        this.input = new TextComponent(this.editDiv);
+        this.input.inputEl.classList.add ('tag-editor-input');
 
-    const input = new TextComponent(editDiv);
-    input.inputEl.classList.add ('tag-editor-input');
+        this.tagActionDropdown = new DropdownComponent(this.editDiv)
+        .addOption('rename', "Rename") 
+        .addOption('lower', "Convert to lower case") 
+        .addOption('totext', "Remove hash (#)") 
+        .addOption('summary', "Create summary"); 
+        this.tagActionDropdown.selectEl.classList.add ('tag-editor-dropdown');
 
-    const tagActionDropdown = new DropdownComponent(editDiv)
-    .addOption('rename', "Rename") 
-    .addOption('lower', "Convert to lower case") 
-    .addOption('totext', "Remove hash (#)") 
-    .addOption('summary', "Create summary"); 
-    tagActionDropdown.selectEl.classList.add ('tag-editor-dropdown'); 
+        contentEl.appendChild (this.editDiv)
+        contentEl.appendChild(this.optionsDiv)
+
+        this.showEditTagOptions('rename');   
     
-    // Edit tag options
-    function showEditTagOptions (originalTag: String, editType: String) {
+        const hr = createEl ('hr')
+        hr.classList.add ('tag-editor-hr'); 
+        contentEl.appendChild (hr);
+
+        this.tagActionDropdown.onChange((value) => {
+            this.settings.action = value;
+            if (value == "summary") {
+                this.showSummaryOptions ();
+            } else {
+                //if (editDiv.contains(summaryOptSelectEl)) editDiv.removeChild(summaryOptSelectEl)
+                this.showEditTagOptions (value)
+            }
+        }); 
+
+        const submitBtn = new ButtonComponent(contentEl)
+            .setClass ('tag-editor-submit')
+            .setButtonText('Submit')
+            .onClick ((evt) => {
+                this.submitTagEdit();
+            }
+        )
+    }
+
+    submitTagEdit () {
+
+        //console.log(this.settings)
+
+        //const startsWithHash: Boolean = this.settings.newName.trim()[0] == '#';
+        const isValidTag: Boolean = Utils.isTagValid(this.settings.newName.trim(), true)
+        const action: String = this.settings.action;
+        let newName: String = this.settings.originalTag;
+
+        if (action == 'summary') {
+
+            // just this note for now. 
+            // tomorrow we do into new note based on function in GUI 'make sumary note'
+            // and also, abstract these methods into tag summary like you did for the others
+
+            const summaryTags: Array = Utils.extractValidTags (this.input.getValue());
+            if (summaryTags.length > 0) this.plugin.tagSummary.createCodeBlock(summaryTags, this.settings.summaryPos);
+            else new Notice ('Invalid tag format.')
+
+            // this.close();
+
+        } else if (action == 'rename' && !isValidTag) {
+            new Notice ('Invalid tag format.')
+            // https://help.obsidian.md/Editing+and+formatting/Tags#Tag+format
+        } else {
+
+            if (action == 'rename') newName = this.settings.newName;
+            else if (action == 'lower') newName = this.settings.originalTag.toLowerCase();
+            else if (action == 'totext') newName = this.settings.originalTag.substring(1);
+            
+            // vault toggle is in the renameTag method
+
+            this.plugin.tagEditor.renameTag (
+                this.settings.originalTag,
+                newName,
+                this.settings.vaultToggle
+            )
+            //{originalTag: '#book', vaultToggle: false, newName: '4aw', summaryPos: 'top', action: 'rename'}
+            //this.renameTag (this.originalTag, newName.getValue(),vaultToggle);
+
+            this.close();
+        }
+
+    }
+
+   /*
+    } else if (vaultToggle) {
+        
+        // make this into a function // call it from the action function
+        contentEl.empty();
+        titleEl.setText("Applying edit")
+        //submitBtn.setDisabled(true)
+        const editProgress = new ProgressBarComponent (contentEl)
+        editProgress.setValue(75)
+
+        const submitBtn = new ButtonComponent(contentEl)
+        .setClass ('tag-editor-submit')
+        .setButtonText('Cancel')
+        .onClick ((evt) => {
+               // validate
+               console.log('cancel');
+               //submitTagEdit()
+            }
+        )
+        // close when done
+    } else {
+        // do it
+        modal.close();
+    }*/
 
 
-        optionsDiv.empty();
-
-        input.setValue(originalTag);
-        input.setDisabled(true)
+    /*inputChangeHandler (value: String, editType: String) {
+        console.log(value);
 
         if (editType == 'rename') {
-            const newName = new Setting(optionsDiv)
+            // validate
+            this.settings.newName = value;
+            //console.log(this.settings.newName)
+        }
+    }*/
+
+    showSummaryOptions () {
+        this.optionsDiv.empty();
+
+        this.input.setDisabled(false)
+
+        new Setting (this.optionsDiv)
+            .setName("Where do you want to add the tag summary?")
+            .setDesc("Add multiple tags above separated by a comma.")
+            .addDropdown((opt) =>
+            opt
+            .addOption('top', "Top of this note")
+            .addOption('end', "Bottom of this note")
+            //.addOption('here', "In place of this tag")
+            .addOption('note', "In a new note") 
+            .onChange((value) => {
+                   this.settings.summaryPos = value;
+                   //console.log(this.settings.summaryPos)
+                }
+            )
+        ); 
+    }
+
+
+    showEditTagOptions (editType: String) {
+
+        this.optionsDiv.empty();
+
+        this.input.setValue(this.settings.originalTag);
+        this.input.setDisabled(true)
+
+        if (editType == 'rename') {
+            const newName = new Setting(this.optionsDiv)
                 .setName("New name")
                 .setDesc("Tags can include letters, numbers, underscores (_), hyphens (-), and forward slashes (/) for nested tags.")
                 .addText((opt) =>
                     opt
-                    .setValue(originalTag)
-                    .onChange((value) => {
-                       // validate if proper tag. use native input restrictions
-                       console.log(value);
-
+                    .setValue('')
+                    .onChange((value) => { 
+                       //this.inputChangeHandler (value, editType);
+                       this.settings.newName = value;
                     }
                 )
             );
         }
 
-       /* new Setting(optionsDiv)
-            .setName("Where")
-            .setDesc("Toggle ON to apply this change to ALL notes in this vault.")
-            .addToggle((opt) =>
-                opt
-                .setValue(false)
-                .onChange((value) => {
-                   console.log(value);
-
-                }
-            )
-        );*/
-        const whereEditOpt = new Setting (optionsDiv)
+        const whereEditOpt = new Setting (this.optionsDiv)
             .setName("Where to make this change?")
             //.setDesc("WARNING: There is NO UNDO for this this action.")
             .addDropdown((opt) =>
@@ -85,203 +213,20 @@ export class TBTagEditorModal extends Modal {
             .onChange((value) => {
                 if (value == 'vault') {
                     whereEditOpt.setDesc("WARNING: There is NO UNDO for vault changes. Consider making a backup of your vault first.")
-                    vaultToggle = true;
+                    this.settings.vaultToggle = true;
                 } else {
                     whereEditOpt.setDesc("")
-                    vaultToggle = false;
+                    this.settings.vaultToggle = false;
                 }
-                console.log(value)
+                //console.log(this.settings.vaultToggle)
             })
         );
-
     }
 
-    // Create summary options
-    function showSummaryOptions () {
-        optionsDiv.empty();
-
-        input.setDisabled(false)
-
-        new Setting (optionsDiv)
-            .setName("Where do you want to add the tag summary?")
-            .setDesc("Add multiple tags above separated by a comma.")
-            .addDropdown((opt) =>
-            opt
-            .addOption('top', "Top of this note")
-            .addOption('bottom', "Bottom of this note")
-            .addOption('here', "In place of this tag")
-            .addOption('note', "In a new note") 
-            .onChange((value) => {
-                   console.log(value);
-                }
-            )
-        ); 
-    } 
-
-    async function gatherFiles (
-        tag: String, 
-        vaultToggle: Boolean = false
-    ):void {
-        
-        if (vaultToggle) {
-
-        } else {
-
-        }
-
-        /*let listFiles = this.app.vault.getMarkdownFiles();
-
-        listFiles = listFiles.filter((file) => {
-            // Remove files that do not contain the tags selected by the user
-            const cache = this.app.metadataCache.getFileCache(file);
-            const tagsInFile = getAllTags(cache);
-
-            if (validTags.some((value) => tagsInFile?.includes(value))) {
-                return true;
-            }
-            return false;
-        });
-
-
-        /*
-        // Get files content
-        let listContents: [TFile, string][] = await this.readFiles(listFiles);
-        let count = 0;
-
-        // Create summary
-        let summary: string = "";
-        listContents.forEach((item) => {
-            */
+    onClose() {
+        let { contentEl } = this;
+        contentEl.empty();
     }
-
-    async function renameTag (tag, vaultToggle: Boolean = false) {
-
-
-        if (vaultToggle) {
-            //let listFiles = this.app.vault.getMarkdownFiles();
-            //this.app.plugin.tagSummary.readFiles()
-        } else {
-            this.renameTagInFile (tag, newName, await this.app.workspace.getActiveFile());
-        }
-
-    }
-
-    async function renameTagInFile (tag, newName, file:TFile) {
-        // this will be used for remove hash, rename, and lowercase
-        let fileContent = await this.app.vault.read(file);
-        fileContent = fileContent.trim();
-        const newFileContent = Utils.replaceTextInString(
-            tag.trim(), 
-            fileContent, 
-            newName,
-            true).trim();
-        this.app.vault.modify(file, newFileContent);
-    }
-
-    function submitTagEdit (modal, action) {
-        // do stuff
-        //contentEl.empty();
-        // show a breakdown of the actions?
-        console.log(action)
-        if (action == 'summary') {
-            // create summary
-            modal.close();
-        } else if (action == 'rename') {
-            console.log(action)
-            // gather file list
-            //this.renameTag (this.originalTag, newName.getValue(),vaultToggle);
-
-
-            modal.close();
-        } else if (vaultToggle) {
-            
-            // make this into a function // call it from the action function
-            contentEl.empty();
-            titleEl.setText("Applying edit")
-            //submitBtn.setDisabled(true)
-            const editProgress = new ProgressBarComponent (contentEl)
-            editProgress.setValue(75)
-
-            const submitBtn = new ButtonComponent(contentEl)
-            .setClass ('tag-editor-submit')
-            .setButtonText('Cancel')
-            .onClick ((evt) => {
-                   // validate
-                   console.log('cancel');
-                   //submitTagEdit()
-                }
-            )
-            // close when done
-        } else {
-            // do it
-            modal.close();
-        }
-    }
-
-    contentEl.appendChild (editDiv)
-    contentEl.appendChild(optionsDiv)
-
-    showEditTagOptions(this.originalTag, 'rename');   
-    
-    const hr = createEl ('hr')
-    hr.classList.add ('tag-editor-hr'); 
-    contentEl.appendChild (hr)
-
-    //contentEl.appendChild(progressDiv) 
-    
-    const submitBtn = new ButtonComponent(contentEl)
-    .setClass ('tag-editor-submit')
-    .setButtonText('Submit')
-    .onClick ((evt) => {
-           // validate
-           console.log('submit');
-
-           submitTagEdit(this, tagActionDropdown.getValue())
-        }
-    )
-
-
-    // Action: dropdown
-    // - rename - warn if there's another tag with new name. this is merge
-    // - convert to lower-case
-    // - generate tag summary
-    // -- shows dropdown: top of this note, bottom of this note, in place, new note
-    // Submit button
-    // HR
-    // Setting for the across vault toggle
-    // HR
-    // SUBMIT DISABLED UNTUL PROPER ENTRY (change and/or correct)
-
-    // progress dialogue
-    // warning dialogue for vault
-
-    //dropdown.registerOptionListener(listeners, "summary");
-    
-    tagActionDropdown.onChange((value) => {
-        //this.result = value
-        //console.log(value);
-        if (value == "summary") {
-            //editDiv.appendChild(summaryOptSelectEl)
-            showSummaryOptions ();
-        } else {
-            //if (editDiv.contains(summaryOptSelectEl)) editDiv.removeChild(summaryOptSelectEl)
-            showEditTagOptions (this.originalTag, value)
-        }
-    });
-
-    // change hese to onChange
-    input.onChange((value) => {
-        console.log(value);
-    });
-
-
-  }
-
-
-  onClose() {
-    let { contentEl } = this;
-    contentEl.empty();
-  }
 
 
 }

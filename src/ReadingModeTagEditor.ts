@@ -16,6 +16,67 @@ export class ReadingModeTagEditor {
 		this.plugin = plugin;
 	}
 
+	async renameTag (tag, newName, vaultToggle: Boolean = false) {
+		console.log ('ReadingModeTagEditor: rename')
+
+        if (vaultToggle) {
+            //let listFiles = this.app.vault.getMarkdownFiles();
+            //this.app.plugin.tagSummary.readFiles()
+        } else {
+            this.renameTagInFile (tag, newName, await this.app.workspace.getActiveFile());
+        }
+
+    }
+
+    async renameTagInFile (tag, newName, file:TFile) {
+        console.log(tag, newName, file.name)
+        // this will be used for remove hash, rename, and lowercase
+        let fileContent = await this.app.vault.read(file);
+        fileContent = fileContent.trim();
+        const newFileContent = Utils.replaceTextInString(
+            tag.trim(), 
+            fileContent, 
+            newName,
+            true).trim();
+        this.app.vault.modify(file, newFileContent);
+    }
+
+    async gatherFiles (
+        tag: String, 
+        vaultToggle: Boolean = false
+    ):void {
+        
+        if (vaultToggle) {
+
+        } else {
+
+        }
+
+        /*let listFiles = this.app.vault.getMarkdownFiles();
+
+        listFiles = listFiles.filter((file) => {
+            // Remove files that do not contain the tags selected by the user
+            const cache = this.app.metadataCache.getFileCache(file);
+            const tagsInFile = getAllTags(cache);
+
+            if (validTags.some((value) => tagsInFile?.includes(value))) {
+                return true;
+            }
+            return false;
+        });
+
+
+        /*
+        // Get files content
+        let listContents: [TFile, string][] = await this.readFiles(listFiles);
+        let count = 0;
+
+        // Create summary
+        let summary: string = "";
+        listContents.forEach((item) => {
+            */
+    }
+
 	async add (
 		tag: string, 
 		x: number, 

@@ -147,6 +147,25 @@ export class TagSummary {
 			
 	}
 
+	createCodeBlock (tagsArray: String[], summaryPos: String) {
+		//console.log(summaryPos)
+		const codeBlockString = 
+			'```tag-summary\n' +
+			'tags: ' + tagsArray.join(' ') + '\n' +
+			'```';
+
+			//console.log (codeBlockString)
+			// Just doing active file for now
+
+			this.copyTextToSection(
+			    codeBlockString,
+			    summaryPos, 
+			    '',
+			    false
+		    )
+
+	}
+
 	async codeBlockProcessor (
 		source: string, 
 		el:HTMLElement, 
@@ -635,7 +654,8 @@ export class TagSummary {
 	    section: string, 
 	    filePath: string,
 	    addLink: Boolean = true,
-	    selectedFile: TFile)
+	    selectedFile: TFile,
+	    detectPrefix: Boolean = true)
 	:Promise<boolean>{
 
 	    const file = selectedFile ? selectedFile : (await this.app.workspace.getActiveFile());
@@ -651,7 +671,7 @@ export class TagSummary {
 				//console.log(targetLine)
 		    } else if (section == 'end' || mdHeadings.length <= 0) {
 		    	// util function to find last line in file
-		    	targetLine = fileContentLines.length-1
+		    	targetLine = fileContentLines.length - 1;
 		    }
 	    } else if (mdHeadings.length > 0) { // if there are any headings
 	        const headingObj = mdHeadings.find(heading => heading.text.trim() === section);
@@ -663,11 +683,12 @@ export class TagSummary {
 	        }
 	    }
 
-		const linePrefix: String = Utils.getListTypeFromLineNumber(fileContent, targetLine+1);
-
-        const textWithLink = linePrefix + text + (addLink?(` [[${filePath}|🔗]]`):'');
+	    const linePrefix: String = detectPrefix ? Utils.getListTypeFromLineNumber(fileContent, targetLine+1) : '';
+        let finalText;
+        if (addLink) finalText = linePrefix + text + ` [[${filePath}|🔗]]`;
+        else finalText = linePrefix + text;
         //let newContent = this.insertTextAfterLine(text, fileContent, headingObj.line);
-        let newContent = Utils.insertTextAfterLine(textWithLink, fileContent, targetLine);
+        let newContent = Utils.insertTextAfterLine(finalText, fileContent, targetLine);
         await this.app.vault.modify(file, newContent);
         return true;
 	}
