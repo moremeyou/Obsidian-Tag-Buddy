@@ -18,7 +18,7 @@ interface TBSettings {
 	recentlyAddedTags: string;
 	lockRecentTags: boolean;
 	showSummaryButtons:boolean;
-	debugMode: boolean;
+	debugMode: boolean; 
 }
 
 const DEFAULT_SETTINGS: Partial<TBSettings> = {

@@ -1,6 +1,6 @@
 # New version pre-release notes 🧪
 See To do’s below for the great new features in this pre-release. Updated documentation coming soon. For now, here’s a quick roundup:
-- OPT/ALT+CLICK on a tag (previously removed hash) now opens a Tag Actions modal with renaming, removing hash, generating and more – in the current note or across your entire vault. You can even generate a tag summary without code.
+- OPT/ALT+CLICK on a tag (previously removed hash) now opens a Tag Actions modal with renaming, removing hash and more – in the current note or across your entire vault. You can even generate a tag summary without code.
 - Move to section now lets you copy just the link or selected text. And there’s new efficiencies like automatic list type detection when copying to a section (or top/bottom of note, also new).
 - Don’t like all those buttons below each summary block? Settings will soon be overhauled to let you customize which buttons you want to see. 
 - All the original features and functions have not be changed.

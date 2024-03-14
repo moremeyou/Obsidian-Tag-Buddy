@@ -27,7 +27,7 @@ export class TBTagEditorModal extends Modal {
         //this.originalTag = tag;
         //this.onSubmit = onSubmit;
     }
-
+ 
     onOpen () {
         let { contentEl, titleEl , modalEl, containerEl } = this;
 
