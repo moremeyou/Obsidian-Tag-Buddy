@@ -166,7 +166,10 @@ export default class TagBuddy extends Plugin {
 				new Mobile.PressAndHoldHandler(
 					this, 
 					document, 
-					this.onClickEvent.bind(this)
+					(event) => {
+						this.gui.showTagEditor(event.target.closest('.tag').innerText)
+					}
+					//this.onClickEvent.bind(this)
 				);
 				new Mobile.DoubleTapHandler(
 					this, 
@@ -239,23 +242,19 @@ export default class TagBuddy extends Plugin {
 				const selection = window.getSelection();
 				if (selection) selection.removeAllRanges();
 			}, 400)
-			
 
-
-
-			 event.stopPropagation();
-				event.preventDefault();
+			/*if (event.type == 'touchstart'){
+				console.log('handle touch start')
+				//event.stopPropagation();
+				//event.preventDefault();
 				this.gui.showTagEditor(event.target.closest('.tag').innerText)
 				return;
-				//
-
-
-
-
+			} else */
 			if (this.settings.mobileTagSearch && event.type == 'touchend') {
 				// if we get this far, this is a double tap
+				console.log('handle touch end')
 				return;
-			}
+			} 
 		}
  
 		if (target && target.matches('.tag')) {	

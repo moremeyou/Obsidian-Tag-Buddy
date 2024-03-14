@@ -16,6 +16,31 @@ export class TagSummary {
 		this.plugin = plugin;
 	}
 
+	async bakeSummaryBtnHandler (
+		summaryMd: string, 
+		summaryEl:HTMLElement, 
+		filePath:string
+	) {
+		const mdSource = summaryEl.getAttribute(
+			'codeblock-code'
+		);
+		
+		if (mdSource) {
+			const file = await this.app.vault.getAbstractFileByPath(filePath);
+			const fileContent = await this.app.vault.read(file);
+			const newFileContent = Utils.replaceTextInString (
+				mdSource, 
+				fileContent, 
+				summaryMd
+			)
+			this.app.vault.modify(file, newFileContent);
+
+			const notice = new Notice ('Tag summary flattened to active note.');
+		} else {
+			new Notice ('⚠️ Tag Buddy: Can\t find code block source. This is a BUG. 🪲');
+		}
+	}
+
 	copyBtnHandler (e, content):void {
 
 		//e.stopPropagation();
@@ -114,7 +139,7 @@ export class TagSummary {
 						'Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue()=='top' || dropdown.getValue()=='end') ? '' : '🔗'),
 						5000);
 
-					this.plugin.gui.removeElementWithAnimation(paragraphEl, () => {
+					this.plugin.gui.removeElementWithAnimation(paragraphEl, () => { 
 	    				setTimeout(async () => { 
 	    					this.update(summaryEl); 
 	    					paragraphEl.remove(); 
@@ -147,22 +172,72 @@ export class TagSummary {
 			
 	}
 
-	createCodeBlock (tagsArray: String[], summaryPos: String) {
+	async makeSummaryBtnHandler (
+		summaryMd: String, 
+		tags: Array,
+		code: Boolean = false
+	) {
+		
+		//const newNoteObj = this.fileObjFromTags(tags);
+		const newNoteObj = Utils.fileObjFromTags(tags);
+		let fileContent = code ? summaryMd : '## ' + newNoteObj.title + '\n\n' + summaryMd;
+		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
+		//const fileName = this.getActiveFileFolder()+newNoteObj.fileName;
+		const fileName = Utils.getActiveFileFolder(view)+newNoteObj.fileName;
+		const file = this.app.vault.getAbstractFileByPath(fileName);
+		let notice;
+
+		//console.log (newNoteObj.fileName);
+
+		if (!code) {
+			tags.forEach ((tag) => {
+				fileContent = Utils.replaceTextInString (tag, fileContent, tag.substring(1), true)
+			});
+		}
+
+		if (file instanceof TFile) {
+
+			notice = new Notice ('⚠️ Note already exists.\nClick here to overwrite.', 8000);
+			this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+				this.app.vault.modify(file, fileContent);
+				notice = new Notice ('Note updated.\n🔗 Open note.', 5000);
+				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+					this.app.workspace.openLinkText(fileName, '');
+				});
+			});
+
+		} else if (!file) {
+
+			this.app.vault.create(fileName, fileContent);
+			const notice = new Notice ('Summary note created. 📜\n🔗 Open note.');
+			this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+				this.app.workspace.openLinkText(newNoteObj.fileName, '');
+			});
+
+
+		}
+	}
+
+	createCodeBlock (tagsArray: String[], pos: String) {
 		//console.log(summaryPos)
 		const codeBlockString = 
 			'```tag-summary\n' +
 			'tags: ' + tagsArray.join(' ') + '\n' +
 			'```';
 
-			//console.log (codeBlockString)
-			// Just doing active file for now
+		if (pos == 'note') {
+
+			this.makeSummaryBtnHandler (codeBlockString, tagsArray, true);
+
+		} else {
 
 			this.copyTextToSection(
 			    codeBlockString,
-			    summaryPos, 
+			    pos, 
 			    '',
 			    false
 		    )
+		}
 
 	}
 
@@ -387,6 +462,7 @@ export class TagSummary {
 		listContents.forEach((item) => {
 
 			// Get files name
+			// item[0] is the file, item[1] is the file content
 			const fileName = item[0].name.replace(/.md$/g, "");
 			const filePath = item[0].path;
 			//console.log(activeFile)
@@ -548,12 +624,14 @@ export class TagSummary {
         			);
 	        		summaryContainer.appendChild(
 	        			this.plugin.gui.makeSummaryNoteButton(
+	        				this.makeSummaryBtnHandler.bind(this),
 	        				summary, 
 	        				tags
         				)
         			);
 	        		summaryContainer.appendChild(
 	        			this.plugin.gui.makeBakeButton(
+	        				this.bakeSummaryBtnHandler.bind(this),
 	        				summary, 
 	        				summaryContainer, 
 	        				activeFile.path

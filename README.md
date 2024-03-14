@@ -1,8 +1,17 @@
+# New version pre-release notes 🧪
+See [[#✅ ToDo | Todo’s]] for the great new features in this pre-release. Updated documentation coming soon. For now, here’s a quick roundup:
+- OPT/ALT+CLICK on a tag (previously removed hash) now opens a Tag Actions modal with renaming, removing hash, generating and more – in the current note or across your entire vault. You can even generate a tag summary without code.
+- Move to section now lets you copy just the link or selected text. And there’s new efficiencies like automatic list type detection when copying to a section (or top/bottom of note, also new).
+- Don’t like all those buttons below each summary block? Settings will soon be overhauled to let you customize which buttons you want to see. 
+- All the original features and functions have not be changed.
+
+If you’re testing the pre-release, please submit any issues you find. There’s ongoing cleanup and optimisations. But everything noted above should be stable. 
+
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/moremeyou/Obsidian-Tag-Buddy?style=for-the-badge&sort=semver)  ![GitHub All Releases](https://img.shields.io/github/downloads/moremeyou/Obsidian-Tag-Buddy/total?style=for-the-badge)  ![Static Badge](https://img.shields.io/badge/New_Version-In--Progress-green?style=for-the-badge)
 # Obsidian Tag Buddy 🔖
 Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
 
-### ✏️  Use 1: Add tags to note in reading mode
+### ✏️  Use 1: . Add tags to note in reading mode
 ![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
 
 Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. **TRIPLE-TAP** on mobile. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
@@ -90,36 +99,26 @@ Obsidian approved December 6th, 2023! 🤘
 - Disable tag summary buttons.
 - Edit recently added tags.
 - Lock recently added tags: Makes this a favorites list.
-
-## 🗒️ Notes
-- Switch to editing to undo any edits in the active note. 
-	- **Edits are permanent in embeds/summaries (unless that note is open in a tab). I'm considering undo functionality with notices.**
-- **Design rationale:** Tag Buddy is about helping you maintain a specific state of mind when reviewing/annotating/processing your notes. For example, I don't want to switch to editing to simply remove “new” from a “book/highlight/new” tag, or if I want to quickly add a “todo” tag somewhere. Also, I think Obsidian already makes it super easy add/edit/remove tags. So there are no plans to bring those Tag Buddy functions to edit mode. That said, please let me know if you have a use case.
-- **Known limitations:**    
-	 - Editing tags within some other plugins or unknown view types is not supported, for now. Please reach out if you have a use case.
-	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin. But I will implement warnings.
-	 - Two (or more) tag summaries or embeds in the same note referencing the same tags will lose sync with each other. Warnings have been implemented. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. 
 	
 ## ✅ #ToDo :
-- [ ] BUG: Remove extra space if removing between words 
+- [ ] BUG: Remove extra space if removing between words 👨🏻‍💻
 - [x] ~~BUG: Summaries aren’t showing tagged lists~~
-- [ ] BUG: honor obsidian exclude folders in summaries
-- [ ] BUG: missing tagged blocks when right below front matter
+- [ ] BUG: honor obsidian exclude folders in summaries 👨🏻‍💻
+- [ ] BUG: missing tagged blocks when right below front matter 👨🏻‍💻
+- [ ] BUG: making new notes doesn’t work on mobile 👨🏻‍💻
 - [x] ~~Better button/icons~~
-- [ ] Summary improvements 👨🏻‍💻
+- [x] Summary improvements
 	- [x] ~~Move to section is a dropdown of headers~~
 	- [x] ~~Detect list type below heading~~
-	- [ ] Add checkboxes for summary items. Check these to batch move/copy/bake/remove items 👨🏻‍💻
 	- [x] ~~Add to section functionality checks for selected text~~
 	- [x] ~~Add only link to section~~
 	- [x] ~~Copy and move to section now buttons (not mod keys)~~
-- [ ] Edit tag text modal (options for this note, across vault) 👨🏻‍💻
-	- [ ] rename
-	- [ ] hash
-	- [ ] case
-	- [ ] summary
-- [ ] Refactor settings 
-- [x] ~~If tag in a header, add paragraph immediately below to summary~~
+- [x] ~~Edit tag text modal (options for this note, across vault)~~
+	- [x] ~~rename~~
+	- [x] ~~remove hash~~
+	- [x] ~~lower case~~
+	- [x] ~~make summary~~
+- [ ] Refactor settings 👨🏻‍💻
 - [ ] BUG: Mobile modal input focus
 - [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
 
@@ -127,6 +126,15 @@ Obsidian approved December 6th, 2023! 🤘
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
+
+## 🗒️ Notes
+- Switch to editing to undo any edits in the active note. 
+	- **Edits are permanent in embeds/summaries (unless that note is open in a tab). 
+- **Design rationale:** Tag Buddy is about helping you maintain a specific state of mind when reviewing/annotating/processing your notes. For example, I don't want to switch to editing to simply remove “new” from a “book/highlight/new” tag, or if I want to quickly add a “todo” tag somewhere. Also, I think Obsidian already makes it super easy add/edit/remove tags. So there are no plans to bring those Tag Buddy functions to edit mode. That said, please let me know if you have a use case.
+- **Known limitations:**    
+	 - Editing tags within some other plugins or unknown view types is not supported, for now. Please reach out if you have a use case.
+	 - Checkboxes are superficially functional in summaries. But the state change isn't applied to the source file. This functionality might be beyond the scope of this plugin.
+	 - Two (or more) tag summaries or embeds in the same note referencing the same tags will lose sync with each other. Warnings have been implemented. WORKAROUND: Use the **Refresh button** below the tag summary to manually update. 
 - - -
 
 ## Disclaimer

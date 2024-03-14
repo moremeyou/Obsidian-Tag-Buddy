@@ -13,14 +13,6 @@
 }
 
 .tag-editor-input {
-    /*background: var(--background-modifier-form-field);
-    border: var(--input-border-width) solid var(--background-modifier-border);
-    color: var(--text-normal);
-    font-family: inherit;
-    padding: var(--size-4-1) var(--size-4-2);
-    font-size: var(--font-ui-small);
-    border-radius: var(--input-radius);
-    outline: none;*/
     margin: 10px 10px 10px 0;
 }
 
@@ -79,25 +71,6 @@
 }
 
 .tag-editor-dropdown {
-    /*height: var(--input-height);
-    font-size: var(--font-ui-small);
-    font-family: inherit;
-    font-weight: var(--input-font-weight);
-    color: var(--text-normal);
-    line-height: var(--line-height-tight);
-    padding: 0 1.9em 0 0.8em;
-    max-width: 100%;
-    box-sizing: border-box;
-    margin: 0;
-    border: 0;
-    box-shadow: var(--input-shadow);
-    border-radius: var(--input-radius);
-    -webkit-appearance: none;
-    appearance: none;
-    background-color: var(--interactive-normal);
-    background-repeat: no-repeat, repeat;
-    background-position: right 0.7em top 50%, 0 0;
-    background-size: 0.65em auto, 100%;*/
     margin: 10px 20px 10px 0px;
 }
 
@@ -125,28 +98,16 @@
    align-items: center !important;
    justify-content: center !important;
    --icon-size: var(--icon-size-l) !important;
-   /*line-height: 25px !important;
-   border-radius: 5px !important;
-   width: auto !important;
-   
-   padding: 2.5px 5px !important;*/
-   /*font-size: 65% !important;*/
-   /*margin: 0px 3px 0px 0px !important;*/
-   /*min-width: 40px !important;*/
    color: var(--link-color) !important;
-   /*border: 1px solid var(--link-color) !important;*/ 
    background-color: var(--background-primary) !important;
    opacity: 0.5;
 }
 .tagsummary-button:hover {
-    /*background-color: var(--link-color) !important;
-    color: var(--background-secondary) !important;*/
     opacity: 1;
 }
 
 .tagsummary-checkbox {
     float: right;
-    /*text-align: left !important;*/
     opacity: 0.5 !important;
 }
 
@@ -155,23 +116,10 @@
 }
 
 .tagsummary-button.tagsummary-checkbox:hover {
-    /*background-color: var(--link-color) !important;
-    color: var(--background-secondary) !important;*/
     opacity: 1;
 }
 
 .tagsummary-dropdown {
-   /*color: var(--text-primary) !important;
-   background: none;
-   border: 2px solid var(--text-quote) !important;
-   border-radius: 5px !important;
-   padding: 0px 0px 10px 0px !important;
-   font-size: 65% !important;
-   margin: 2px !important;
-   color: var(--link-color) !important;
-   border: 1px solid var(--link-color) !important; 
-   background-color: var(--background-primary) !important;
-   border: 1.75px solid var(--text-quote) !important;*/
    color: var(--link-color) !important;
    background: transparent;
    border-radius: 5px !important;
@@ -184,22 +132,9 @@
    overflow: hidden;
    padding: 2px 5px 2px 5px !important;
    /*margin: 0px 10px 0px -5px !important;chevron-right*/
-   margin: 0px 10px 0px 0px !important;
+   margin: 0px 5px 0px 5px !important;
    opacity: 0.5;
 
-  /*
-   display: inline-flex !important;
-   align-items: center !important;
-   justify-content: center !important;
-   margin: 0px 0px 10px 0px !important;
-   appearance: none; Remove default styling 
-    -webkit-appearance: none; For Safari 
-    -moz-appearance: none; For Firefox 
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill='var(--text-primary)' width="24" height="24" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: calc(100% - 5px) center;
-    background-size: 1.5rem;
-    padding-right: 2rem;  Ensure there's enough padding to not overlap text */
 }
 
 .tagsummary-dropdown:hover {
@@ -208,8 +143,6 @@
     color: var(--background-secondary) !important;
     opacity: 1;
 }
-
-
 
 .tagsummary-item-title {
     margin: 5px 0px
@@ -245,9 +178,6 @@ blockquote.tag-summary-paragraph {
        box-shadow: none;  /* remove shadows if they look off */
        border-radius: 5px;
        color: var(--link-color) !important;
-       /*border: 1px solid var(--link-color); 
-       width: auto !important;            /* auto adjusts width based on content */
-       /*max-width: 60px !important;  */  
        max-height: 25px !important;
        min-width: 25px !important;
        white-space: nowrap;
@@ -269,10 +199,10 @@ blockquote.tag-summary-paragraph {
    min-width: 40px !important;
    white-space: nowrap;
    overflow: hidden;
-   padding: 2px 5px 2px 5px !important;
-   /*margin: 0px 10px 0px -5px !important;*/
-   margin: 0px 10px 0px 0px !important;s
-   font-size: 12px !important;
+   /*padding: 2px 5px 2px 5px !important;
+   /*margin: 0px 10px 0px -5px !important;
+   margin: 0px 10px 0px 0px !important;
+   font-size: 12px !important;*/
    
 }
 
@@ -281,5 +211,5 @@ blockquote.tag-summary-paragraph {
     background-color: var(--link-color) !important;
     color: var(--background-secondary) !important;
 }
-
+}
 }

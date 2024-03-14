@@ -1,4 +1,4 @@
-import { App, Modal, Notice, TFile, Setting, DropdownComponent, ButtonComponent, TextComponent, ProgressBarComponent} from "obsidian";
+import { App, Modal, Notice, TFile, Setting, SelectFileModal, DropdownComponent, ButtonComponent, TextComponent, ProgressBarComponent} from "obsidian";
 import TagBuddy from "main";
 import * as Utils from './utils';
 
@@ -87,17 +87,13 @@ export class TBTagEditorModal extends Modal {
         let newName: String = this.settings.originalTag;
 
         if (action == 'summary') {
-
-            // just this note for now. 
-            // tomorrow we do into new note based on function in GUI 'make sumary note'
-            // and also, abstract these methods into tag summary like you did for the others
-
             const summaryTags: Array = Utils.extractValidTags (this.input.getValue());
-            if (summaryTags.length > 0) this.plugin.tagSummary.createCodeBlock(summaryTags, this.settings.summaryPos);
-            else new Notice ('Invalid tag format.')
-
-            // this.close();
-
+            if (summaryTags.length < 1) {
+                new Notice ('Invalid tag format.')
+            } else {
+                this.plugin.tagSummary.createCodeBlock(summaryTags, this.settings.summaryPos);
+                this.close();
+            }
         } else if (action == 'rename' && !isValidTag) {
             new Notice ('Invalid tag format.')
             // https://help.obsidian.md/Editing+and+formatting/Tags#Tag+format
@@ -114,8 +110,6 @@ export class TBTagEditorModal extends Modal {
                 newName,
                 this.settings.vaultToggle
             )
-            //{originalTag: '#book', vaultToggle: false, newName: '4aw', summaryPos: 'top', action: 'rename'}
-            //this.renameTag (this.originalTag, newName.getValue(),vaultToggle);
 
             this.close();
         }

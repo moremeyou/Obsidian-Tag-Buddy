@@ -14,6 +14,7 @@ export class SelectFileModal extends SuggestModal<TFile> {
 
   // Returns all available suggestions.
   getSuggestions(query: string): TFile[] {
+    //if (this.fileList.length == 0)
     return this.fileList.filter((file) =>
       file.path.includes(query)
     );
@@ -28,6 +29,13 @@ export class SelectFileModal extends SuggestModal<TFile> {
   // Perform action on the selected suggestion.
   onChooseSuggestion(file: TFile, evt: MouseEvent | KeyboardEvent) {
     //new Notice(`Selected ${file.path}`);
+    //console.log(evt.target.value)
+    //if (file.name)
     this.onSubmit(file)
   }
+
+  //onNoSuggestion(file: TFile, evt: MouseEvent | KeyboardEvent) {
+    //new Notice(`No selection`);
+    //this.onSubmit(file)
+  //}
 }

@@ -298,6 +298,7 @@ console.log('NEW TEXT');
 console.log('>>'+newText+'<<')*/
 //console.log(escapeRegExp(replaceText.trim()))
         const escapedReplaceText = escapeRegExp(replaceText.trim()).replace(/\n/g, '\\s*\\n\\s*');
+        //const escapedReplaceText = escapeRegExp(replaceText).replace(/\n/g, '\\s*\\n\\s*');
 
         //const regex = new RegExp(escapeRegExp(replaceText.trim()), all ? "gi" : "i");
         const regex = new RegExp(escapedReplaceText, all ? "gsi" : "si");
@@ -370,16 +371,21 @@ export function getActiveFileFolder(
     //const activeFile = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeFile) return null;
 
-    // Determine the correct path separator
-    const pathSeparator = activeFile.path.includes('\\') ? '\\' : '/';
+    if (activeFile.path.includes('\\') || activeFile.path.includes('/')) {
 
-    const pathParts = activeFile.path.split(pathSeparator);
-    pathParts.pop();  // Remove the file name part
-    let folderPath = pathParts.join(pathSeparator);
+        // Determine the correct path separator
+        const pathSeparator = activeFile.path.includes('\\') ? '\\' : '/';
 
-    // Ensure the folder path ends with the correct path separator
-    if (!folderPath.endsWith(pathSeparator)) {
-        folderPath += pathSeparator;
+        const pathParts = activeFile.path.split(pathSeparator);
+        pathParts.pop();  // Remove the file name part
+        let folderPath = pathParts.join(pathSeparator);
+
+        // Ensure the folder path ends with the correct path separator
+        if (!folderPath.endsWith(pathSeparator)) {
+            folderPath += pathSeparator;
+        }
+    } else {
+        folderPath = ''
     }
 
     return folderPath;
@@ -440,20 +446,6 @@ export function ctrlCmdKey (
     if (isMac) return event.metaKey;
     else return event.ctrlKey;
 }
-
-/*export function debounce(
-    func: Function, 
-    wait: number
-): Function {
-    let timeout;
-    return function(...args) {
-        const context = this;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            func.apply(context, args);
-        }, wait);
-    };
-}*/
 
 export function tagsInString(
     string: string, 

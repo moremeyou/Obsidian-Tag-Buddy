@@ -17,65 +17,98 @@ export class ReadingModeTagEditor {
 	}
 
 	async renameTag (tag, newName, vaultToggle: Boolean = false) {
-		console.log ('ReadingModeTagEditor: rename')
+		//console.log ('ReadingModeTagEditor: rename')
 
         if (vaultToggle) {
-            //let listFiles = this.app.vault.getMarkdownFiles();
-            //this.app.plugin.tagSummary.readFiles()
+        	//console.log('!!!!!!renaming across vault')
+
+        	const validTags = [tag]
+			let listFiles = this.app.vault.getMarkdownFiles();
+
+			listFiles = listFiles.filter((file) => {
+				// Remove files that do not contain the tags selected by the user
+				const cache = this.app.metadataCache.getFileCache(file);
+				const tagsInFile = getAllTags(cache);
+
+				if (validTags.some((value) => tagsInFile?.includes(value))) {
+					return true;
+				}
+				return false;
+	        });
+
+	        let listContents: [TFile, string][] = await this.plugin.tagSummary.readFiles(listFiles);
+	        // listContents[n][0] is the file, listContents[n][[1] is the file content
+	        
+	        listContents.forEach((note) => {
+	        	//this.renameTagInFile (tag, newName, note[0]);
+	        	this.renameTagInFileByIndex (
+	        		tag,
+	        		newName,
+	        		note[0]
+    			)
+
+	        });
+ 
         } else {
-            this.renameTagInFile (tag, newName, await this.app.workspace.getActiveFile());
+
+        	const file: TFile = this.app.workspace.getActiveFile();
+        	this.renameTagInFileByIndex (
+        		tag,
+        		newName,
+        		file
+    		)
+           
         }
 
     }
 
-    async renameTagInFile (tag, newName, file:TFile) {
-        console.log(tag, newName, file.name)
+    async renameTagInFileByIndex (
+    	tag: String, 
+    	newName: String, 
+    	file: TFile
+	):Void {
+
+    	const fileContent: String = await this.app.vault.read(file);
+        let newFileContent: String = fileContent;
+    	const tagPositions = this.plugin.tagProcessor.getMarkdownTags (file, fileContent);
+    	// {tag:tag, index:match.index, source:file.name}
+
+    	let filteredTagObjs = tagPositions.filter(tagObj => tagObj.tag === tag);
+
+    	if (filteredTagObjs.length > 0) {
+
+    		filteredTagObjs.sort((a, b) => a.index - b.index);
+    		let offset = 0;
+		    filteredTagObjs.forEach(tagObj => {
+		        // Calculate the new index considering the offset
+		        const newIndex = tagObj.index + offset;
+		        // Replace the tag at the correct position
+		        newFileContent = newFileContent.substring(0, newIndex) + newName + newFileContent.substring(newIndex + tagObj.tag.length);
+		        // Update the offset for the next iteration
+		        offset += newName.length - tagObj.tag.length;
+		    });
+
+    		this.app.vault.modify(file, newFileContent);
+
+    	} else {
+    		new Notice ('No tags to rename.')
+    	}
+    }
+
+   /* async renameTagInFile (tag, newName, file:TFile) {
+
+console.log((tag), newName, file.name)
+
         // this will be used for remove hash, rename, and lowercase
         let fileContent = await this.app.vault.read(file);
         fileContent = fileContent.trim();
         const newFileContent = Utils.replaceTextInString(
-            tag.trim(), 
+            tag.trim(),
             fileContent, 
             newName,
             true).trim();
         this.app.vault.modify(file, newFileContent);
-    }
-
-    async gatherFiles (
-        tag: String, 
-        vaultToggle: Boolean = false
-    ):void {
-        
-        if (vaultToggle) {
-
-        } else {
-
-        }
-
-        /*let listFiles = this.app.vault.getMarkdownFiles();
-
-        listFiles = listFiles.filter((file) => {
-            // Remove files that do not contain the tags selected by the user
-            const cache = this.app.metadataCache.getFileCache(file);
-            const tagsInFile = getAllTags(cache);
-
-            if (validTags.some((value) => tagsInFile?.includes(value))) {
-                return true;
-            }
-            return false;
-        });
-
-
-        /*
-        // Get files content
-        let listContents: [TFile, string][] = await this.readFiles(listFiles);
-        let count = 0;
-
-        // Create summary
-        let summary: string = "";
-        listContents.forEach((item) => {
-            */
-    }
+    }*/
 
 	async add (
 		tag: string, 

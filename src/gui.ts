@@ -16,13 +16,10 @@ export class GUI {
 
 		this.app = app;
 		this.plugin = plugin;
-
-		//this.injectStyles();
 	}
 
 	showTagEditor (tag = '') {
 
-//console.log('GUI.showTagEditor')
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		const mode = view?.getMode();
 	
@@ -180,18 +177,6 @@ export class GUI {
 		
 		selectEl.querySelector('select').className = 'tagsummary-dropdown';
 
-		// have these as settings "show x, etc"
-		// link-2
-		// copy-plus - copy's to
-		// copy-check - moves
-/*
-		copyToEl.appendChild(
-			this.makeButton ('link-2', async(e) => { })
-		);
-		copyToEl.appendChild(
-			this.makeButton ('copy-plus', async(e) => { })
-		);
-*/
 		copyToEl.appendChild(
 			this.makeCopyToButton (
 				clickFn,
@@ -241,11 +226,6 @@ export class GUI {
 			)
 		)
 
-		//////
-		// copy to file button
-		// prompts for a file. then tries to put the content under the specified header in that file
-		//////
-
 		copyToEl.appendChild(selectEl);
 
 
@@ -278,155 +258,29 @@ export class GUI {
 
   					//new Notice(`File: ${result.name}`);
 
-  					clickFn(
-						e, 
-						mode,
-						dropdown,
-						paragraphEl, 
-						summaryEl,
-						content,  
-						tags, 
-						filePath,
-						result
-					);
+  					clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath, result);
 
 				}).open();
 
 			} else {
 
-				clickFn(
-					e, 
-					mode,
-					dropdown,
-					paragraphEl, 
-					summaryEl,
-					content,  
-					tags, 
-					filePath
-				);
+				clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath);
 			}
 		});
 		let buttonHoverText;
 		if (mode == 'link') buttonHoverText = 'Copy paragraph link to section.' ;
 		else if (mode == 'copy') buttonHoverText = 'Copy paragraph to section.';
 		else if (mode == 'move') buttonHoverText = 'Move paragraph to section.';
-		else if (mode == 'note') buttonHoverText = 'Move paragraph to section in note.';
+		else if (mode == 'note') buttonHoverText = 'Copy paragraph to section in note.';
 
 		button.title = buttonHoverText;
 
 		return button;
 		
-		//const buttonLabel = ('chevron-right-square')
-		/*let buttonLabel;
-		if (mode == 'link') buttonLabel = 'link';
-		else if (mode == 'copy') buttonLabel = 'copy-plus';
-		else if (mode == 'move') buttonLabel = 'replace'; //'copy-check';
-
-		const button = this.makeButton(
-			buttonLabel, 
-			async(e) => { 
-				e.stopPropagation();
-
-				// content to copy
-
-				let newContent
-				const selection = window.getSelection().toString();
-				
-				if (selection == '') newContent = content;
-				else newContent = selection;
-				let notice;
-					
-				if (mode == 'link') {
-				
-					const fileName = filePath.split('/').pop().replace(/\.md$/, '');
-					newContent = '[[' + filePath + '|' + fileName + ']]';
-				
-				} 
-
-				if (mode != 'link' && !selection) {
-					tags.forEach((tag, i) => {
-						// make this a setting. we'll default to always for now
-						newContent = Utils.removeTagFromString(newContent, tag).trim();
-					});
-				}
-
-
-//console.log('content=' + newContent)
-				const copySuccess = this.plugin.tagSummary.copyTextToSection(
-					//this.plugin.settings.taggedParagraphCopyPrefix + 
-					newContent, 
-					dropdown.getValue(), 
-					filePath,
-					(mode!='link')
-				);
-
-				if (copySuccess) {
-
-//console.log('mode=' + mode + '\nselection=' + selection + '<')
-
-					if (mode == 'move' && !selection) {
-
-//console.log('mode == move && no selection')
-
-						const file = this.app.vault.getAbstractFileByPath(filePath);
-						let fileContent = await this.app.vault.read(file);
-						fileContent = fileContent.trim();
-						const newFileContent = Utils.replaceTextInString(
-							content.trim(), 
-							fileContent, 
-							newContent).trim();
-						if (fileContent != newFileContent) {
-							
-							this.app.vault.modify(file, newFileContent);
-							
-							notice = new Notice(
-								//'Moved to section: ' + dropdown.getValue() +
-								//'.\n🔗 Open source note.', 
-								'Copied to section: ' + dropdown.getValue() + '. 🔗',
-								5000);
-
-							this.removeElementWithAnimation(paragraphEl, () => {
-			    				setTimeout(async () => { 
-			    					this.plugin.tagSummary.update(summaryEl); 
-			    					paragraphEl.remove(); 
-			    				}, 500);						
-						    	setTimeout(async () => { 
-						    		//this.plugin.tagProcessor.run(); 
-						    	}, 800);
-							});
-
-							this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-								//this.app.workspace.openLinkText(filePath, '');
-								this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
-			 				});
-
-						} else {
-							new Notice ('Copied to section: ' + dropdown.getValue() 
-								+ '.\nCan\'t update source file.');
-						}
-
-					} else if (mode == 'copy' || mode == 'link') {
-						notice = new Notice ('Copied to section: ' + dropdown.getValue() + '. 🔗');
-						this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-							this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
- 						});
-					}
-				}
-				
-			}
-		)
-
-		let buttonHoverText;
-		if (mode == 'link') buttonHoverText = 'Copy paragraph link to section.' ;
-		else if (mode == 'copy') buttonHoverText = 'Copy paragraph to section.';
-		else if (mode == 'move') buttonHoverText = 'Move paragraph to section.';
-
-		button.title = buttonHoverText;
-
-		return button;*/
 	}
 
 	makeBakeButton (
+		clickFn: Function,
 		summaryMd: string, 
 		summaryEl:HTMLElement, 
 		filePath:string
@@ -437,31 +291,8 @@ export class GUI {
 			async(e) => { 
 				e.stopPropagation();
 				
-				const mdSource = summaryEl.getAttribute(
-					'codeblock-code'
-				);
-				
-				if (mdSource) {
-					const file = await this.app.vault.getAbstractFileByPath(filePath);
-					const fileContent = await this.app.vault.read(file);
-					const newFileContent = Utils.replaceTextInString (
-						mdSource, 
-						fileContent, 
-						summaryMd // this is where we call back to tag summary. 
-						// we should be passing the index of this block
-						// tag summary should return the selection or this index block
-						// pass the function instead of the data to run it here. 
-						// the function is in tag summary.
-						// this is the view and controller.
-						// tag summary is the model.
-					)
-//console.log(newFileContent)
-					this.app.vault.modify(file, newFileContent);
+				clickFn (summaryMd, summaryEl, filePath)
 
-					const notice = new Notice ('Tag summary flattened to active note.');
-				} else {
-					new Notice ('⚠️ Tag Buddy: Can\t find code block source. This is a BUG. 🪲');
-				}
 			}
 		);
 
@@ -503,6 +334,7 @@ export class GUI {
 	}
 
 	makeSummaryNoteButton (
+		clickFn: Function,
 		summaryMd: string, 
 		tags: Array
 	): HTMLElement {
@@ -510,43 +342,10 @@ export class GUI {
 		const button = this.makeButton (
 			'file-plus-2', 
 			async (e) => {
-
-			e.stopPropagation();
-
-			//const newNoteObj = this.fileObjFromTags(tags);
-			const newNoteObj = Utils.fileObjFromTags(tags);
-			let fileContent = '## ' + newNoteObj.title + '\n\n' + summaryMd;
-			const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
-			//const fileName = this.getActiveFileFolder()+newNoteObj.fileName;
-			const fileName = Utils.getActiveFileFolder(view)+newNoteObj.fileName;
-			const file = this.app.vault.getAbstractFileByPath(fileName);
-			let notice;
-
-			tags.forEach ((tag) => {
-				fileContent = Utils.replaceTextInString (tag, fileContent, tag.substring(1), true)
-			});
-
-			if (file instanceof TFile) {
-
-				notice = new Notice ('⚠️ Note already exists.\nClick here to overwrite.', 5000);
-				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-					this.app.vault.modify(file, fileContent);
-					notice = new Notice ('Note updated.\n🔗 Open note.', 5000);
-					this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-						this.app.workspace.openLinkText(fileName, '');
-					});
-				});
-
-			} else if (!file) {
-
-				this.app.vault.create(fileName, fileContent);
-				const notice = new Notice ('Tag Buddy: Summary note created. 📜\n🔗 Open note.');
-				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-					this.app.workspace.openLinkText(newNoteObj.fileName, '');
-				});
-
+				e.stopPropagation();
+				clickFn (summaryMd, tags);
 			}
-		});
+		);
 
 		button.title = 'Create note from summary';
 
@@ -575,10 +374,7 @@ export class GUI {
 			range = document.caretRangeFromPoint(pageX, pageY)
 			nodeType = range.startContainer.nodeType;
 		}
-//console.log(event)
-//console.log(pageX, pageY)
-//console.log(range)
-//console.log('deepestNode:', deepestNode)
+
 		//const targetClasses = ['tag'];
         //if (mode == 'preview' && !targetClasses.some(cls => event.target.classList.contains(cls))) {
        	if (mode == 'preview') {
@@ -600,7 +396,7 @@ export class GUI {
 		}
 	}
 
-	removeElementWithAnimation(
+	removeElementWithAnimation( 
 		el: HTMLElement, 
 		callback: (e: Event) => void, 
 	):void {
