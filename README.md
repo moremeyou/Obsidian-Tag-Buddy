@@ -1,4 +1,4 @@
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/moremeyou/Obsidian-Tag-Buddy?style=for-the-badge&sort=semver)  ![GitHub All Releases](https://img.shields.io/github/downloads/moremeyou/Obsidian-Tag-Buddy/total?style=for-the-badge) ![Static Badge](https://img.shields.io/badge/New_Version-In--Progress-green?style=for-the-badge) 
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/moremeyou/Obsidian-Tag-Buddy?style=for-the-badge&sort=semver) ![GitHub All Releases](https://img.shields.io/github/downloads/moremeyou/Obsidian-Tag-Buddy/total?style=for-the-badge) ![Static Badge](https://img.shields.io/badge/New_Version-In--Progress-green?style=for-the-badge)
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 # Obsidian Tag Buddy 🔖
 Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
@@ -80,7 +80,7 @@ Obsidian approved December 6th, 2023! 🤘
 	5. After installation, tap **Enable**.
 	6. Enjoy!
 
-# 🧪 New version (0.6.7) pre-release notes 
+## 🧪 New version (0.6.7) pre-release notes 
 0.6.4 will be downloaded by default. Pre-release only available through the [BRAT](https://tfthacker.com/brat-quick-guide) plugin. 
 
 See To do’s below for the great new features in this pre-release. Updated documentation coming soon. For now, here’s a quick roundup:
