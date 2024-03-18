@@ -361,7 +361,7 @@ export class TagSummary {
 
 		const container = createEl('div');
 		const textDiv = createEl("blockquote");
-		textDiv.innerHTML = "There are no files with tagged paragraphs that match the tags:<br>"
+		textDiv.innerHTML = "There are no notes with tagged paragraphs that match the tags:<br>"
 			+ (tags.length>0 ? tags.join(', ') : "No tags specified.") + "<br>";
 		
 		container.appendChild(textDiv);
@@ -427,6 +427,11 @@ export class TagSummary {
 			// Remove files that do not contain the tags selected by the user
 			const cache = this.app.metadataCache.getFileCache(file);
 			const tagsInFile = getAllTags(cache);
+			// Remove files where the path includes '_exclude'
+			if (file.path.includes('_exclude')) return false
+			
+			// Remove the file if it's the same file as this summary
+			//if (activeFile) if (activeFile.path == file.path) return false;
 
 			if (validTags.some((value) => tagsInFile?.includes(value))) {
 				return true;
@@ -465,20 +470,14 @@ export class TagSummary {
 			// item[0] is the file, item[1] is the file content
 			const fileName = item[0].name.replace(/.md$/g, "");
 			const filePath = item[0].path;
-			//console.log(activeFile)
-			// Do not add this item if it's in the same file we're creating the summary
-			// Should filter this file out earlier
-			if (activeFile) {
-				if (activeFile.name == item[0].name) return;
-			}
-
+			
 			// Get paragraphs
 			let listParagraphs: string[] = Array();
 			const blocks = item[1].split(/\n\s*\n/).filter((row) => row.trim().length > 0);
 
 			// Get list items
 			blocks.forEach((paragraph) => {
-				
+	
 				// Check if the paragraph is another plugin
 				let valid = false;
 				//let listTags = paragraph.match(/#[\p{L}0-9_\-/#]+/gu);

@@ -1,13 +1,5 @@
-# New version pre-release notes 🧪
-See To do’s below for the great new features in this pre-release. Updated documentation coming soon. For now, here’s a quick roundup:
-- OPT/ALT+CLICK on a tag (previously removed hash) now opens a Tag Actions modal with renaming, removing hash and more – in the current note or across your entire vault. You can even generate a tag summary without code.
-- Move to section now lets you copy just the link or selected text. And there’s new efficiencies like automatic list type detection when copying to a section (or top/bottom of note, also new).
-- Don’t like all those buttons below each summary block? Settings will soon be overhauled to let you customize which buttons you want to see. 
-- All the original features and functions have not be changed.
-
-If you’re testing the pre-release, please submit any issues you find. There’s ongoing cleanup and optimisations. But everything noted above should be stable. 
-
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/moremeyou/Obsidian-Tag-Buddy?style=for-the-badge&sort=semver)  ![GitHub All Releases](https://img.shields.io/github/downloads/moremeyou/Obsidian-Tag-Buddy/total?style=for-the-badge)  ![Static Badge](https://img.shields.io/badge/New_Version-In--Progress-green?style=for-the-badge)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/moremeyou/Obsidian-Tag-Buddy?style=for-the-badge&sort=semver)  ![GitHub All Releases](https://img.shields.io/github/downloads/moremeyou/Obsidian-Tag-Buddy/total?style=for-the-badge) ![Static Badge](https://img.shields.io/badge/New_Version-In--Progress-green?style=for-the-badge) 
+<a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 # Obsidian Tag Buddy 🔖
 Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
 
@@ -88,6 +80,17 @@ Obsidian approved December 6th, 2023! 🤘
 	5. After installation, tap **Enable**.
 	6. Enjoy!
 
+# 🧪 New version (0.6.7) pre-release notes 
+0.6.4 will be downloaded by default. Pre-release only available through the [BRAT](https://tfthacker.com/brat-quick-guide) plugin. 
+
+See To do’s below for the great new features in this pre-release. Updated documentation coming soon. For now, here’s a quick roundup:
+- OPT/ALT+CLICK on a tag (previously removed hash) now opens a Tag Actions modal with renaming, removing hash and more – in the current note or across your entire vault. You can even generate a tag summary without code.
+- Move to section now lets you copy just the link or selected text. And there’s new efficiencies like automatic list type detection when copying to a section (or top/bottom of note, also new).
+- Don’t like all those buttons below each summary block? Settings will soon be overhauled to let you customize which buttons you want to see. 
+- All the original features and functions have not be changed.
+
+If you’re testing the pre-release, please [submit any issues you find](https://github.com/moremeyou/Obsidian-Tag-Buddy/issues). There’s ongoing cleanup and optimisations. But everything noted above should be stable. 
+
 ## ⚙️ Settings
 - Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native  tag search on click.
 - Convert to tag text with **ALT/OPT+CLICK**. Toggle off to use **ALT/OPT+CLICK** to perform native tag search.
@@ -102,12 +105,13 @@ Obsidian approved December 6th, 2023! 🤘
 	
 ## ✅ #ToDo :
 - [ ] BUG: Remove extra space if removing between words 👨🏻‍💻
-- [x] ~~BUG: Summaries aren’t showing tagged lists~~
-- [ ] BUG: honor obsidian exclude folders in summaries 👨🏻‍💻
-- [ ] BUG: missing tagged blocks when right below front matter 👨🏻‍💻
 - [ ] BUG: making new notes doesn’t work on mobile 👨🏻‍💻
+- [ ] BUG: uncaught exceptions when using kanban and others 👨🏻‍💻
+- [x] ~~BUG: Summaries aren’t showing tagged lists~~
+- [ ] Refactor settings 👨🏻‍💻
+- [x] ~~Ignore file paths that include, “_exclude”~~
 - [x] ~~Better button/icons~~
-- [x] Summary improvements
+- [x] ~~Summary improvements~~
 	- [x] ~~Move to section is a dropdown of headers~~
 	- [x] ~~Detect list type below heading~~
 	- [x] ~~Add to section functionality checks for selected text~~
@@ -118,7 +122,6 @@ Obsidian approved December 6th, 2023! 🤘
 	- [x] ~~remove hash~~
 	- [x] ~~lower case~~
 	- [x] ~~make summary~~
-- [ ] Refactor settings 👨🏻‍💻
 - [ ] BUG: Mobile modal input focus
 - [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
 
