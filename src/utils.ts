@@ -17,6 +17,19 @@ export function getTagElement(
     return null;
 }
 
+export function platformSettingCheck (app: App, value) {
+    return (value == 'always' || (value == 'desktop' && !app.isMobile) || (value == 'mobile' && app.isMobile))
+}
+
+export function platformSettingCheckMultiple (app: App, values: Array []) {
+    for (let value of values) {
+        if (platformSettingCheck(app, value)) {
+            return true; 
+        }
+    }
+    return false;
+}
+
 export function isWordNearEnd(
     str: string, 
     word: string, 
@@ -370,7 +383,7 @@ export function getActiveFileFolder(
     //const activeFile = app.workspace.activeLeaf.view.file;
     //const activeFile = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeFile) return null;
-
+    let folderPath
     if (activeFile.path.includes('\\') || activeFile.path.includes('/')) {
 
         // Determine the correct path separator
@@ -378,7 +391,7 @@ export function getActiveFileFolder(
 
         const pathParts = activeFile.path.split(pathSeparator);
         pathParts.pop();  // Remove the file name part
-        let folderPath = pathParts.join(pathSeparator);
+        folderPath = pathParts.join(pathSeparator);
 
         // Ensure the folder path ends with the correct path separator
         if (!folderPath.endsWith(pathSeparator)) {

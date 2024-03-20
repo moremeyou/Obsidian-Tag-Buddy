@@ -217,7 +217,8 @@ console.log((tag), newName, file.name)
 	async edit (
 		tagEl: HTMLElement, 
 		event: Event, 
-		pragraphEl: HTMLElement
+		pragraphEl: HTMLElement,
+		editType: String
 	):void {
 
 		let tagContainer: HTMLElement;
@@ -276,16 +277,10 @@ console.log((tag), newName, file.name)
 
 			let afterTagChr = '';
 			
-			/*if (afterTag.startsWith(' ')) {
-				afterTagChr = ' ';
-			} else if (afterTag.startsWith('\n')) {
-				afterTagChr = '\n';
-			}*/
 			
 			// Can't remember why I have this...
 			// need to refactor all this line break space stuff
 			if (fileContent[index] === '\n') beforeTag += '\n';
-			
 			let newContent = '';
 
 			////////////////////////////////////////////////////////////////
@@ -296,7 +291,8 @@ console.log((tag), newName, file.name)
 				
 				newContent = beforeTag + afterTagChr + afterTag;
 
-			} else if (event.altKey 
+			//} else if (event.altKey 
+			} else if (editType == 'hash' 
 						|| ((event.type == 'touchstart') 
 							&& !this.plugin.settings.mobileTagSearch)) 
 			{ 
@@ -308,10 +304,15 @@ console.log((tag), newName, file.name)
 				if (this.app.isMobile && this.plugin.settings.mobileNotices) 
 					{ new Notice ('Tag Buddy: ' + tag + ' converted to text.'); }
 			
-			} else if (((event.type == 'touchend') 
+			/*} else if (((event.type == 'touchend') 
 				|| this.plugin.settings.mobileTagSearch) 
 					|| (Utils.ctrlCmdKey(event) && !this.plugin.settings.removeOnClick) 
 					|| (!Utils.ctrlCmdKey(event) && this.plugin.settings.removeOnClick)
+				) 
+			{*/
+			} else if (((event.type == 'touchend') 
+				|| this.plugin.settings.mobileTagSearch) 
+					|| (editType == 'remove') 
 				) 
 			{
 
@@ -319,11 +320,12 @@ console.log((tag), newName, file.name)
 				let parentTag = '';
 
 				if (tag.includes('/') 
-					&& (this.plugin.settings.removeChildTagsFirst 
-						|| (event.shiftKey 
-							&& !this.plugin.settings.removeChildTagsFirst)
-						)
-					) 
+
+					//&& (this.plugin.settings.removeChildTagsFirst 
+					//|| (event.shiftKey 
+						//&& !this.plugin.settings.removeChildTagsFirst)
+					)
+					 
 				{
 					let parts = tag.split('/');
 					const removedChild = parts.pop();
@@ -342,7 +344,26 @@ console.log((tag), newName, file.name)
 					}
 				
 				} else {
-					newContent = beforeTag + afterTag;
+					// remove extra space
+					
+//console.log ('>' + beforeTag.substring(beforeTag.length-1) + afterTag.substring(0,1) + '<')
+					/*if (beforeTag.substring(beforeTag.length-1) == ' ' && afterTag.substring(0,1) == ' ') {
+						newContent = beforeTag + afterTag.substring(1);
+					} else {
+						newContent = beforeTag + afterTag;
+					}*/
+
+					const startsWithPunctuation = /^[.,!:?;]/.test(afterTag.trimStart()[0]);
+//console.log('>'+afterTag.trimStart()[0]+'<')
+					if (beforeTag.endsWith(' ') && afterTag.startsWith(' ')) {
+				        newContent = beforeTag + afterTag.substring(1);
+				    } else if (startsWithPunctuation) {
+				    	newContent = beforeTag.trimEnd() + afterTag.trimStart();
+				    } else {
+				        // If there's no leading space in afterTag or special handling for punctuation isn't needed, concatenate directly
+				        newContent = beforeTag + afterTag;
+				    }
+
 					if (this.app.isMobile 
 						&& this.plugin.settings.mobileNotices) { 
 						new Notice ('Tag Buddy: ' + tag + ' removed.'); 

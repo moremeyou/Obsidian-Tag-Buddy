@@ -104,11 +104,14 @@ If you’re testing the pre-release, please [submit any issues you find](https:/
 - Lock recently added tags: Makes this a favorites list.
 	
 ## ✅ #ToDo :
-- [ ] BUG: Remove extra space if removing between words 👨🏻‍💻
-- [ ] BUG: making new notes doesn’t work on mobile 👨🏻‍💻
-- [ ] BUG: uncaught exceptions when using kanban and others 👨🏻‍💻
+- [ ] Mobile testing with new settings 👨🏻‍💻
+- [ ] Edit tag modal “Just this instance”
+- [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
+- [x] ~~Refactor settings~~
+- [x] ~~BUG: Remove extra space if removing between words~~
+- [x] ~~BUG: making new notes doesn’t work on mobile~~
+- [x] ~~BUG: uncaught exceptions when using kanban and others~~
 - [x] ~~BUG: Summaries aren’t showing tagged lists~~
-- [ ] Refactor settings 👨🏻‍💻
 - [x] ~~Ignore file paths that include, “_exclude”~~
 - [x] ~~Better button/icons~~
 - [x] ~~Summary improvements~~
@@ -122,8 +125,6 @@ If you’re testing the pre-release, please [submit any issues you find](https:/
 	- [x] ~~remove hash~~
 	- [x] ~~lower case~~
 	- [x] ~~make summary~~
-- [ ] BUG: Mobile modal input focus
-- [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
 
 ## 👍 Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 

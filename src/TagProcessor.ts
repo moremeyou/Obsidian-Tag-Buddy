@@ -257,7 +257,7 @@ export class TagProcessor {
 	):void {
 		if (this.plugin.settings.debugMode) console.log('Tag Buddy: processNativeEmbed')
 		embed = embed.closest('.markdown-embed');
- 		if (embed.getAttribute('src')) {
+ 		if (embed?.getAttribute('src')) {
 			const linkElement = embed.getAttribute('src');
 			let filePath = embed.getAttribute('src');
 			const linkArray = filePath.split('#');

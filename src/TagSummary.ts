@@ -98,7 +98,9 @@ export class TagSummary {
 			});
 		}
 
-		const copySuccess = this.copyTextToSection(
+//console.log(dropdown.getValue())
+
+		const copySuccess = await this.copyTextToSection(
 			//this.plugin.settings.taggedParagraphCopyPrefix + 
 			newContent, 
 			dropdown.getValue(), 
@@ -155,7 +157,7 @@ export class TagSummary {
 							//this.app.workspace.openLinkText(filePath, '');
 							this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
 		 				});
-					}
+					} 
 
 				} else {
 					new Notice ('Copied to section: ' + dropdown.getValue() 
@@ -175,15 +177,21 @@ export class TagSummary {
 	async makeSummaryBtnHandler (
 		summaryMd: String, 
 		tags: Array,
-		code: Boolean = false
+		code: Boolean = false,
+		incrementFile: Boolean = false
 	) {
-		
+
+//new Notice ('makeSummaryBtnHandler', 10000)
+
+		// try to abstract the handlers from their functions
 		//const newNoteObj = this.fileObjFromTags(tags);
 		const newNoteObj = Utils.fileObjFromTags(tags);
 		let fileContent = code ? summaryMd : '## ' + newNoteObj.title + '\n\n' + summaryMd;
 		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
 		//const fileName = this.getActiveFileFolder()+newNoteObj.fileName;
-		const fileName = Utils.getActiveFileFolder(view)+newNoteObj.fileName;
+		// const fileName = Utils.getActiveFileFolder(view)+newNoteObj.fileName;
+		const filePath = Utils.getActiveFileFolder(this.app.workspace.getActiveFile())
+		const fileName = filePath + newNoteObj.fileName;
 		const file = this.app.vault.getAbstractFileByPath(fileName);
 		let notice;
 
@@ -195,7 +203,7 @@ export class TagSummary {
 			});
 		}
 
-		if (file instanceof TFile) {
+		if (file instanceof TFile && !incrementFile) {
 
 			notice = new Notice ('⚠️ Note already exists.\nClick here to overwrite.', 8000);
 			this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
@@ -205,6 +213,33 @@ export class TagSummary {
 					this.app.workspace.openLinkText(fileName, '');
 				});
 			});
+
+		/*} else if ((file instanceof TFile) && incrementFile) {
+
+			const baseName = file.name.replace(/\.md$/, "");
+			const extension = ".md";
+			const regex = /(\d+)$/;
+			const match = baseName.match(regex);
+			let incrementedFileName;
+			let suffix = 1; 
+			if (match) {
+			    suffix = parseInt(match[1], 10) + 1;
+			    // If there's a match, you need to remove the matched number from the baseName before appending the incremented number
+			    const numberLength = match[1].length;
+			    const baseNameWithoutNumber = baseName.slice(0, -numberLength);
+			    incrementedFileName = baseNameWithoutNumber + ' ' + suffix + extension;
+			    console.log(suffix, filePath + incrementedFileName);
+			} else {
+			    // If there's no number at the end, the approach remains the same
+			    incrementedFileName = baseName + ' ' + suffix + extension;
+			    console.log(suffix, filePath + incrementedFileName);
+			}
+			this.app.vault.create(filePath+incrementedFileName, fileContent);
+			const notice = new Notice ('Note created. 📜\n🔗 Open note.');
+			this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+				this.app.workspace.openLinkText(newNoteObj.fileName, '');
+			});
+			*/
 
 		} else if (!file) {
 
@@ -531,43 +566,58 @@ export class TagSummary {
         		if (blockLink) link = '[[' + filePath + '#' + blockLink + '|' + fileName + ']]';
         		else link = '[[' + filePath + '|' + fileName + ']]';
 						
-        		if (this.plugin.settings.tagSummaryBlockButtons) {
 
-        			/*buttonContainer.appendChild(
-						this.plugin.gui.makeBlockSelector(
-							count-1
+    			/*buttonContainer.appendChild(
+					this.plugin.gui.makeBlockSelector(
+						count-1
+					)
+				);*/
+
+				//if (sections.length >= 1) {
+        		/*if (this.plugin.settings.removeTagBtn == 'always' 
+        			|| this.plugin.settings.removeTagBtn == 'desktop' && !this.app.isMobile
+        			|| this.plugin.settings.removeTagBtn == 'mobile' && this.app.isMobile
+        			)
+        			*/
+        		//if (Utils.platformSettingCheck (this.app, this.plugin.settings.removeTagBtn)) {
+
+					buttonContainer.appendChild(
+						this.plugin.gui.makeCopyToSection(
+							this.copyToBtnHandler.bind(this),
+							paragraph, 
+							sections, 
+							tags,
+							(blockLink ? (filePath + '#' + blockLink[0]) : filePath), 
+							paragraphEl, 
+							summaryContainer
 						)
-					);*/
+					);
+				//}
 
-					if (sections.length >= 1) {
-						buttonContainer.appendChild(
-							this.plugin.gui.makeCopyToSection(
-								this.copyToBtnHandler.bind(this),
-								paragraph, 
-								sections, 
-								tags,
-								(blockLink ? (filePath + '#' + blockLink[0]) : filePath), 
-								paragraphEl, 
-								summaryContainer
-							)
-						);
-					}
+				if (Utils.platformSettingCheck (this.app, this.plugin.settings.copyToCBBtn)) {
+
 					buttonContainer.appendChild(
 						this.plugin.gui.makeCopyButton(
 							this.copyBtnHandler.bind(this),
 							paragraph.trim()
 						)
 					);
-    				buttonContainer.appendChild(
-    					this.plugin.gui.makeRemoveTagButton(
-    						this.removeTagBtnHandler.bind(this),
-    						paragraphEl, 
-    						tagSection//, 
-    						//(blockLink ? (filePath + '#' + blockLink[0]) : filePath)
+
+				}
+
+				if (Utils.platformSettingCheck (this.app, this.plugin.settings.removeTagBtn)) {
+
+					buttonContainer.appendChild(
+						this.plugin.gui.makeRemoveTagButton(
+							this.removeTagBtnHandler.bind(this),
+							paragraphEl, 
+							tagSection//, 
+							//(blockLink ? (filePath + '#' + blockLink[0]) : filePath)
 						)
 					);
 
-    			}
+				}
+
 
         		const mdParagraph = paragraph;
         		paragraph = '**' + link + '**\n' + paragraph;
@@ -741,14 +791,21 @@ export class TagSummary {
 	    const mdHeadings = Utils.getMarkdownHeadings(fileContentLines);
 	    let targetLine;
 
-	    if (mdHeadings.length <= 0 || section == 'end' || section == 'top') {
+	    //if (mdHeadings.length <= 0 || section == 'end' || section == 'top' || section == 'note' || section == 'newNote') {
+    	if (mdHeadings.length <= 0 || section == 'end' || section == 'top') {
+
 	    	if (section == 'top') {	    	
 		    	targetLine = Utils.findFirstLineAfterFrontMatter(fileContent)
 		    	if (targetLine == 0) fileContent = '\n' + fileContent
 				//console.log(targetLine)
-		    } else if (section == 'end' || mdHeadings.length <= 0) {
-		    	// util function to find last line in file
+    		/*} else if (section == 'newNote') {
+		    	this.makeSummaryBtnHandler (text, [], true, true);
+		    	return true;
+		    	*/
+		    //} else if (section == 'end' || mdHeadings.length <= 0 || section == 'note') {
+	    	} else if (section == 'end') {
 		    	targetLine = fileContentLines.length - 1;
+		    //} else if (mdHeadings.length <= 0) {
 		    }
 	    } else if (mdHeadings.length > 0) { // if there are any headings
 	        const headingObj = mdHeadings.find(heading => heading.text.trim() === section);

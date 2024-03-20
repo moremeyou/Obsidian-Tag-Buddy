@@ -192,17 +192,17 @@ blockquote.tag-summary-paragraph {
    background: transparent;
    border-radius: 5px !important;
    box-shadow: none !important;
-   vertical-align: top !important;
+   /*vertical-align: top !important;*/
    border: 1.75px solid var(--link-color) !important; 
    background-color: var(--background-primary) !important;
    max-height: 25px !important;
    min-width: 40px !important;
    white-space: nowrap;
    overflow: hidden;
-   /*padding: 2px 5px 2px 5px !important;
-   /*margin: 0px 10px 0px -5px !important;
-   margin: 0px 10px 0px 0px !important;
-   font-size: 12px !important;*/
+   /*padding: 2px 5px 2px 5px !important;*/
+   /*margin: 0px 10px 0px -5px !important;*/
+   /*margin: 0px 10px 0px 0px !important;*/
+   font-size: 12px !important;
    
 }
 

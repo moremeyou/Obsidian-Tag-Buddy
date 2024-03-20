@@ -17,7 +17,7 @@ export class GUI {
 		this.app = app;
 		this.plugin = plugin;
 	}
-
+ 
 	showTagEditor (tag = '') {
 
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -172,61 +172,79 @@ export class GUI {
 		sections.forEach((sec) => {
 			dropdown.addOption(sec, Utils.truncateStringAtWord(sec, 16)); 
 		});
-		dropdown.addOption('top', 'Top of note'); 
-		dropdown.addOption('end', 'End of note'); 
+		dropdown.addOption('top', 'Note top'); 
+		dropdown.addOption('end', 'Note end'); 
+		//dropdown.addOption('note', 'Note'); 
+		//dropdown.addOption('newNote', 'New note'); 
 		
 		selectEl.querySelector('select').className = 'tagsummary-dropdown';
+		
+		if (Utils.platformSettingCheck (this.app, this.plugin.settings.copyToNoteBtn)) {
+			copyToEl.appendChild(
+				this.makeCopyToButton (
+					clickFn,
+					'note',	
+					dropdown,
+					paragraphEl, 
+					summaryEl,
+					content,
+					tags,
+					filePath 
+				)
+			)
+		}
 
-		copyToEl.appendChild(
-			this.makeCopyToButton (
-				clickFn,
-				'note',	
-				dropdown,
-				paragraphEl, 
-				summaryEl,
-				content,
-				tags,
-				filePath 
+		if (Utils.platformSettingCheck (this.app, this.plugin.settings.copyLinkToSectionBtn)) {
+			copyToEl.appendChild(
+				this.makeCopyToButton (
+					clickFn,
+					'link',	
+					dropdown,
+					paragraphEl, 
+					summaryEl,
+					content,
+					tags,
+					filePath 
+				)
 			)
-		)
-		copyToEl.appendChild(
-			this.makeCopyToButton (
-				clickFn,
-				'link',	
-				dropdown,
-				paragraphEl, 
-				summaryEl,
-				content,
-				tags,
-				filePath 
-			)
-		)
-		copyToEl.appendChild(
-			this.makeCopyToButton (
-				clickFn,
-				'copy',
-				dropdown,
-				paragraphEl, 
-				summaryEl,
-				content,
-				tags,
-				filePath 
-			)
-		)
-		copyToEl.appendChild(
-			this.makeCopyToButton (
-				clickFn,
-				'move',
-				dropdown,
-				paragraphEl, 
-				summaryEl,
-				content,
-				tags,
-				filePath 
-			)
-		)
+		}
 
-		copyToEl.appendChild(selectEl);
+		if (Utils.platformSettingCheck (this.app, this.plugin.settings.copyToSectionBtn)) {
+			copyToEl.appendChild(
+				this.makeCopyToButton (
+					clickFn,
+					'copy',
+					dropdown,
+					paragraphEl, 
+					summaryEl,
+					content,
+					tags,
+					filePath 
+				)
+			)
+		}
+
+		if (Utils.platformSettingCheck (this.app, this.plugin.settings.moveToSectionBtn)) {
+			copyToEl.appendChild(
+				this.makeCopyToButton (
+					clickFn,
+					'move',
+					dropdown,
+					paragraphEl, 
+					summaryEl,
+					content,
+					tags,
+					filePath 
+				)
+			)
+		}
+
+		if (Utils.platformSettingCheckMultiple (this.app, [this.plugin.settings.moveToSectionBtn,
+														   this.plugin.settings.copyToSectionBtn,
+														   this.plugin.settings.copyLinkToSectionBtn,
+														   this.plugin.settings.copyToNoteBtn])) {
+			copyToEl.appendChild(selectEl);
+		}
 
 
 		return copyToEl;
@@ -249,28 +267,34 @@ export class GUI {
 		else if (mode == 'move') buttonLabel = 'replace'; //'copy-check';
 		else if (mode == 'note') buttonLabel = 'file-plus-2';
 
-		const button = this.makeButton (buttonLabel, (e) => { 
+		const button = this.makeButton (buttonLabel, async (e) => { 
 			e.stopPropagation();
 
 			if (mode == 'note') {
+			//if (dropdown.getValue() == 'note') {
 
-				new SelectFileModal(this.app, (result) => {
+				new SelectFileModal(this.app, (file) => {
 
   					//new Notice(`File: ${result.name}`);
 
-  					clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath, result);
+  					clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath, file);
 
 				}).open();
 
+			/*} else if (dropdown.getValue() == 'newNote') {
+
+//console.log(view, fileName)
+				clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath);
+*/
 			} else {
 
 				clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath);
 			}
 		});
 		let buttonHoverText;
-		if (mode == 'link') buttonHoverText = 'Copy paragraph link to section.' ;
-		else if (mode == 'copy') buttonHoverText = 'Copy paragraph to section.';
-		else if (mode == 'move') buttonHoverText = 'Move paragraph to section.';
+		if (mode == 'link') buttonHoverText = 'Copy paragraph link.' ;
+		else if (mode == 'copy') buttonHoverText = 'Copy paragraph.';
+		else if (mode == 'move') buttonHoverText = 'Move paragraph.';
 		else if (mode == 'note') buttonHoverText = 'Copy paragraph to section in note.';
 
 		button.title = buttonHoverText;
@@ -309,7 +333,7 @@ export class GUI {
 			e.stopPropagation();
 			clickFn(e, content);
 		});
-		button.title = 'Copy paragraph';
+		button.title = 'Copy paragraph to clipboard.';
 
 		return button;
 	}
@@ -343,6 +367,7 @@ export class GUI {
 			'file-plus-2', 
 			async (e) => {
 				e.stopPropagation();
+//new Notice ('makeSummaryNoteButton', 10000)
 				clickFn (summaryMd, tags);
 			}
 		);

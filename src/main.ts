@@ -12,13 +12,31 @@ interface TBSettings {
 	removeChildTagsFirst; // 
 	optToConvert: boolean; //alt
 	mobileTagSearch: boolean; 
-	mobileNotices: boolean; 
 	tagSummaryBlockButtons: boolean; 
 	taggedParagraphCopyPrefix: string;
+
+
+	// new settings
+	desktopClickTag: String;
+	desktopCMDClickTag: String;
+	desktopOPTClickTag: String;
+	mobileDoubleTapTag: String;
+	mobileLongPressTag: String;
+	mobileTripleTapText: Boolean;
+
+	removeTagBtn: String;
+	copyToCBBtn: String;
+	moveToSectionBtn: String;
+	copyToSectionBtn: String;
+	copyLinkToSectionBtn: String;
+	copyToNoteBtn: String;
+
+	mobileNotices: boolean; 
 	recentlyAddedTags: string;
 	lockRecentTags: boolean;
 	showSummaryButtons:boolean;
 	debugMode: boolean; 
+
 }
 
 const DEFAULT_SETTINGS: Partial<TBSettings> = {
@@ -26,13 +44,30 @@ const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	removeChildTagsFirst: true, 
 	optToConvert: true, 
 	mobileTagSearch: false, 
-	mobileNotices: true,
 	tagSummaryBlockButtons: false,
 	taggedParagraphCopyPrefix: '',
+
+
+	// new
+	desktopClickTag: 'remove',
+	desktopCMDClickTag: 'edit',
+	desktopOPTClickTag: 'native',
+	mobileDoubleTapTag: 'remove',
+	mobileLongPressTag: 'edit',
+	mobileTripleTapText: true,
+
+	removeTagBtn: 'always',
+	copyToCBBtn: 'hide',
+	moveToSectionBtn: 'always',
+	copyToSectionBtn: 'always',
+	copyLinkToSectionBtn: 'hide',
+	copyToNoteBtn: 'always',
+
+	mobileNotices: true,
 	recentlyAddedTags: '',
 	lockRecentTags: false,
 	showSummaryButtons:false,
-	debugMode: false,
+	debugMode: false
 }; 
 
 export default class TagBuddy extends Plugin {  
@@ -112,8 +147,8 @@ export default class TagBuddy extends Plugin {
 				async (event: EditorEvent) => { 
 					const activeFile = await this.app.workspace.getActiveFile();
 					if (this.settings.debugMode) console.log('Tag Buddy: last active file:', this.activeFile?.name);
-					if (this.settings.debugMode) console.log('Tag Buddy: file open:', activeFile.name)
-					if (activeFile.path != this.activeFile?.path) {
+					if (this.settings.debugMode) console.log('Tag Buddy: file open:', activeFile?.name)
+					if (activeFile?.path != this.activeFile?.path) {
 						this.tagProcessor.reset();
 						this.activeFile = this.app.workspace.getActiveFile();
 						if (this.tagProcessor) {
@@ -156,8 +191,14 @@ export default class TagBuddy extends Plugin {
 					'click', 
 					(e:Event) => { 
 						const isTag = e.target.classList.contains('tag');
+//new Notice ('!this.settings.mobileTagSearch: ' + !this.settings.mobileTagSearch)
+//new Notice ('this.setting.mobileDoubleTapTag != native: ' + (this.setting.mobileDoubleTapTag != 'native'))
 						if (isTag && !this.settings.mobileTagSearch) {
+						//if (isTag && (this.setting.mobileDoubleTapTag != 'native'// ||
+									  //this.plugin.setting.mobileLongPressTag != 'native'
+						//			  )) {
 							e.stopPropagation();
+//new Notice ('tapped tag and stop all other mobile touches except our custom ones')
 						} else {	
 						}
 					}, true
@@ -205,6 +246,7 @@ export default class TagBuddy extends Plugin {
 
 		const target = event.target as HTMLElement;
 		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
+		const modKey: String = Utils.ctrlCmdKey(event) ? 'CMD' : (event.altKey ? 'OPT' : '');
 
 		// This condition it in case we click on a tag in another plugin like repeat or checklist
 		// Can't edit tags in these cases. For now.
@@ -220,13 +262,25 @@ export default class TagBuddy extends Plugin {
 
 		if (!this.app.isMobile) {
 			//new Notice ('Tag Buddy event type: ' + event.type);
-			if ((this.settings.removeOnClick && Utils.ctrlCmdKey(event)) 
-				|| (!this.settings.removeOnClick && !Utils.ctrlCmdKey(event))) { 
+			//console.log(event.type)
+			/*if ((this.settings.desktopClickTag == 'native' && (!Utils.ctrlCmdKey(event) && !event.altKey)) ||
+				(this.settings.desktopCMDClickTag == 'native' && Utils.ctrlCmdKey(event)) ||
+				(this.settings.desktopOPTClickTag == 'native' && event.altKey)) { */
+			if ((this.settings.desktopClickTag == 'native' && modKey == '') ||
+				(this.settings.desktopCMDClickTag == 'native' && modKey == 'CMD') ||
+				(this.settings.desktopOPTClickTag == 'native' && modKey == 'OPT')) { 
+console.log('native tag click')
 				return; 
-			//} else if (event.altKey && !this.settings.optToConvert) {  
-			} else if (event.altKey && target && target.matches('.tag')) {  
-
-//console.log(event.target.closest('.tag').innerText)
+ 
+			//} else if (event.altKey && target && target.matches('.tag')) {  
+			/*} else if ((this.settings.desktopClickTag == 'edit' && (!Utils.ctrlCmdKey(event) && !event.altKey)) ||
+				(this.settings.desktopCMDClickTag == 'edit' && Utils.ctrlCmdKey(event)) ||
+				(this.settings.desktopOPTClickTag == 'edit' && event.altKey)) {*/
+			} else if ((this.settings.desktopClickTag == 'edit' && modKey == '') ||
+				(this.settings.desktopCMDClickTag == 'edit' && modKey == 'CMD') ||
+				(this.settings.desktopOPTClickTag == 'edit' && modKey == 'OPT')) {
+				if (!target.matches('.tag')) return
+console.log('edit tag')
 				// get the tag via: event.target.closest('.tag').innerText
 				event.stopPropagation();
 				event.preventDefault();
@@ -243,13 +297,6 @@ export default class TagBuddy extends Plugin {
 				if (selection) selection.removeAllRanges();
 			}, 400)
 
-			/*if (event.type == 'touchstart'){
-				console.log('handle touch start')
-				//event.stopPropagation();
-				//event.preventDefault();
-				this.gui.showTagEditor(event.target.closest('.tag').innerText)
-				return;
-			} else */
 			if (this.settings.mobileTagSearch && event.type == 'touchend') {
 				// if we get this far, this is a double tap
 				console.log('handle touch end')
@@ -265,11 +312,26 @@ export default class TagBuddy extends Plugin {
 				return;
 			}
 
-			if (this.settings.removeOnClick 
-				|| (!this.settings.removeOnClick && Utils.ctrlCmdKey(event))) {
+			//let editType = 
+			//if (this.settings.removeOnClick 
+			//	|| (!this.settings.removeOnClick && Utils.ctrlCmdKey(event))) {
+			//['remove', 'hash'].includes(this.settings.desktopClickTag)
+			//if ([this.settings.desktopClickTag, this.settings.desktopCMDClickTag, this.settings.desktopOPTClickTag].includes('remove'))
+			
+			let editType;
+			if (modKey == '') editType = this.settings.desktopClickTag
+			else if (modKey == 'CMD') editType = this.settings.desktopCMDClickTag
+			else if (modKey == 'OPT') editType = this.settings.desktopOPTClickTag 
+
+// at this point we should only be dealing with 'remove' or 'hash'. so we can always stop the default now.
+console.log (editType)
+			/*if (this.settings.desktopClickTag == 'remove' ||
+				this.settings.desktopCMDClickTag == 'remove' ||
+				this.settings.desktopOPTClickTag == 'remove') {*/
+			//if (editType == 'remove') {
 				event.stopPropagation();
 				event.preventDefault();
-			}
+			//}
 
 			const clickedTag = target.closest('.tag'); 
 			const tag = clickedTag.innerText;
@@ -281,7 +343,9 @@ export default class TagBuddy extends Plugin {
 				// Try
 				this.tagEditor.edit(
 					target, 
-					event
+					event,
+					null,
+					editType
 				);
 			} else {
 				// Try again
@@ -290,7 +354,9 @@ export default class TagBuddy extends Plugin {
 					tagFile = clickedTag.getAttribute('file-source');
 					this.tagEditor.edit (
 						target, 
-						event
+						event,
+						null,
+						editType
 					);
 				}, 300);
 			}

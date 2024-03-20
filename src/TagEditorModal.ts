@@ -161,12 +161,12 @@ export class TBTagEditorModal extends Modal {
             .setName("Where do you want to add the tag summary?")
             .setDesc("Add multiple tags above separated by a comma.")
             .addDropdown((opt) =>
-            opt
-            .addOption('top', "Top of this note")
-            .addOption('end', "Bottom of this note")
-            //.addOption('here', "In place of this tag")
-            .addOption('note', "In a new note") 
-            .onChange((value) => {
+                opt
+                .addOption('top', "Top of this note")
+                .addOption('end', "Bottom of this note")
+                //.addOption('here', "In place of this tag")
+                .addOption('note', "In a new note") 
+                .onChange((value) => {
                    this.settings.summaryPos = value;
                    //console.log(this.settings.summaryPos)
                 }
