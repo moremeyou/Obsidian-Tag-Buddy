@@ -152,7 +152,6 @@ export class TBSettingsTab extends PluginSettingTab {
                 .addOption('remove', "Remove tag")
                 .addOption('hash', "Remove hash")
                 .addOption('edit', "Edit tag")
-                .addOption('native', "Search tag")
                 .setValue(this.plugin.settings.mobileLongPressTag)
                 .onChange(async (value) => {
                     this.plugin.settings.mobileLongPressTag = value;

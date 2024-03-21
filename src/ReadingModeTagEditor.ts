@@ -292,9 +292,7 @@ console.log((tag), newName, file.name)
 				newContent = beforeTag + afterTagChr + afterTag;
 
 			//} else if (event.altKey 
-			} else if (editType == 'hash' 
-						|| ((event.type == 'touchstart') 
-							&& !this.plugin.settings.mobileTagSearch)) 
+			} else if (editType == 'hash') 
 			{ 
 				// Remove the hash only
 				const noHash = tag.substring(1);

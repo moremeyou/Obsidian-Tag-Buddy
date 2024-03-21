@@ -191,31 +191,73 @@ export default class TagBuddy extends Plugin {
 					'click', 
 					(e:Event) => { 
 						const isTag = e.target.classList.contains('tag');
-//new Notice ('!this.settings.mobileTagSearch: ' + !this.settings.mobileTagSearch)
-//new Notice ('this.setting.mobileDoubleTapTag != native: ' + (this.setting.mobileDoubleTapTag != 'native'))
-						if (isTag && !this.settings.mobileTagSearch) {
+						const tag = e.target.closest('.tag')
+						//target.closest('.tag')
+//new Notice (isTag)						
+//new Notice (tag.innerText)
+//new Notice (this.settings.mobileDoubleTapTag)
+						//if (isTag && !this.settings.mobileTagSearch) {
+						//if (this.settings.mobileDoubleTapTag == 'native') {
+						if (isTag && this.settings.mobileDoubleTapTag != 'native') {
+						//if (isTag) { 
+//new Notice (isTag)						
+//new Notice (tag.innerText)
+//new Notice (this.settings.mobileDoubleTapTag)
+//new Notice ('is tag')
 						//if (isTag && (this.setting.mobileDoubleTapTag != 'native'// ||
 									  //this.plugin.setting.mobileLongPressTag != 'native'
 						//			  )) {
 							e.stopPropagation();
+							//e.preventDefault();
+
 //new Notice ('tapped tag and stop all other mobile touches except our custom ones')
-						} else {	
+						} else if (!isTag) {
+							//e.preventDefault();
+							//e.stopPropagation();
+						} else {
+
+							//e.stopPropagation();
+							//e.preventDefault();
 						}
 					}, true
 				);
 
+				
+				new Mobile.DoubleTapHandler(
+					this, 
+					document,  
+					(event) => {
+						//new Notice ('double tap')
+						//event.preventDefault();
+						if (event.target.classList.contains('tag')) {
+							this.mobileTapHandler (event, this.settings.mobileDoubleTapTag)
+						}
+					}, true
+					//this.onClickEvent.bind(this)
+				);
 				new Mobile.PressAndHoldHandler(
 					this, 
 					document, 
 					(event) => {
-						this.gui.showTagEditor(event.target.closest('.tag').innerText)
+						//new Notice ('hold')
+						if (event.target.classList.contains('tag')) {
+							this.mobileTapHandler (event, this.settings.mobileLongPressTag)
+						}
 					}
+					/*async (event: MouseEvent) => {	
+		    			const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
+				        if (view && 
+				        	(view.getMode() == 'preview') &&
+				        	(view.containerEl.contains(event.target))
+			        	) {         
+				        	event.preventDefault();
+				        	this.gui.showTagEditor(event.target.closest('.tag').innerText)
+				        }
+		    		}, true*/
+					//(event) => {
+					//	this.gui.showTagEditor(event.target.closest('.tag').innerText)
+					//}
 					//this.onClickEvent.bind(this)
-				);
-				new Mobile.DoubleTapHandler(
-					this, 
-					document, 
-					this.onClickEvent.bind(this)
 				);
 				new Mobile.TripleTapHandler(
 					this,
@@ -226,7 +268,7 @@ export default class TagBuddy extends Plugin {
 				        	(view.getMode() == 'preview') &&
 				        	(view.containerEl.contains(event.target))
 			        	) {         
-				        	event.preventDefault();
+				        	//event.preventDefault();
 				        	this.gui.showTagSelector(event)
 				        }
 		    		}, true
@@ -235,6 +277,23 @@ export default class TagBuddy extends Plugin {
 			}	
 
 		});
+	}
+
+	async mobileTapHandler (event, setting) {
+//new Notice (setting)
+		if (setting == 'edit') {
+			const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
+	        if (view && (view.getMode() == 'preview') && (view.containerEl.contains(event.target))) 
+	        {         
+	        	//event.preventDefault();
+	        	//event.stopPropagation()
+	        	this.gui.showTagEditor(event.target.closest('.tag').innerText)
+	        }
+		} else if (setting == 'remove') {
+			this.tagEditor.edit(event.target, event, null, 'remove')
+		} else if (setting == 'hash') {
+			this.tagEditor.edit(event.target, event, null, 'hash')
+		}
 	}
 
 	async onClickEvent (

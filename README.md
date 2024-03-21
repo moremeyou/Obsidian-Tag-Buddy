@@ -104,9 +104,9 @@ If you’re testing the pre-release, please [submit any issues you find](https:/
 - Lock recently added tags: Makes this a favorites list.
 	
 ## ✅ #ToDo :
-- [ ] Mobile testing with new settings 👨🏻‍💻
-- [ ] Edit tag modal “Just this instance”
+- [ ] Edit tag modal “Just this instance” 👨🏻‍💻
 - [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
+- [x] ~~Mobile bugs with new settings~~
 - [x] ~~Refactor settings~~
 - [x] ~~BUG: Remove extra space if removing between words~~
 - [x] ~~BUG: making new notes doesn’t work on mobile~~
