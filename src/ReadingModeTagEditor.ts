@@ -16,53 +16,108 @@ export class ReadingModeTagEditor {
 		this.plugin = plugin;
 	}
 
-	async renameTag (tag, newName, vaultToggle: Boolean = false) {
-		//console.log ('ReadingModeTagEditor: rename')
+	//async renameTag (tag, newName, batchAction: string | number, specificFile:TFile = null) {
+	async renameTag (tag, newName, batchAction: string | number, filePath: string = null, tagEl: HTMLElement) {
+		
+		//console.log (newName, batchAction, filePath)
+	
+		//const tagContainerType = tagEl.getAttribute(
+		//	'type'
+		//);
+		//const index = tagEl.getAttribute(
+		//	'md-index'
+		//);
+		//const filePath = tagEl.getAttribute(
+		//	'file-source'
+		//);
+		
+		const activeFile: TFile = await this.app.workspace.getActiveFile();
+		const file: TFile = filePath == null ? activeFile : await Utils.validateFilePath(filePath);
+		
+		if (!file) return;
 
-        if (vaultToggle) {
-        	//console.log('!!!!!!renaming across vault')
+		const fileContent: string = await this.app.vault.read(file);
+		//const file: TFile = await Utils.validateFilePath(filePath);
 
-        	const validTags = [tag]
-			let listFiles = this.app.vault.getMarkdownFiles();
+		if (typeof batchAction === 'number') {
 
-			listFiles = listFiles.filter((file) => {
-				// Remove files that do not contain the tags selected by the user
-				const cache = this.app.metadataCache.getFileCache(file);
-				const tagsInFile = getAllTags(cache);
+        	//const file: TFile = await this.app.workspace.getActiveFile()
+        	//const fileContent: String = await this.app.vault.read(file);
+        	const newFileContent = this.renameTagInStringByIndex (
+        		tag,
+        		newName,
+        		parseInt(batchAction),
+        		fileContent
+    		)
+    		this.app.vault.modify(file, newFileContent);
 
-				if (validTags.some((value) => tagsInFile?.includes(value))) {
-					return true;
-				}
-				return false;
-	        });
+        } else if (batchAction == 'note') {
 
-	        let listContents: [TFile, string][] = await this.plugin.tagSummary.readFiles(listFiles);
-	        // listContents[n][0] is the file, listContents[n][[1] is the file content
-	        
-	        listContents.forEach((note) => {
-	        	//this.renameTagInFile (tag, newName, note[0]);
-	        	this.renameTagInFileByIndex (
-	        		tag,
-	        		newName,
-	        		note[0]
-    			)
-
-	        });
- 
-        } else {
-
-        	const file: TFile = this.app.workspace.getActiveFile();
-        	this.renameTagInFileByIndex (
+        	//const file: TFile = await this.app.workspace.getActiveFile();
+        	this.renameTagsInFileByIndex (
         		tag,
         		newName,
         		file
     		)
+
+    		
+           
+        } else if (batchAction == 'vault') {
+        	
+	    	this.renameTagsInVaultByIndex (
+	    		tag,
+	    		newName
+			)
+
+			//if (activeFile != file) {
+        		//this.app.workspace.activeLeaf.rebuildView()
+        		//new Notice ('Tags have been updated in external notes. Please refresh this summary or reload this note.')
+        	//}
            
         }
 
+        if (activeFile != file && tagEl) {
+        		//this.app.workspace.activeLeaf.rebuildView()
+        		new Notice ('Refresh this summary to see changes.', 5000)
+        	//console.log(tagEl.closest('.tag-summary-block'))
+        	//this.plugin.tagSummary.update(tagEl.closest('.tag-summary-block')); 
+    	}
+        
+
     }
 
-    async renameTagInFileByIndex (
+    async renameTagsInVaultByIndex (tag, newName) {
+
+    	const validTags = [tag]
+		let listFiles = this.app.vault.getMarkdownFiles();
+
+		listFiles = listFiles.filter((file) => {
+			// Remove files that do not contain the tags selected by the user
+			const cache = this.app.metadataCache.getFileCache(file);
+			const tagsInFile = getAllTags(cache);
+
+			if (validTags.some((value) => tagsInFile?.includes(value))) {
+				return true;
+			}
+			return false;
+        });
+
+        let listContents: [TFile, string][] = await this.plugin.tagSummary.readFiles(listFiles);
+        // listContents[n][0] is the file, listContents[n][[1] is the file content
+        
+        listContents.forEach(async (note) => {
+        	//this.renameTagInFile (tag, newName, note[0]);
+        	this.renameTagsInFileByIndex (
+        		tag,
+        		newName,
+        		note[0]
+			)
+
+        });
+
+    }
+
+    async renameTagsInFileByIndex (
     	tag: String, 
     	newName: String, 
     	file: TFile
@@ -81,9 +136,10 @@ export class ReadingModeTagEditor {
     		let offset = 0;
 		    filteredTagObjs.forEach(tagObj => {
 		        // Calculate the new index considering the offset
-		        const newIndex = tagObj.index + offset;
+		        const newIndex: Number = tagObj.index + offset;
 		        // Replace the tag at the correct position
 		        newFileContent = newFileContent.substring(0, newIndex) + newName + newFileContent.substring(newIndex + tagObj.tag.length);
+		        //newFileContent = this.renameTagInStringByIndex (tag, newName, newIndex, fileContent)
 		        // Update the offset for the next iteration
 		        offset += newName.length - tagObj.tag.length;
 		    });
@@ -91,24 +147,25 @@ export class ReadingModeTagEditor {
     		this.app.vault.modify(file, newFileContent);
 
     	} else {
-    		new Notice ('No tags to rename.')
+    		//new Notice ('No tags to rename.')
     	}
     }
 
-   /* async renameTagInFile (tag, newName, file:TFile) {
+    renameTagInStringByIndex (
+    	tag: String, 
+    	newName: String, 
+    	index: Number,
+    	fileContent: String
+	):String {
+    	//console.log(fileContent)
+    	const newContent: String = fileContent.substring (0, parseInt(index)) + newName + fileContent.substring((parseInt(index) + parseInt(tag.length)))
+    	//console.log(newContent)
+    	//console.log(index + tag.length)
+    	return (newContent);
+    	//this.app.vault.modify(file, newFileContent);
 
-console.log((tag), newName, file.name)
+    }
 
-        // this will be used for remove hash, rename, and lowercase
-        let fileContent = await this.app.vault.read(file);
-        fileContent = fileContent.trim();
-        const newFileContent = Utils.replaceTextInString(
-            tag.trim(),
-            fileContent, 
-            newName,
-            true).trim();
-        this.app.vault.modify(file, newFileContent);
-    }*/
 
 	async add (
 		tag: string, 
@@ -218,9 +275,10 @@ console.log((tag), newName, file.name)
 		tagEl: HTMLElement, 
 		event: Event, 
 		pragraphEl: HTMLElement,
-		editType: String
+		editType: String,
+		newName: String
 	):void {
-
+//console.log(tagEl)
 		let tagContainer: HTMLElement;
 		const tagContainerType = tagEl.getAttribute(
 			'type'
@@ -287,13 +345,15 @@ console.log((tag), newName, file.name)
 			// TO-DO: REFACTOR
 			////////////////////////////////////////////////////////////////
 
-			if (!event) { // then we're calling this method from a button. need to rethink how this is organized.
+			if (editType == 'rename') { // this only happens from edit modal
+
+				//newContent = this.renameTagInStringByIndex ('#'+tag, newName, index, fileContent);
+
+			} else if (!event) { // then we're calling this method from a button. need to rethink how this is organized.
 				
 				newContent = beforeTag + afterTagChr + afterTag;
 
-			//} else if (event.altKey 
-			} else if (editType == 'hash') 
-			{ 
+			} else if (editType == 'hash') { 
 				// Remove the hash only
 				const noHash = tag.substring(1);
 				//newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + noHash + afterTag;
@@ -309,7 +369,7 @@ console.log((tag), newName, file.name)
 				) 
 			{*/
 			} else if (((event.type == 'touchend') 
-				|| this.plugin.settings.mobileTagSearch) 
+				|| this.plugin.settings.mobileTagSearch) // don't need this check any more. 
 					|| (editType == 'remove') 
 				) 
 			{
@@ -369,87 +429,88 @@ console.log((tag), newName, file.name)
 				}
 			} 
 			
-				if (tagEl.getAttribute('type') == 'plugin-summary') {
+			if (tagEl.getAttribute('type') == 'plugin-summary') {
+			// can we be using tagContainerType from above?
 
-					// Safety check 1
-					const summaryEl = tagEl.closest('.tag-summary-paragraph');
-					const mdSource = summaryEl.getAttribute('md-source').trim();
-					
-					const escapedText = Utils.escapeRegExp(mdSource);
-					const regex = new RegExp(escapedText, 'g');
-					const matches = fileContent.match(regex);
-					
-					if (matches && matches.length > 1) {
-					    new Notice ('⚠️ Can\'t safely remove/edit tag:\nSurrounding text repeated in source note.');
-					    return;
+				// Safety check 1
+				const summaryEl = tagEl.closest('.tag-summary-paragraph');
+				const mdSource = summaryEl.getAttribute('md-source').trim();
+				
+				const escapedText = Utils.escapeRegExp(mdSource);
+				const regex = new RegExp(escapedText, 'g');
+				const matches = fileContent.match(regex);
+				
+				if (matches && matches.length > 1) {
+				    new Notice ('⚠️ Can\'t safely remove/edit tag:\nSurrounding text repeated in source note.');
+				    return;
 
-					} else if ((matches && matches.length === 0) || !matches) {
-						new Notice ('⚠️ Can\'t find tag in source note.\n');
-					    return;
-					}
-
-					// Safety check 2
-					if ((newContent == '' && !safeToEmptyFile) 
-						|| Utils.contentChangedTooMuch(
-							fileContentBackup, 
-							newContent, 
-							tag, 
-							2)
-						) 
-					{
-						new Notice('Tag Buddy: File change error.');
-						newContent = fileContentBackup;
-
-					} else if (newContent == '' && safeToEmptyFile) {
-						new Notice('Tag Buddy: Tag removed. The note is empty.');
-					}
-
-					setTimeout(async () => {
-						
-						const tagParagraphEl = tagEl.closest('.tag-summary-paragraph');
-						const tagSummaryBlock = tagEl.closest('.tag-summary-block');
-						const tagsToCheck = TagSummary.getTagsToCheckFromEl(tagSummaryBlock);
-						const tagsInContent = Utils.tagsInString(tagParagraphEl.innerText);
-
-						if (tagsToCheck.includes(tag)) {
-							const tagCount = Utils.countOccurrences(tagsToCheck, tagsInContent)
-							
-							if (tagCount >= 2) {
-								this.plugin.tagSummary.update(tagSummaryBlock); 
-							} else {
-								//console.log('last one, will remove paragraph')
-								const notice = new Notice (tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
-								
-								this.plugin.gui.removeElementWithAnimation(
-									tagParagraphEl, 
-									() => {
-				    					setTimeout(async () => { 
-				    						this.plugin.tagSummary.update(tagSummaryBlock); 
-				    						tagParagraphEl.remove(); 
-			    						}, 500);
-								});
-
-								this.plugin.registerDomEvent(
-									notice.noticeEl, 
-									'click', 
-									(e: Event) => {
-							 	 		this.app.workspace.openLinkText(filePath, '');
-									}
-								);
-							}
-
-						} else {
-							this.plugin.tagSummary.update(tagSummaryBlock); 
-						}
-					}, 200);
-
-				} else if (tagEl.getAttribute('type') == 'native-embed') {
-
-					setTimeout(async () => { 
-						this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);
-					}, 200)
-
+				} else if ((matches && matches.length === 0) || !matches) {
+					new Notice ('⚠️ Can\'t find tag in source note.\n');
+				    return;
 				}
+
+				// Safety check 2
+				if ((newContent == '' && !safeToEmptyFile) 
+					|| Utils.contentChangedTooMuch(
+						fileContentBackup, 
+						newContent, 
+						tag, 
+						2)
+					) 
+				{
+					new Notice('Tag Buddy: File change error.');
+					newContent = fileContentBackup;
+
+				} else if (newContent == '' && safeToEmptyFile) {
+					new Notice('Tag Buddy: Tag removed. The note is empty.');
+				}
+
+				setTimeout(async () => {
+					
+					const tagParagraphEl = tagEl.closest('.tag-summary-paragraph');
+					const tagSummaryBlock = tagEl.closest('.tag-summary-block');
+					const tagsToCheck = TagSummary.getTagsToCheckFromEl(tagSummaryBlock);
+					const tagsInContent = Utils.tagsInString(tagParagraphEl.innerText);
+
+					if (tagsToCheck.includes(tag)) {
+						const tagCount = Utils.countOccurrences(tagsToCheck, tagsInContent)
+						
+						if (tagCount >= 2) {
+							this.plugin.tagSummary.update(tagSummaryBlock); 
+						} else {
+							//console.log('last one, will remove paragraph')
+							const notice = new Notice (tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
+							
+							this.plugin.gui.removeElementWithAnimation(
+								tagParagraphEl, 
+								() => {
+			    					setTimeout(async () => { 
+			    						this.plugin.tagSummary.update(tagSummaryBlock); 
+			    						tagParagraphEl.remove(); 
+		    						}, 500);
+							});
+
+							this.plugin.registerDomEvent(
+								notice.noticeEl, 
+								'click', 
+								(e: Event) => {
+						 	 		this.app.workspace.openLinkText(filePath, '');
+								}
+							);
+						}
+
+					} else {
+						this.plugin.tagSummary.update(tagSummaryBlock); 
+					}
+				}, 200);
+
+			} else if (tagEl.getAttribute('type') == 'native-embed') {
+
+				setTimeout(async () => { 
+					this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);
+				}, 200)
+
+			}
 
 			try {
 
@@ -462,12 +523,12 @@ console.log((tag), newName, file.name)
 					const backupFileName = String(file.name.substring(0, file.name.indexOf('.md')) + ' BACKUP.md');
 					this.app.vault.create(backupFileName, fileContentBackup);
 
-					new Notice('⚠️ Tag/note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.');
+					new Notice('⚠️ Tag/note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.', 10000);
 				
 				} catch (error) {
 
 					navigator.clipboard.writeText(fileContentBackup);
-					new Notice('⚠️ Tag/note editing error: ' + error.message + '\nNote content copied to clipboard.');
+					new Notice('⚠️ Tag/note editing error: ' + error.message + '\nNote content copied to clipboard.', 10000);
 
 				}
 			} 

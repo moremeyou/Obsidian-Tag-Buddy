@@ -13,17 +13,29 @@ export class TBTagEditorModal extends Modal {
 
     settings = {
         originalTag: '',
-        vaultToggle: false,
+        originalIndex: null,
+        tagEl: null,
+        filePath: null,
+        batchAction: 'instance',
         newName: '',
         summaryPos: 'top',
         action: 'rename'
     };
 
     //constructor(app: App, tag: String, onSubmit: (result: string) => void) {
-    constructor(app: App, plugin: TagBuddy, tag: String) {
+    constructor(app: App, plugin: TagBuddy, tag: string, index: number, filePath: string = null, tagEl: HTMLElement = null) {
+    //constructor(app: App, plugin: TagBuddy, tagEl: HTMLElement) {
         super(app);
         this.plugin = plugin;
+//console.log(tagEl)
+        this.settings.tagEl = tagEl;
+        //this.settings.originalIndex = parseInt (tagEl.getAttribute('md-index'));
+        //this.settings.originalTag = tagEl.innerText;
+        //this.settings.batchActioon = tagEl.getAttribute('md-index');
+
+        this.settings.filePath = filePath
         this.settings.originalTag = tag;
+        this.settings.originalIndex = index;
         //this.originalTag = tag;
         //this.onSubmit = onSubmit;
     }
@@ -102,55 +114,41 @@ export class TBTagEditorModal extends Modal {
             if (action == 'rename') newName = this.settings.newName;
             else if (action == 'lower') newName = this.settings.originalTag.toLowerCase();
             else if (action == 'totext') newName = this.settings.originalTag.substring(1);
+
+            //if (this.settings.batchAction == 'instance') {
+// this isn't working. soemthing about how I'm looping around with edit and rename. might not work. 
+                // and if not we can't make embded or summary edits edits 
+                //this.plugin.tagEditor.edit (this.settings.tagEl, null, null, 'rename', newName)
+                this.plugin.tagEditor.renameTag (
+                    this.settings.originalTag,
+                    newName,
+                    ((this.settings.batchAction == 'instance') ? parseInt(this.settings.originalIndex) : this.settings.batchAction),
+                    this.settings.filePath,
+                    this.settings.tagEl
+                    //parseInt(this.settings.originalIndex),
+
+                    //((this.settings.batchAction == 'instance') ? parseInt(this.settings.originalIndex) : this.settings.batchAction)
+                )
+                this.close();
+            }
+           /* else {
+
+                this.plugin.tagEditor.renameTag (
+                    this.settings.originalTag,
+                    //this.settings.tagEl,
+                    newName,
+                    this.settings.batchAction
+                    //parseInt(this.settings.originalIndex),
+
+                    //((this.settings.batchAction == 'instance') ? parseInt(this.settings.originalIndex) : this.settings.batchAction)
+                )
+
+            }*/
+
             
-            // vault toggle is in the renameTag method
-
-            this.plugin.tagEditor.renameTag (
-                this.settings.originalTag,
-                newName,
-                this.settings.vaultToggle
-            )
-
-            this.close();
-        }
+        //}
 
     }
-
-   /*
-    } else if (vaultToggle) {
-        
-        // make this into a function // call it from the action function
-        contentEl.empty();
-        titleEl.setText("Applying edit")
-        //submitBtn.setDisabled(true)
-        const editProgress = new ProgressBarComponent (contentEl)
-        editProgress.setValue(75)
-
-        const submitBtn = new ButtonComponent(contentEl)
-        .setClass ('tag-editor-submit')
-        .setButtonText('Cancel')
-        .onClick ((evt) => {
-               // validate
-               console.log('cancel');
-               //submitTagEdit()
-            }
-        )
-        // close when done
-    } else {
-        // do it
-        modal.close();
-    }*/
-
-
-    /*inputChangeHandler (value: String, editType: String) {
-        console.log(value);
-
-        if (editType == 'rename') {
-            // validate
-            this.settings.newName = value;
-            //console.log(this.settings.newName)
-        }
-    }*/
 
     showSummaryOptions () {
         this.optionsDiv.empty();
@@ -202,17 +200,22 @@ export class TBTagEditorModal extends Modal {
             //.setDesc("WARNING: There is NO UNDO for this this action.")
             .addDropdown((opt) =>
             opt
-            .addOption('note', "Just within this note")
+            .addOption('instance', "Just this instance")
+            .addOption('note', "All in this note")
             .addOption('vault', "Across entire vault")
             .onChange((value) => {
                 if (value == 'vault') {
                     whereEditOpt.setDesc("WARNING: There is NO UNDO for vault changes. Consider making a backup of your vault first.")
-                    this.settings.vaultToggle = true;
-                } else {
+                    this.settings.batchAction = 'vault';
+                } else if (value == 'note') {
+                    whereEditOpt.setDesc("Only tags in this note will be updated. Choose \'Across entire vault\' to update this tag everywhere.")
+                    this.settings.batchAction = 'note';
+                } else if (value == 'instance') {
                     whereEditOpt.setDesc("")
-                    this.settings.vaultToggle = false;
+                    this.settings.batchAction = 'instance';
+                    //this.settings.batchActioon = this.settings.originalIndex
                 }
-                //console.log(this.settings.vaultToggle)
+                //console.log(this.settings.batchAction)
             })
         );
     }

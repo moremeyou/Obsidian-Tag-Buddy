@@ -7,6 +7,7 @@ export class TagSummary {
 	plugin: TagBuddy;
 	selectedBlocks: Number[];
 	blocks: String[];
+	private static fileSummaries: Map<TFile, Set<HTMLElement>> = new Map();
 
 	constructor(
 		app: App, 
@@ -40,6 +41,21 @@ export class TagSummary {
 			new Notice ('⚠️ Tag Buddy: Can\t find code block source. This is a BUG. 🪲');
 		}
 	}
+
+	/*public static addSummary(file: TFile, summary: HTMLElement): void {
+        if (!this.fileSummaries.has(file)) {
+            this.fileSummaries.set(file, new Set([summary]));
+        } else {
+            const summaries = this.fileSummaries.get(file);
+            summaries?.add(summary);
+        }
+    }
+
+    // Method to retrieve an array of unique summary elements for a given file
+    public static getSummariesByFile(file: TFile): HTMLElement[] {
+        const summaries = this.fileSummaries.get(file);
+        return summaries ? Array.from(summaries) : [];
+    }*/
 
 	copyBtnHandler (e, content):void {
 

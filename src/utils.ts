@@ -435,7 +435,7 @@ export function getTagsFromApp(
 
 export async function validateFilePath (
     filePath: string
-): string {
+): TFile {
     const matchingFiles = await app.vault.getFiles().filter(file => file.name === filePath);
     if (matchingFiles.length === 1) {
         const filePath = matchingFiles[0].path;

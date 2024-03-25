@@ -18,7 +18,7 @@ export class GUI {
 		this.plugin = plugin;
 	}
  
-	showTagEditor (tag = '') {
+	showTagEditor (tagEl) {
 
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		const mode = view?.getMode();
@@ -29,12 +29,22 @@ export class GUI {
 		
 		}
 
+		const index = parseInt (tagEl.getAttribute('md-index'));
+		const tag = tagEl.innerText;
+		const filePath = tagEl.getAttribute('file-source')
+		const tagContainerType = tagEl.getAttribute('type');
+
        	if (mode == 'preview') {
 			
 			const tagEditorModal: TBTagEditorModal = new TBTagEditorModal (
 				this.app, 
 				this.plugin,
-				tag//,
+				tag,
+				index,
+				filePath,
+				(tagContainerType == 'plugin-summary') ? tagEl : null,
+				//tag,
+				//index
 				//(tag)=>{
 				//	console.log(tag) 
 				//}
@@ -45,10 +55,10 @@ export class GUI {
 
 	}
 
-	isTagValid (tag:string):boolean { // including the #
+	/*isTagValid (tag:string):boolean { // including the #
 		const tagPattern = /^#[\w]+$/;
 		return tagPattern.test(tag);
-	}
+	}*/
 
 	makeButton (
 		lable: string, 

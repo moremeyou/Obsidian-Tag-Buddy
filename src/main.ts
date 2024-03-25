@@ -287,7 +287,7 @@ export default class TagBuddy extends Plugin {
 	        {         
 	        	//event.preventDefault();
 	        	//event.stopPropagation()
-	        	this.gui.showTagEditor(event.target.closest('.tag').innerText)
+	        	this.gui.showTagEditor(event.target.closest('.tag'))
 	        }
 		} else if (setting == 'remove') {
 			this.tagEditor.edit(event.target, event, null, 'remove')
@@ -343,7 +343,8 @@ console.log('edit tag')
 				// get the tag via: event.target.closest('.tag').innerText
 				event.stopPropagation();
 				event.preventDefault();
-				this.gui.showTagEditor(event.target.closest('.tag').innerText)
+				//this.gui.showTagEditor(event.target.closest('.tag').innerText)
+				this.gui.showTagEditor(event.target.closest('.tag'))
 			
 				return; 
 			}
@@ -383,7 +384,7 @@ console.log('edit tag')
 			else if (modKey == 'OPT') editType = this.settings.desktopOPTClickTag 
 
 // at this point we should only be dealing with 'remove' or 'hash'. so we can always stop the default now.
-console.log (editType)
+//console.log (editType)
 			/*if (this.settings.desktopClickTag == 'remove' ||
 				this.settings.desktopCMDClickTag == 'remove' ||
 				this.settings.desktopOPTClickTag == 'remove') {*/
@@ -461,8 +462,10 @@ console.log (editType)
 	saveRecentTag (
 		tag:string
 	):void {
-		if (Utils.isTagValid(tag)) {
+//console.log('save recent tag:', tag)
+		if (Utils.isTagValid(tag, true)) {
 			//console.log('accepted:', tag)
+//console.log("asdfasdfasdfsdf")
 			const recentTagsString = this.settings.recentlyAddedTags;
 			let recentTags:Array;
 			if (recentTagsString == '') {
@@ -488,8 +491,7 @@ console.log (editType)
 
 	getRecentTags ():Array {
 		const recentTags = 
-		this.settings.recentlyAddedTags=='' ? 
-		[] : this.settings.recentlyAddedTags.split(', ');
+		this.settings.recentlyAddedTags=='' ? [] : this.settings.recentlyAddedTags.split(', ');
 		return recentTags;
 	}
 }

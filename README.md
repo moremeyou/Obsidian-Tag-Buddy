@@ -104,8 +104,8 @@ If you’re testing the pre-release, please [submit any issues you find](https:/
 - Lock recently added tags: Makes this a favorites list.
 	
 ## ✅ #ToDo :
-- [ ] Edit tag modal “Just this instance” 👨🏻‍💻
 - [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
+- [x] ~~Edit tag modal “Just this instance”~~
 - [x] ~~Mobile bugs with new settings~~
 - [x] ~~Refactor settings~~
 - [x] ~~BUG: Remove extra space if removing between words~~
