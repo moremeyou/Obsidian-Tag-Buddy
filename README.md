@@ -105,6 +105,7 @@ If you’re testing the pre-release, please [submit any issues you find](https:/
 	
 ## ✅ #ToDo :
 - [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
+- [ ] Add ‘exclude folder‘ parameter to summary code block
 - [x] ~~Edit tag modal “Just this instance”~~
 - [x] ~~Mobile bugs with new settings~~
 - [x] ~~Refactor settings~~

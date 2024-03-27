@@ -213,7 +213,7 @@ export class TagProcessor {
 
 			if (tagPositions.length != tagElements.length) {
 				this.outOfSync = true;
-				new Notice('Markdown source and preview tags out of sync. Check for tag syntax errors or close and reload this note.');
+				new Notice('Markdown source and preview tags out of sync. Try refreshing this summary. Then check for tag syntax errors or conflicts in metadata. Please report if this error persists.',10000);
 				if (this.plugin.settings.debugMode) this.logDifferences(tagPositions, tagElements)
 				return;
 			}

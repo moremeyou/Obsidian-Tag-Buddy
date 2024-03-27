@@ -359,11 +359,15 @@ export function fileObjFromTags(
     // Construct the file name
     const tagsPart = tagsArray.join('+');
     const currentDate = new Date();
-    const datePart = currentDate.getDate().toString().padStart(2, '0') + '-' +
-                     (currentDate.getMonth() + 1).toString().padStart(2, '0') + '-' +
+    const datePart = currentDate.getDate().toString().padStart(2, '0') + //'-' +
+                     (currentDate.getMonth() + 1).toString().padStart(2, '0') + //'-' +
                      currentDate.getFullYear().toString().slice(-2);
+    const timePart = //currentDate.getHours().toString().padStart(2, '0') + '-' +
+                     //currentDate.getMinutes().toString().padStart(2, '0') + '-' +
+                     currentDate.getSeconds().toString().padStart(2, '0');
     //const fileName = `Tag Summary (${tagsPart}) (${datePart}).md`;
-    const fileName = `Tag Summary (${datePart}).md`;
+                    // console.log(timePart)
+    const fileName = `Tag Summary (${datePart} ${timePart}).md`;
 
     // Construct the title
     const titleTagsPart = tagsArray.map(tag => tag.charAt(0).toUpperCase() + tag.slice(1)).join(' + ');
@@ -375,6 +379,9 @@ export function fileObjFromTags(
         title: title
     };
 }
+
+
+
 
 export function getActiveFileFolder(
     activeFile: TFile

@@ -328,7 +328,7 @@ export default class TagBuddy extends Plugin {
 			if ((this.settings.desktopClickTag == 'native' && modKey == '') ||
 				(this.settings.desktopCMDClickTag == 'native' && modKey == 'CMD') ||
 				(this.settings.desktopOPTClickTag == 'native' && modKey == 'OPT')) { 
-console.log('native tag click')
+//console.log('native tag click')
 				return; 
  
 			//} else if (event.altKey && target && target.matches('.tag')) {  
@@ -339,7 +339,7 @@ console.log('native tag click')
 				(this.settings.desktopCMDClickTag == 'edit' && modKey == 'CMD') ||
 				(this.settings.desktopOPTClickTag == 'edit' && modKey == 'OPT')) {
 				if (!target.matches('.tag')) return
-console.log('edit tag')
+//console.log('edit tag')
 				// get the tag via: event.target.closest('.tag').innerText
 				event.stopPropagation();
 				event.preventDefault();
@@ -359,7 +359,7 @@ console.log('edit tag')
 
 			if (this.settings.mobileTagSearch && event.type == 'touchend') {
 				// if we get this far, this is a double tap
-				console.log('handle touch end')
+				//console.log('handle touch end')
 				return;
 			} 
 		}
@@ -368,7 +368,7 @@ console.log('edit tag')
 			// const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
 
 			if (this.tagProcessor.outOfSync) {
-				new Notice('Markdown source and preview tags are out of sync. Please close and reload this note.');
+				new Notice('Markdown source and HTML tags are out of sync. Check for tag syntax errors.');
 				return;
 			}
 
