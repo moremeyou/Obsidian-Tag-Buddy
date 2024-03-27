@@ -1,27 +1,24 @@
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/moremeyou/Obsidian-Tag-Buddy?style=for-the-badge&sort=semver) ![GitHub All Releases](https://img.shields.io/github/downloads/moremeyou/Obsidian-Tag-Buddy/total?style=for-the-badge) ![Static Badge](https://img.shields.io/badge/New_Version-In--Progress-green?style=for-the-badge)
-<a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/moremeyou/Obsidian-Tag-Buddy?style=for-the-badge&sort=semver) ![GitHub All Releases](https://img.shields.io/github/downloads/moremeyou/Obsidian-Tag-Buddy/total?style=for-the-badge) <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
 # Obsidian Tag Buddy 🔖
-Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode. 
+Unlock powerful tag editing features in Reading Mode. Add, remove, and edit tags across your vault, in the active note or a single instance. Use tag summaries to roundup and process tagged content like an inbox. 
+###### Why only Reading Mode?
+Tag Buddy is about maintaining your flow state when reading, reviewing, annotating, or processing your notes. Having tag function in Reading Mode means you can, for example, remove “new” from a “#book/highlight/new” tag, or quickly add a “#todo” tag–all without switching to Edit or Source Mode. Read on for use cases and documentation.
 
-### ✏️  Use 1: . Add tags to note in reading mode
-![Add Tag Demo](https://user-images.githubusercontent.com/8971804/273914678-1f574966-a8fe-4fe4-8c91-7c3ef828c8c9.gif)
+# Documentation
+### ✏️  Add tags to note
+CMD+RIGHT-CLICK (or TRIPLE-TAP on mobile) lets you add an displays a tag selector where you can chose recent, favorite or create a new tag in any native markdown note.  
 
-Add tag to text block/areas with **CTRL/CMD+RIGHT-CLICK**. **TRIPLE-TAP** on mobile. Recently added tags are saved. Lock this list in settings, effectively making a favorites list. 
+![Add Tag Demo](https://raw.githubusercontent.com/moremeyou/Obsidian-Tag-Buddy/main/addTagDemo.gif) 
 
-### 🫥 Use 2: Remove tags in reading mode
-![Remove Tag Demo](https://user-images.githubusercontent.com/8971804/273923015-9eb2de41-3aeb-4243-9655-efdf4fd70ace.gif)
+### 🧼 Remove tags and nested tags
+By default, a CLICK (or DOUBLE-TAP on mobile) removes a tag. Nested tags be removed from the deepest tag first. And you can customize these actions with modifier keys. For example: you can preserve native tag search when CLICKING and assign CMD+CLICK to remove the tag. More on these functions in the settings later in this document.
 
-**CLICK** to remove tags in the active note, embedded note/block or generated tag summary blocks. **DOUBLE-TAP** on mobile. Hold **CTRL/CMD+CLICK** to use the native tag search. Customize this in plugin settings. 
+![Remove Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/removeTagDemo.gif?raw=true)
 
-### 🪺  Use 3: Edit nested tags in reading mode
-![Nested Tag Demo](https://user-images.githubusercontent.com/8971804/273923013-0b449539-cd7d-4c50-bb30-a2eb7c66dc93.gif)
-
-If there are nested tags, Tag Buddy will progressively remove these first. 
-
-### 🧼  Use 4: Convert tags to text in reading mode
-![Convert Tag Demo](https://user-images.githubusercontent.com/8971804/273923003-d22b0c3e-39dc-4444-8716-fa9bcb327319.gif)
-
-Removes the hash (converts the tag to text) with **OPT/ALT+CLICK** on desktop or **PRESS+HOLD** on mobile.
+### 🫥  Edit tags individually, in the note or across the vault
+By default, CMD+CLICK (or LONG-PRESS on mobile) reveals the tag editor with various tag functions: From quickly renaming to generating tag summaries. And again, these actions can be customized in the plugin settings.  
+![Edit Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/editTagDemo.gif?raw=true)
+![Edit Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/tagEditorOverview.gif?raw=true)
 
 ### 🔎  Use 5: Add/edit tags in tag summaries
 ![Tag Summary Demo](https://user-images.githubusercontent.com/8971804/274069683-1e6257a6-f6d6-402a-adae-c534c2f5a507.gif)
