@@ -462,6 +462,7 @@ export class TagSummary {
 		const validTags = tags.concat(include);
 		const tempComponent = new TempComponent();
 		const summaryContainer = createEl('div');
+		//summaryContainer.appendChild(createEl('hr'));
 		this.selectedBlocks = [];
 		this.blocks = [];
 
@@ -705,7 +706,7 @@ export class TagSummary {
 
 	        		summaryContainer.appendChild(createEl('br')); 
 				} 
-				summaryContainer.appendChild(createEl('hr')); 
+				//summaryContainer.appendChild(createEl('hr')); 
 			}, 0);
 			summaryContainer.setAttribute(
 				'codeblock-tags', 
