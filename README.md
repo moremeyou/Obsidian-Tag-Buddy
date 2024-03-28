@@ -49,6 +49,7 @@ As noted above, each paragraph includes a dropdown to specify where the move or 
 
 ### 🧩 Tag summary code block
 This is the full syntax for all the parameters you can pass to the tag-summary code block. Using the include, exclude, and max parameters of the tag summary code block you can easily customise and build new notes from tagged content. 
+
 ````markdown
 ```tag-summary
 tags: #tag1 #tag2 // Results can have either of these tags 
@@ -62,6 +63,7 @@ Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the o
 
 ## ⚙️ Settings
 Customize how Tag Buddy looks and functions across desktop and mobile.
+
 ![Tag Buddy Settings Pt1](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/settings1.gif?raw=true)
 ![Tag Buddy Settings Pt2](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/settings2.gif?raw=true)
 ![raw.githubusercontent.com/moremeyou/Obsidian-Tag-Buddy/main/settings3.gif](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/settings3.gif?raw=true)
@@ -75,6 +77,8 @@ Tag Buddy is about maintaining your flow state when reading or reviewing your no
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
 
 <a href="https://www.buymeacoffee.com/moremeyou" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>
+
+
 ## 📦 Install now
 Obsidian approved December 6th, 2023! 🤘
 - If you're already using community plugins, click here to install from the [Obsidian plugin store.](https://obsidian.md/plugins?id=tag-buddy)
@@ -86,18 +90,7 @@ Obsidian approved December 6th, 2023! 🤘
 	5. After installation, tap **Enable**.
 	6. Enjoy!
 
-## ⚙️ Settings
-- Override native tag search. Toggle off to use **CMD/CTRL+CLICK** to remove tag, restoring native  tag search on click.
-- Convert to tag text with **ALT/OPT+CLICK**. Toggle off to use **ALT/OPT+CLICK** to perform native tag search.
-- Remove child tags first. Toggle off to use **SHIFT+CLICK** to remove child tags first. 
-- Override native mobile tag search. Toggle on to restore mobile native tag search on tap. Tag removal will then use LONG-PRESS.
-- Show mobile notices. Toggle off to hide notices when editing or removing a tag.
-- Specify the copy-to-section prefix when using buttons in tag summary.
-- Enable tag summary paragraph action buttons. 
-- Disable tag summary buttons.
-- Edit recently added tags.
-- Lock recently added tags: Makes this a favorites list.
-	
+
 ## ✅ #ToDo :
 - [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
 - [ ] Add ‘exclude folder‘ parameter to summary code block
