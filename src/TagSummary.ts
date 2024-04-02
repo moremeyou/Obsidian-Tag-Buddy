@@ -642,13 +642,29 @@ export class TagSummary {
 
           		paragraphEl.setAttribute('md-source', mdParagraph); 
           		blocks.push(mdParagraph)
+//console.log(mdParagraph, '\n-----\n', paragraph)
+//console.log(activeFile.path)
 
-          		await MarkdownRenderer.renderMarkdown(
+
+
+/*const el = document.createElement("div") // using `createElement` instead of `createEl` to avoid appending to the DOM
+const comp = new Component()
+// @ts-expect-error `obsidian` package not yet updated
+await MarkdownRenderer.render(this.app, "![[example.png]]", el, "", comp)
+comp.load() // loads embeds
+console.log(el.cloneNode(true)) // do something with el
+comp.unload() // when done with it to release resources
+*/
+await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponent)
+
+
+          		/*await MarkdownRenderer.renderMarkdown(
           			paragraph, 
           			paragraphEl, 
-          			filePath, //'', 
+          			activeFile.path,
+          			//filePath, //'', 
           			tempComponent
-      			);
+      			);*/
 
 //console.log('markdown render summary')
           		
@@ -664,7 +680,7 @@ export class TagSummary {
 				);*/
 
           		titleEl.appendChild(paragraphEl.querySelector('strong').cloneNode(true))
-
+//console.log(paragraphEl.outerHTML)
           		if (this.plugin.settings.tagSummaryBlockButtons) paragraphEl.appendChild(buttonContainer);
           		paragraphEl.querySelector('strong').replaceWith(titleEl)
           		//paragraphEl.setAttribute('md-source', mdParagraph)
