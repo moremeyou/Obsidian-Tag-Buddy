@@ -610,7 +610,6 @@ export class TagSummary {
 						)
 					);
 				//}
-
 				if (Utils.platformSettingCheck (this.app, this.plugin.settings.copyToCBBtn)) {
 
 					buttonContainer.appendChild(
@@ -621,7 +620,7 @@ export class TagSummary {
 					);
 
 				}
-
+//console.log(Utils.platformSettingCheck (this.app, this.plugin.settings.removeTagBtn))
 				if (Utils.platformSettingCheck (this.app, this.plugin.settings.removeTagBtn)) {
 
 					buttonContainer.appendChild(
@@ -680,8 +679,9 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 				);*/
 
           		titleEl.appendChild(paragraphEl.querySelector('strong').cloneNode(true))
-//console.log(paragraphEl.outerHTML)
-          		if (this.plugin.settings.tagSummaryBlockButtons) paragraphEl.appendChild(buttonContainer);
+	//console.log(paragraphEl.outerHTML)
+          		//if (this.plugin.settings.tagSummaryBlockButtons) 
+          			paragraphEl.appendChild(buttonContainer);
           		paragraphEl.querySelector('strong').replaceWith(titleEl)
           		//paragraphEl.setAttribute('md-source', mdParagraph)
 

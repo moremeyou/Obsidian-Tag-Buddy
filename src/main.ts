@@ -8,12 +8,12 @@ import * as Utils from './utils';
 import * as Mobile from './Mobile';
 
 interface TBSettings {
-	removeOnClick: boolean; // ctrl
-	removeChildTagsFirst; // 
-	optToConvert: boolean; //alt
-	mobileTagSearch: boolean; 
-	tagSummaryBlockButtons: boolean; 
-	taggedParagraphCopyPrefix: string;
+	//removeOnClick: boolean; // ctrl
+	//removeChildTagsFirst; // 
+	//optToConvert: boolean; //alt
+	//mobileTagSearch: boolean; 
+	//tagSummaryBlockButtons: boolean; 
+	//taggedParagraphCopyPrefix: string;
 
 
 	// new settings

@@ -162,8 +162,8 @@ export class TagProcessor {
 
 	// adapt this method to use the cache tag info (line, offset, etc)
 	getMarkdownTags (
-		file: TFile, 
-		fileContent: string
+		file: TFile,  
+		fileContent: string 
 	): Array {
 
 		const tagPositions = [];
@@ -175,6 +175,8 @@ export class TagProcessor {
 		//const regex = /(?<=^|\s)(#[^\s#.,;!?:]+)(?=[.,;!?:\s]|$)|(?<!`)```(?!`)/g; // Fix for matching ```` 
 		//const regex = /(?<=^|\s)(#[^\s#.',;!?:]+)(?=[.,;!?:'\s]|$)|(?<!`)```(?!`)/g; // Fix for matching but excluding ''s' in '#tag's'
 		const regex = /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g; // fix for number-only and typographic apostrophy's
+
+
 
 		let insideCodeBlock = false;
 
@@ -213,7 +215,7 @@ export class TagProcessor {
 
 			if (tagPositions.length != tagElements.length) {
 				this.outOfSync = true;
-				new Notice('Markdown source and preview tags out of sync. Try refreshing this summary. Then check for tag syntax errors or conflicts in metadata. Please report if this error persists.',10000);
+				new Notice('Tag Buddy: Markdown source and preview tags out of sync. Try refreshing this summary. Then check for tag syntax errors or conflicts in metadata. Please report if this error persists.',10000);
 				if (this.plugin.settings.debugMode) this.logDifferences(tagPositions, tagElements)
 				return;
 			}
@@ -239,7 +241,9 @@ export class TagProcessor {
 		    		    tagElIndex++;
 		    		} else {
 		    			this.outOfSync = true;
-						new Notice('Markdown source and preview tags out of sync. Please close and reload this note.');
+						new Notice('Tag Buddy: Markdown source and preview tags out of sync. Try refreshing this summary. Then check for tag syntax errors or conflicts in metadata. Please report if this error persists.');
+//console.log(tagPositions, tagElements)
+
 						this.logDifferences(tagPositions, tagElements)
 						return;
 		    		}
@@ -309,8 +313,9 @@ export class TagProcessor {
 		}
 	}
 
-	logDifferences(tagPositions, tagElements) {
+	logDifferences(tagPositions: Array, tagElements: Array) {
 		// Extract tags and innerTexts into separate arrays
+
 		const tags = tagPositions.map(item => item.tag);
 		const innerTexts1 = tagElements.map(item => item.innerText);
 
