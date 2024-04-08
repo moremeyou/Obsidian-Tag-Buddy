@@ -3,7 +3,7 @@
 Unlock powerful tag editing features in Reading Mode. Add, remove, and edit tags across your vault, in the active note or a single instance. Use tag summaries to roundup and process tagged content like an inbox. 
 
 ### ✏️  Add tags to note
-CMD+RIGHT-CLICK (or TRIPLE-TAP on mobile) displays a tag selector to a chose recent/favorite tag or create a new tag in any native markdown note, embedded content or tag summary (explained below).  
+CMD+RIGHT-CLICK (or TRIPLE-TAP on mobile) displays a tag selector to chose a recent/favorite tag or create a new tag in any native markdown note, embedded content or tag summary (explained below).  
 
 ![Add Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/addTagDemo.gif?raw=true) 
 
