@@ -3,17 +3,17 @@
 Unlock powerful tag editing features in Reading Mode. Add, remove, and edit tags across your vault, in the active note or a single instance. Use tag summaries to roundup and process tagged content like an inbox. 
 
 ### ✏️  Add tags to note
-CMD+RIGHT-CLICK (or TRIPLE-TAP on mobile) displays a tag selector to a chose recent, favorite or create a new tag in any native markdown note, embedded content or tag summary (explained below).  
+CMD+RIGHT-CLICK (or TRIPLE-TAP on mobile) displays a tag selector to a chose recent/favorite tag or create a new tag in any native markdown note, embedded content or tag summary (explained below).  
 
 ![Add Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/addTagDemo.gif?raw=true) 
 
 ### 🧼 Remove tags and nested tags
-By default, a CLICK (or DOUBLE-TAP on mobile) removes a tag. Nested tags be removed from the deepest tag first. And you can customize these actions with modifier keys. For example: you can preserve native tag search when CLICKING and assign CMD+CLICK to remove the tag. More on settings below.
+By default, a CLICK (or DOUBLE-TAP on mobile) removes a tag. Nested tags will be removed from the deepest tag first. And you can customize these actions with modifier keys. For example: you can preserve native tag search when CLICKING and assign CMD+CLICK to remove the tag. More on settings below.
 
 ![Remove Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/removeTagDemo.gif?raw=true)
 
 ### 🫥  Edit tags individually, all in note or across the vault
-By default, CMD+CLICK (or LONG-PRESS on mobile) on a tag reveals the Tag Action modal. From here you apply these actions to just the clicked tag, all of the same tag in this note, or all of the same tag across the entire vault:
+By default, CMD+CLICK (or LONG-PRESS on mobile) on a tag reveals the Tag Action modal. From here you apply the following actions to just the clicked tag, all of the same tag in this note, or all of the same tag across the entire vault:
 - Rename tag 
 - Change case
 - Convert to text
@@ -27,14 +27,14 @@ Tag summaries can be auto-generated when editing a tag (as seen above) or with t
 
 ![Tag Summary Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/tagSummaryDemo1.gif?raw=true)
 
-Interact with results in tag summaries with shortcut buttons:
-- Copy paragraph to section in another note
+Interact with results in tag summaries:
 - Copy paragraph to section in this note.
+- Copy paragraph to section in another note.
 - Move paragraph to section in this note. To achieve this, Tag Buddy first removes the queried tag from the paragraph, then copies it to the section.
 - Section dropdown is explained below. 
 - Remove tag button removes the tag but doesn’t copy the paragraph.
 
-Interact with the entire summary with shortcut buttons:
+Interact with the entire summary with summary buttons:
 - Reload the summary. Useful if you’re updating tags in queried notes.
 - Copy to clipboard copies the entire summary as markdown.
 - Copy the entire summary to another note.
@@ -43,7 +43,7 @@ Interact with the entire summary with shortcut buttons:
 All these buttons can be hidden in the settings outlined below.
 
 ### 📚  Copy or move paragraphs to a section
-As noted above, each paragraph includes a dropdown to specify where the move or copy buttons should paste the tagged paragraph. “Top of note” and “End of note” are always available. But if you include a header section title in the tag summary, this will also become an option in the dropdown, as seem below. Likewise, when copying to another note, Tag Buddy will look for this section in that note. If it’s not found, it will paste to the top of the other note. In all cases, when pasting Tag Buddy will try to detect the list type below the section header.
+As noted above, each paragraph includes a dropdown to specify where the move or copy buttons should paste the tagged paragraph. “Top of note” and “End of note” are always available. But if you include a header section title in the tag summary, this will also become an option in the dropdown, as seem below. If a section is chosen, when copying or moving to another note, Tag Buddy will look for that section to paste the content. If the section isn’t found, it will paste to the top of the note. In all cases, when pasting Tag Buddy will try to detect the list type below the section header.
 
 ![Copy To Section Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/tagSummaryDemo2.gif?raw=true)
 
@@ -71,7 +71,7 @@ Customize how Tag Buddy looks and functions across desktop and mobile.
 ## 🧐 Why is this useful to me? 
 I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note so I can review and process on-demand.  
 ###### Why only Reading Mode?
-Tag Buddy is about maintaining your flow state when reading or reviewing your notes. Tag editing functionality in Reading Mode means you can, for example, remove “new” from “#book/highlight/new”, or quickly add “#todo” without switching to Edit or Source Mode. Read on for use cases and documentation.
+Tag Buddy is about maintaining your flow state when reading or reviewing your notes. Tag editing functionality in Reading Mode means you can, for example, remove “new” from “#book/highlight/new”, or quickly add “#todo” without switching to Edit or Source Mode.
 
 ## 👍 Support a buddy
 There’s lots to do and I’d like this plugin to grow with Obsidian and the community. Your support will ensure on-going development and maintenance. 
@@ -91,9 +91,10 @@ Obsidian approved December 6th, 2023! 🤘
 	6. Enjoy!
 
 
-## ✅ #ToDo :
-- [ ] ON-GOING: Refactoring and cleanup 👨🏻‍💻
+## ✅ To Do
+- [x] ON-GOING: Refactoring and cleanup 👨🏻‍💻
 - [ ] Add ‘exclude folder‘ parameter to summary code block
+- [ ] Anchor link to tagged paragraph
 - [x] ~~Edit tag modal “Just this instance”~~
 - [x] ~~Mobile bugs with new settings~~
 - [x] ~~Refactor settings~~
