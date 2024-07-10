@@ -2,6 +2,13 @@
 # Obsidian Tag Buddy 🔖
 Unlock powerful tag editing features in Reading Mode. Add, remove, and edit tags across your vault, in the active note or a single instance. Use tag summaries to roundup and process tagged content like an inbox. 
 
+🔎 **Documentation below** ⬇️
+
+🎬 **As seen in** *Capture and curate ideas: Modern note taking for creatives*
+
+[![Demo Video](https://github.com/moremeyou/Obsidian-Tag-Buddy/assets/8971804/db613fb3-2cce-4d43-99f2-0bb3b4e30e6d)](https://youtu.be/Q6_bC2aGKQk?si=eqwjhg-P5jW4lC4B)
+
+
 ### ✏️  Add tags to note
 CMD+RIGHT-CLICK (or TRIPLE-TAP on mobile) displays a tag selector to chose a recent/favorite tag or create a new tag in any native markdown note, embedded content or tag summary (explained below).  
 
