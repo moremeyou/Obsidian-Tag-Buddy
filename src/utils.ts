@@ -132,6 +132,36 @@ export function getMarkdownHeadings(
     return headers;
 }
 
+export function findClosestHeaderWithLink(paragraph: string): { text: string; link: string } {
+    // Split the input markdown into lines
+    const lines = paragraph.split('\n');
+    let closestHeader = '';
+
+    // Iterate through the lines in reverse order to find the closest preceding header
+    for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i].trim();
+
+        // Check if the current line is a header
+        if (/^#{1,6}\s/.test(line)) {
+            closestHeader = line;
+            break; // Stop searching once a header is found
+        }
+    }
+
+    if (closestHeader) {
+        // Extract the header text (remove hashes and trim spaces)
+        const text = closestHeader.replace(/^#{1,6}\s*/, '').trim();
+
+        // Generate a link in the format of #header text
+        const link = `#${text}`;
+
+        return { text, link };
+    }
+
+    // Return empty values if no header is found
+    return { text: '', link: '' };
+}
+
 export function fileContainsHeading(
     fileContent: string,
     heading: string

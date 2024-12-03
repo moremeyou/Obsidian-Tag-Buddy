@@ -78,7 +78,7 @@ export default class TagBuddy extends Plugin {
 	tagEditor: ReadingModeTagEditor;
 	private activeFile: TFile;
 
-	// onunload() { I think all the cleanup is done automatically the way I register everything. } 
+	onunload() { } // this is needed for hotreload. Actual cleanup is done throughout.
 
 	async onload() {
 		

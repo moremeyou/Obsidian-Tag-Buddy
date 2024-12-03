@@ -483,7 +483,7 @@ export class TagSummary {
 			if (file.path.includes('_exclude')) return false
 			
 			// Remove the file if it's the same file as this summary
-			//if (activeFile) if (activeFile.path == file.path) return false;
+			if (activeFile) if (activeFile.path == file.path) return false;
 
 			if (validTags.some((value) => tagsInFile?.includes(value))) {
 				return true;
@@ -578,9 +578,18 @@ export class TagSummary {
 				paragraphEl.setAttribute('class', 'tag-summary-paragraph');
 
 				const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu); 
+				
+				// Check if there's a header in this paragaph
+				const header = Utils.findClosestHeaderWithLink(paragraph);
+				// console.log(header.text, header.link)
+
+
 				let link;
         		
         		if (blockLink) link = '[[' + filePath + '#' + blockLink + '|' + fileName + ']]';
+
+        		else if (header.text != '') link = '[[' + filePath + '#' + header.link + '|' + fileName + ']]';
+
         		else link = '[[' + filePath + '|' + fileName + ']]';
 						
 

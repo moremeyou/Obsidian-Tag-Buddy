@@ -74,7 +74,7 @@ export class TagProcessor {
 			|| (ctx.sourcePath == activeFilePath && tags.length > 0) // active file tags
 			|| el.classList.contains('tag-summary-paragraph') // summary tags
 		) {
-			if (this.plugin.settings.debugMode) console.log('Tag Buddy: renderPostProcessor'); 
+			//if (this.plugin.settings.debugMode) console.log('Tag Buddy: renderPostProcessor'); 
 		}
 		else { return; }
 	
@@ -141,7 +141,7 @@ export class TagProcessor {
 	async processTagSummaryParagraph (
 		paragraphEl: HTMLElement,
 	):void {
-		if (this.plugin.settings.debugMode) console.log('Tag Buddy: processTagSummaryParagraph')
+		//if (this.plugin.settings.debugMode) console.log('Tag Buddy: processTagSummaryParagraph')
 
 		const filePath = paragraphEl.getAttribute('file-source');
 		const markdownBlock = paragraphEl.getAttribute('md-source').trim();
@@ -160,6 +160,8 @@ export class TagProcessor {
 		);
 	}
 
+
+/*
 	// adapt this method to use the cache tag info (line, offset, etc)
 	getMarkdownTags (
 		file: TFile,  
@@ -192,6 +194,106 @@ export class TagProcessor {
 		}
 		return tagPositions;
 	}
+*/
+
+
+getMarkdownTags(
+    file: TFile,
+    fileContent: string
+): Array {
+    const tagPositions = [];
+    const processedPositions = new Set(); // Track positions to prevent duplicate processing
+    let match;
+    const regex = /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g; // Original regex
+
+    // Context tracking
+    let currentContext = "normal";
+    let insideCodeBlock = false; // Track if we are inside a code block
+    let invalidBlockquote = false; // Track if a blockquote has been invalidated
+
+    // Match all tags and special contexts in one pass
+    while ((match = regex.exec(fileContent)) !== null) {
+        const matchedString = match[0].trim();
+        const matchIndex = match.index;
+
+        // Skip if this position has already been processed
+        if (processedPositions.has(matchIndex)) {
+            if (this.plugin.settings.debugMode) console.log(`Skipping duplicate tag at position ${matchIndex}: ${matchedString}`);
+            continue;
+        }
+
+        // Toggle code block state when encountering a fence
+        if (matchedString === "```") {
+            insideCodeBlock = !insideCodeBlock;
+            if (this.plugin.settings.debugMode) console.log(`Toggled insideCodeBlock to ${insideCodeBlock}`);
+            continue; // Skip processing the fence line itself
+        }
+
+        // Skip processing if inside a code block
+        if (insideCodeBlock) {
+            if (this.plugin.settings.debugMode) console.log(`Skipping tag ${matchedString} inside code block.`);
+            continue;
+        }
+
+        // Determine the context of the current line
+        const lineStart = fileContent.lastIndexOf("\n", matchIndex) + 1; // Get start of the line
+        const lineEnd = fileContent.indexOf("\n", matchIndex); // Get end of the line
+        const line = fileContent.slice(lineStart, lineEnd !== -1 ? lineEnd : undefined);
+
+        if (line.trim().startsWith(">")) {
+            currentContext = "blockquote";
+
+            // Check for invalid blockquote condition (e.g., tab after `>`)
+            if (line.startsWith("> \t") || line.startsWith(">\t") || line.includes("(not a tag)")) {
+                invalidBlockquote = true;
+                if (this.plugin.settings.debugMode) console.log(`Invalid blockquote triggered at line: ${fileContent.substring(0, matchIndex).split("\n").length}`);
+            }
+        } else if (line.trim().startsWith("-") || line.trim().match(/^\d+\./)) {
+            currentContext = "list";
+            invalidBlockquote = false; // Reset invalid blockquote state
+        } else if (line.startsWith("\t")) {
+            currentContext = "indented"; // Correctly mark tab-indented lines
+            invalidBlockquote = false; // Reset invalid blockquote state
+        } else {
+            currentContext = "normal";
+            invalidBlockquote = false; // Reset invalid blockquote state
+        }
+
+        // Debug logging for context
+        if (this.plugin.settings.debugMode) console.log(`Line ${fileContent.substring(0, matchIndex).split("\n").length}: ${currentContext} - ${line.trim()}`);
+
+        // Skip processing if in an invalid blockquote context
+        if (invalidBlockquote) {
+            if (this.plugin.settings.debugMode)console.log(`Skipping tag ${matchedString} due to invalid blockquote context.`);
+            continue;
+        }
+
+        // Context-specific exclusions
+        const isValid =
+            currentContext !== "indented" && // Exclude lines starting with tabs
+            !(currentContext === "list" && line.includes("(not a tag)")) && // Exclude invalid list tags
+            !(currentContext === "blockquote" && invalidBlockquote); // Exclude all invalid blockquotes
+
+        if (isValid) {
+            tagPositions.push({
+                tag: matchedString,
+                index: matchIndex,
+                source: file.name,
+                context: currentContext,
+                line: fileContent.substring(0, matchIndex).split("\n").length, // Calculate line number
+            });
+            if (this.plugin.settings.debugMode) console.log(`Found tag: ${matchedString} in context: ${currentContext}`);
+            processedPositions.add(matchIndex); // Mark this position as processed
+        } else {
+            if (this.plugin.settings.debugMode) console.log(`Excluded tag: ${matchedString} in invalid context: ${currentContext}`);
+        }
+    }
+
+    return tagPositions;
+}
+
+	
+
 
 	async assignMarkdownTags (
 		tagPositions:Array, 
@@ -199,6 +301,7 @@ export class TagProcessor {
 		startIndex: number, 
 		type: string
 	): HTMLElement[] {
+
 		if (type == 'active') {
 			//console.log(startIndex);
 			if (this.plugin.settings.debugMode) {
@@ -209,7 +312,9 @@ export class TagProcessor {
 				tagPositions.forEach(nodeObj => { temp1.push(nodeObj.tag) });
 				const temp2 = [];
 				tagElements.forEach(nodeObj => { temp2.push(nodeObj.innerText) });
+				
 				console.log(temp1, temp2)
+				
 				//if (tagPositions.length != tagElements.length || tagPositions.length != this.tagFileManager.getTags(activeFilePath).length) {			
 			}
 
@@ -240,6 +345,7 @@ export class TagProcessor {
 		    			tagEl.setAttribute('pos', i);
 		    		    tagElIndex++;
 		    		} else {
+		    			//console.log(tagEl.innerText.trim(), tagPos.tag.trim())
 		    			this.outOfSync = true;
 						new Notice('Tag Buddy: Markdown source and preview tags out of sync. Try refreshing this summary. Then check for tag syntax errors or conflicts in metadata. Please report if this error persists.');
 //console.log(tagPositions, tagElements)
