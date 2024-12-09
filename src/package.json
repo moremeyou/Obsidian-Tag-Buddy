@@ -1,6 +1,6 @@
 {
 	"name": "TagBuddy",
-	"version": "0.6.8.1",
+	"version": "0.6.8.2",
 	"description": "Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode.",
 	"main": "main.js",
 	"scripts": {

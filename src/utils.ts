@@ -321,7 +321,8 @@ export function removeTextFromString (
     sourceText: string, 
     all:boolean=false
 ):string {
-    const regex = new RegExp(this.escapeRegExp(removeText), all ? "gi" : "i");
+    //const regex = new RegExp(this.escapeRegExp(removeText), all ? "gi" : "i");
+    const regex = new RegExp(escapeRegExp(removeText), all ? "gi" : "i");
     return sourceText.replace(regex, '').trim();
 }
 
@@ -470,7 +471,7 @@ export function getTagsFromApp(
     }
 }
 
-export async function validateFilePath (
+ export async function validateFilePath (
     filePath: string
 ): TFile {
     const matchingFiles = await app.vault.getFiles().filter(file => file.name === filePath);
@@ -487,6 +488,28 @@ export async function validateFilePath (
         return null;
     }
 }
+
+
+
+// Updated to allow same file names as long as path is different
+// To use this we need to be storing the whole file path in the HTML, not just the name
+// This is a bigger change we need to dedicate time for. And testing. What does this impact?
+/*export async function validateFilePath(
+    filePath: string
+): Promise<TFile | null> {
+    // Try to get the file by the full path
+    const file = await app.vault.getAbstractFileByPath(filePath);
+
+    if (file && file instanceof TFile) {
+        // Return the file if it exists and is a valid TFile
+        return file;
+    } else {
+        // Handle the case where the file is not found or is not a TFile
+        new Notice('Tag Buddy: File not found or invalid. Please check the path and try again.');
+        return null;
+    }
+}
+*/
 
 export function ctrlCmdKey (
     event: Event

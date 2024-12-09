@@ -524,8 +524,15 @@ export class TagSummary {
 			const filePath = item[0].path;
 			
 			// Get paragraphs
+			//let listParagraphs: string[] = Array();
+			//const blocks = item[1].split(/\n\s*\n/).filter((row) => row.trim().length > 0);
+			
+			// Update to treat list items as paragraph breaks
 			let listParagraphs: string[] = Array();
-			const blocks = item[1].split(/\n\s*\n/).filter((row) => row.trim().length > 0);
+			const blocks = item[1]
+			  .split(/(?:\n\s*\n|(?<=^|\n)[*-]\s|(?<=^|\n)\d+\.\s)/)
+			  .filter((row) => row.trim().length > 0);
+
 
 			// Get list items
 			blocks.forEach((paragraph) => {
@@ -581,17 +588,21 @@ export class TagSummary {
 				
 				// Check if there's a header in this paragaph
 				const header = Utils.findClosestHeaderWithLink(paragraph);
-				// console.log(header.text, header.link)
+				let headerLink = Utils.removeTextFromString ("#", header.link, true);
+				//headerLink = Utils.removeTextFromString ("@", headerLink, true);
+				headerLink = Utils.removeTextFromString ("[", headerLink, true);
+				headerLink = Utils.removeTextFromString ("]", headerLink, true);
+				console.log("-------------", headerLink)
 
 
 				let link;
         		
         		if (blockLink) link = '[[' + filePath + '#' + blockLink + '|' + fileName + ']]';
 
-        		else if (header.text != '') link = '[[' + filePath + '#' + header.link + '|' + fileName + ']]';
+        		//else if (header.text != '') link = '[[' + filePath + '#' + header.link + '|' + fileName + ']]';
+        		else if (header.text != '') link = '[[' + filePath + '#' + headerLink + ']]';
 
         		else link = '[[' + filePath + '|' + fileName + ']]';
-						
 
     			/*buttonContainer.appendChild(
 					this.plugin.gui.makeBlockSelector(
