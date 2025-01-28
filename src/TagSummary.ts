@@ -80,6 +80,9 @@ export class TagSummary {
 	removeTagBtnHandler (e, paragraphEl, tag):void {
 		const tagEl = Utils.getTagElement(paragraphEl, tag);
 		this.plugin.tagEditor.edit(tagEl);
+		setTimeout(async () => { 
+			this.update(summaryEl); 
+    	}, 800);
 	}
 
 	async copyToBtnHandler (
@@ -139,7 +142,8 @@ export class TagSummary {
 			} else if (mode == 'move' && !selection) {
 
 
-				const file = this.app.vault.getAbstractFileByPath(filePath);
+				const file = await this.app.vault.getAbstractFileByPath(filePath.split('#')[0]);
+//console.log("---->", filePath, file)
 				let fileContent = await this.app.vault.read(file);
 				fileContent = fileContent.trim();
 				const newFileContent = Utils.replaceTextInString(
@@ -157,15 +161,16 @@ export class TagSummary {
 						'Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue()=='top' || dropdown.getValue()=='end') ? '' : '🔗'),
 						5000);
 
-					this.plugin.gui.removeElementWithAnimation(paragraphEl, () => { 
+					//this.plugin.gui.removeElementWithAnimation(paragraphEl, () => { 
 	    				setTimeout(async () => { 
-	    					this.update(summaryEl); 
-	    					paragraphEl.remove(); 
-	    				}, 500);						
+	    					//this.update(summaryEl); 
+	    					//paragraphEl.remove(); 
+	    				}, 100);						
 				    	setTimeout(async () => { 
 				    		//this.plugin.tagProcessor.run(); 
-				    	}, 800);
-					});
+							this.update(summaryEl); 
+				    	}, 300);
+					//});
 
 					if (dropdown.getValue() != 'top' || dropdown.getValue() != 'end') {
 
@@ -592,7 +597,7 @@ export class TagSummary {
 				//headerLink = Utils.removeTextFromString ("@", headerLink, true);
 				headerLink = Utils.removeTextFromString ("[", headerLink, true);
 				headerLink = Utils.removeTextFromString ("]", headerLink, true);
-				console.log("-------------", headerLink)
+				//console.log("-------------", headerLink)
 
 
 				let link;
@@ -787,7 +792,7 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 	update (
 		summaryEl:HTMLElement
 	): void {
-		
+//console.log('>>>> Update')
 		const tagsStr = summaryEl.getAttribute(
 			'codeblock-tags'
 		);
