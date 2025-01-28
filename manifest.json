@@ -1,7 +1,7 @@
 {
 	"id": "tag-buddy",
 	"name": "Tag Buddy",
-	"version": "0.6.8",
+	"version": "0.6.8.2",
 	"minAppVersion": "1.0.0",
 	"description": "Unlock powerful tag editing features in Reading Mode. Add, remove, and edit tags across your vault, in the active note or a single instance. Use tag summaries to roundup and process tagged content like an inbox.",
 	"author": "David Fasullo",
