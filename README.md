@@ -12,12 +12,12 @@ Unlock powerful tag editing features in Reading Mode. Add, remove, and edit tags
 ### ✏️  Add tags to note
 CMD+RIGHT-CLICK (or TRIPLE-TAP on mobile) displays a tag selector to chose a recent/favorite tag or create a new tag in any native markdown note, embedded content or tag summary (explained below).  
 
-![Add Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/addTagDemo.gif?raw=true) 
+![Add Tag Demo](docs/assets/addTagDemo.gif)
 
 ### 🧼 Remove tags and nested tags
 By default, a CLICK (or DOUBLE-TAP on mobile) removes a tag. Nested tags will be removed from the deepest tag first. And you can customize these actions with modifier keys. For example: you can preserve native tag search when CLICKING and assign CMD+CLICK to remove the tag. More on settings below.
 
-![Remove Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/removeTagDemo.gif?raw=true)
+![Remove Tag Demo](docs/assets/removeTagDemo.gif)
 
 ### 🫥  Edit tags individually, all in note or across the vault
 By default, CMD+CLICK (or LONG-PRESS on mobile) on a tag reveals the Tag Action modal. From here you apply the following actions to just the clicked tag, all of the same tag in this note, or all of the same tag across the entire vault:
@@ -26,13 +26,13 @@ By default, CMD+CLICK (or LONG-PRESS on mobile) on a tag reveals the Tag Action 
 - Convert to text
 - Create tag summary
 
-![Edit Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/editTagDemo.gif?raw=true)
-![Edit Tag Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/tagEditorOverview.gif?raw=true)
+![Edit Tag Demo](docs/assets/editTagDemo.gif)
+![Edit Tag Demo](docs/assets/tagEditorOverview.gif)
 
 ### 🔎 Generate and interact with tag summaries
 Tag summaries can be auto-generated when editing a tag (as seen above) or with this basic syntax. Use the same interaction for adding, removing or editing tags within summaries or native embeds, just as you would elsewhere.
 
-![Tag Summary Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/tagSummaryDemo1.gif?raw=true)
+![Tag Summary Demo](docs/assets/tagSummaryDemo1.gif)
 
 Interact with results in tag summaries:
 - Copy paragraph to section in this note.
@@ -52,7 +52,7 @@ All these buttons can be hidden in the settings outlined below.
 ### 📚  Copy or move paragraphs to a section
 As noted above, each paragraph includes a dropdown to specify where the move or copy buttons should paste the tagged paragraph. “Top of note” and “End of note” are always available. But if you include a header section title in the tag summary, this will also become an option in the dropdown, as seem below. If a section is chosen, when copying or moving to another note, Tag Buddy will look for that section to paste the content. If the section isn’t found, it will paste to the top of the note. In all cases, when pasting Tag Buddy will try to detect the list type below the section header.
 
-![Copy To Section Demo](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/tagSummaryDemo2.gif?raw=true)
+![Copy To Section Demo](docs/assets/tagSummaryDemo2.gif)
 
 ### 🧩 Tag summary code block
 This is the full syntax for all the parameters you can pass to the tag-summary code block. Using the include, exclude, and max parameters of the tag summary code block you can easily customise and build new notes from tagged content. 
@@ -71,9 +71,9 @@ Thanks to [Tag Summary Plugin](https://github.com/macrojd/tag-summary) for the o
 ## ⚙️ Settings
 Customize how Tag Buddy looks and functions across desktop and mobile.
 
-![Tag Buddy Settings Pt1](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/settings1.gif?raw=true)
-![Tag Buddy Settings Pt2](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/settings2.gif?raw=true)
-![raw.githubusercontent.com/moremeyou/Obsidian-Tag-Buddy/main/settings3.gif](https://github.com/moremeyou/Obsidian-Tag-Buddy/blob/main/settings3.gif?raw=true)
+![Tag Buddy Settings Pt1](docs/assets/settings1.gif)
+![Tag Buddy Settings Pt2](docs/assets/settings2.gif)
+![Tag Buddy Settings Pt3](docs/assets/settings3.gif)
 
 ## 🧐 Why is this useful to me? 
 I use tags to connect ideas, but also as a flexible I/O or state/status management system. For example, most of my content comes in through daily notes with tags. Then I have specialized notes that query those tags into an "Inbox" section of the specialized note so I can review and process on-demand.  
