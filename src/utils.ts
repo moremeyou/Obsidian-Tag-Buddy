@@ -1,4 +1,4 @@
-import { TFile, Platform } from 'obsidian';
+import { Notice, TFile, Platform } from 'obsidian';
 
 export function getTagElement(
     paragraphEl: HTMLElement, 
@@ -474,12 +474,20 @@ export function getTagsFromApp(
  export async function validateFilePath (
     filePath: string
 ): TFile {
-    const matchingFiles = await app.vault.getFiles().filter(file => file.name === filePath);
+    const normalizedPath = filePath?.trim();
+    if (!normalizedPath) {
+        new Notice('Tag Buddy: No file path found. Try again, or this tag might be in an unsupported embed type.');
+        return null;
+    }
+
+    const fileFromPath = app.vault.getAbstractFileByPath(normalizedPath);
+    if (fileFromPath instanceof TFile) {
+        return fileFromPath;
+    }
+
+    const matchingFiles = app.vault.getMarkdownFiles().filter(file => file.name === normalizedPath);
     if (matchingFiles.length === 1) {
-        const filePath = matchingFiles[0].path;
-        const file = await this.app.vault.getAbstractFileByPath(filePath);
-        //console.log('Validate file: ' + embedFile.name);
-        return file;
+        return matchingFiles[0];
     } else if (matchingFiles.length > 1) {
         new Notice('Tag Buddy: Multiple files found with the same name. Can\'t safely edit tag.');
         return null;

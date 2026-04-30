@@ -443,16 +443,23 @@ function getTagsFromApp(app2, recentTags) {
   }
 }
 async function validateFilePath(filePath) {
-  const matchingFiles = await app.vault.getFiles().filter((file) => file.name === filePath);
+  const normalizedPath = filePath == null ? void 0 : filePath.trim();
+  if (!normalizedPath) {
+    new import_obsidian2.Notice("Tag Buddy: No file path found. Try again, or this tag might be in an unsupported embed type.");
+    return null;
+  }
+  const fileFromPath = app.vault.getAbstractFileByPath(normalizedPath);
+  if (fileFromPath instanceof import_obsidian2.TFile) {
+    return fileFromPath;
+  }
+  const matchingFiles = app.vault.getMarkdownFiles().filter((file) => file.name === normalizedPath);
   if (matchingFiles.length === 1) {
-    const filePath2 = matchingFiles[0].path;
-    const file = await this.app.vault.getAbstractFileByPath(filePath2);
-    return file;
+    return matchingFiles[0];
   } else if (matchingFiles.length > 1) {
-    new Notice("Tag Buddy: Multiple files found with the same name. Can't safely edit tag.");
+    new import_obsidian2.Notice("Tag Buddy: Multiple files found with the same name. Can't safely edit tag.");
     return null;
   } else {
-    new Notice("Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.");
+    new import_obsidian2.Notice("Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.");
     return null;
   }
 }
@@ -1776,7 +1783,7 @@ var TagProcessor = class {
   		    }	    
   		    if (insideCodeBlock) continue;
   		    const tag = match[0].trim();
-  		    tagPositions.push({tag:tag, index:match.index, source:file.name}); 
+  		    tagPositions.push({tag:tag, index:match.index, source:file.path}); 
   //console.log(tag)
   		}
   		return tagPositions;
@@ -1837,7 +1844,7 @@ var TagProcessor = class {
         tagPositions.push({
           tag: matchedString,
           index: matchIndex,
-          source: file.name,
+          source: file.path,
           context: currentContext,
           line: fileContent.substring(0, matchIndex).split("\n").length
           // Calculate line number

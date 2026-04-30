@@ -126,7 +126,7 @@ export class ReadingModeTagEditor {
     	const fileContent: String = await this.app.vault.read(file);
         let newFileContent: String = fileContent;
     	const tagPositions = this.plugin.tagProcessor.getMarkdownTags (file, fileContent);
-    	// {tag:tag, index:match.index, source:file.name}
+    	// {tag:tag, index:match.index, source:file.path}
 
     	let filteredTagObjs = tagPositions.filter(tagObj => tagObj.tag === tag);
 

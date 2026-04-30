@@ -189,7 +189,7 @@ export class TagProcessor {
 		    }	    
 		    if (insideCodeBlock) continue;
 		    const tag = match[0].trim();
-		    tagPositions.push({tag:tag, index:match.index, source:file.name}); 
+		    tagPositions.push({tag:tag, index:match.index, source:file.path}); 
 //console.log(tag)
 		}
 		return tagPositions;
@@ -278,7 +278,7 @@ getMarkdownTags(
             tagPositions.push({
                 tag: matchedString,
                 index: matchIndex,
-                source: file.name,
+                source: file.path,
                 context: currentContext,
                 line: fileContent.substring(0, matchIndex).split("\n").length, // Calculate line number
             });
