@@ -79,7 +79,12 @@ export class TagSummary {
 
 	removeTagBtnHandler (e, paragraphEl, tag):void {
 		const tagEl = Utils.getTagElement(paragraphEl, tag);
-		this.plugin.tagEditor.edit(tagEl);
+		const summaryEl = paragraphEl.closest('.tag-summary-block');
+		if (!tagEl || !summaryEl) {
+			new Notice ('⚠️ Can\'t identify tag summary item. Please refresh this summary and try again.');
+			return;
+		}
+		this.plugin.tagEditor.edit(tagEl, e, paragraphEl, 'remove');
 		setTimeout(async () => { 
 			this.update(summaryEl); 
     	}, 800);
@@ -172,7 +177,7 @@ export class TagSummary {
 				    	}, 300);
 					//});
 
-					if (dropdown.getValue() != 'top' || dropdown.getValue() != 'end') {
+					if (dropdown.getValue() != 'top' && dropdown.getValue() != 'end') {
 
 						this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
 							//this.app.workspace.openLinkText(filePath, '');
@@ -187,9 +192,11 @@ export class TagSummary {
 
 			} else if (mode == 'copy' || mode == 'link') {
 				notice = new Notice ('Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue()=='top' || dropdown.getValue()=='end') ? '' : '🔗'));
-				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-					this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
+				if (dropdown.getValue() != 'top' && dropdown.getValue() != 'end') {
+					this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+						this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
 					});
+				}
 			}
 		}
 			
@@ -363,9 +370,9 @@ export class TagSummary {
 				exclude = list;
 			}
 
-			// Check if the line specifies sections of a note
-			if (line.match(/^\s*sections:[\p{L}0-9_\-/#, ]+$/gu)) {
-				const content = line.replace(/^\s*sections:/, "").trim();
+			// Check if the line specifies section targets for copy/move actions
+			if (line.match(/^\s*sections?:[\p{L}0-9_\-/#, ]+$/gu)) {
+				const content = line.replace(/^\s*sections?:/, "").trim();
 				// Get the list of sections and assign them to the sections variable
 				let list = content.split(',').map((sec) => sec.trim());
 				sections = list;
@@ -548,7 +555,7 @@ export class TagSummary {
 				let listTags = paragraph.match(/(?<=^|\s)(#[^\s#.,;!?:]+)/g); // revised to not match hash in middle of word
 				
 				if (listTags != null && listTags.length > 0) {
-					if (!paragraph.contains("```") && !paragraph.contains("---")) {
+					if (!paragraph.includes("```") && !paragraph.includes("---")) {
 						valid = this.isValidText(listTags, tags, include, exclude);
 					}
 				}
@@ -870,8 +877,9 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 	        if (headingObj) {
 	        	targetLine = headingObj.line;
 	        } else {
-	            new Notice (`${section} not found.`);
-	            return false;
+	            new Notice (`${section} not found. Pasting at top of note.`);
+	            targetLine = Utils.findFirstLineAfterFrontMatter(fileContent);
+		    	if (targetLine == 0) fileContent = '\n' + fileContent;
 	        }
 	    }
 

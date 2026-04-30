@@ -130,10 +130,12 @@ export class TBTagEditorModal extends Modal {
                     //((this.settings.batchAction == 'instance') ? parseInt(this.settings.originalIndex) : this.settings.batchAction)
                 )
                 this.close();
-                setTimeout(async () => { 
-                    this.plugin.tagSummary.update(tagEl.closest()); 
-                    paragraphEl.remove(); 
-                }, 500);    
+                const summaryEl = this.settings.tagEl ? (this.settings.tagEl as HTMLElement).closest('.tag-summary-block') : null;
+                if (summaryEl) {
+                    setTimeout(async () => { 
+                        this.plugin.tagSummary.update(summaryEl); 
+                    }, 500);    
+                }
             }
            /* else {
 
@@ -231,4 +233,3 @@ export class TBTagEditorModal extends Modal {
 
 
 }
-

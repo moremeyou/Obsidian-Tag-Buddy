@@ -263,6 +263,7 @@ export default class TagBuddy extends Plugin {
 					this,
 					document, 
 					async (event: MouseEvent) => {	
+		    			if (!this.settings.mobileTripleTapText) return;
 		    			const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
 				        if (view && 
 				        	(view.getMode() == 'preview') &&
