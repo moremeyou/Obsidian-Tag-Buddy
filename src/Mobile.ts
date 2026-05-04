@@ -1,21 +1,24 @@
 import TagBuddy from "main";
-import { App, Plugin } from 'obsidian';
-
 
 export class DoubleTapHandler {
-	
-	constructor(plugin: TagBuddy, element: HTMLElement, callback: Function){
+	private plugin: TagBuddy;
+	private element: HTMLElement | Document;
+	private callback: (event: Event) => void;
+	private lastTap: number;
+	private timeout: ReturnType<typeof setTimeout> | undefined;
+
+	constructor(plugin: TagBuddy, element: HTMLElement | Document, callback: (event: Event) => void){
 	    this.plugin = plugin; // Store the plugin instance
 	    this.element = element;
 	    this.callback = callback;
 	    this.lastTap = 0;
-	    
+
 	    this.plugin.registerDomEvent(
-	    	this.element,
-	    	'touchend', 
-	    	this.handleTouchEnd.bind(this), 
-	    	true
-    	);
+		this.element as HTMLElement,
+		'touchend',
+		this.handleTouchEnd.bind(this),
+		true
+	);
 	  }
 
 	  handleTouchEnd(event: Event) {
@@ -34,25 +37,25 @@ export class DoubleTapHandler {
 }
 
 export class TripleTapHandler {
-	
-  private plugin: any;
-  private element: HTMLElement;
-  private callback: Function;
+
+  private plugin: TagBuddy;
+  private element: HTMLElement | Document;
+  private callback: (event: Event) => void;
   private lastTap: number;
-  private timeout: any;
+  private timeout: ReturnType<typeof setTimeout> | undefined;
   private tapCount: number;
 
-  constructor(plugin: any, element: HTMLElement, callback: Function){
+  constructor(plugin: TagBuddy, element: HTMLElement | Document, callback: (event: Event) => void){
     this.plugin = plugin; // Store the plugin instance
     this.element = element;
     this.callback = callback;
     this.lastTap = 0;
     this.tapCount = 0; // Initialize tap count
-    
+
     this.plugin.registerDomEvent(
-      this.element,
-      'touchend', 
-      this.handleTouchEnd.bind(this), 
+      this.element as HTMLElement,
+      'touchend',
+      this.handleTouchEnd.bind(this),
       true
     );
   }
@@ -61,7 +64,7 @@ export class TripleTapHandler {
     const currentTime = new Date().getTime();
     const tapLength = currentTime - this.lastTap;
     clearTimeout(this.timeout);
-    
+
     if (tapLength < 500 && tapLength > 0) {
       this.tapCount++; // Increment tap count
 
@@ -85,29 +88,34 @@ export class TripleTapHandler {
 
 
 export class PressAndHoldHandler {
-	
+	private plugin: TagBuddy;
+	private element: HTMLElement | Document;
+	private callback: (event: Event) => void;
+	private duration: number;
+	private timeout: ReturnType<typeof setTimeout> | null;
+
 	constructor(
-		plugin: TagBuddy, 
-		element: HTMLElement, 
-		callback: Function, 
+		plugin: TagBuddy,
+		element: HTMLElement | Document,
+		callback: (event: Event) => void,
 		duration: number = 600
 	){
 		this.plugin = plugin;
 		this.element = element;
 		this.callback = callback;
-		this.duration = duration; 
+		this.duration = duration;
 		this.timeout = null;
 
 		this.plugin.registerDomEvent(
-			this.element, 
-			'touchstart', 
-			this.handleTouchStart.bind(this), 
+			this.element as HTMLElement,
+			'touchstart',
+			this.handleTouchStart.bind(this),
 			true
 		);
 		this.plugin.registerDomEvent(
-			this.element, 
-			'touchend', 
-			this.handleTouchEnd.bind(this), 
+			this.element as HTMLElement,
+			'touchend',
+			this.handleTouchEnd.bind(this),
 			true
 		);
 	}

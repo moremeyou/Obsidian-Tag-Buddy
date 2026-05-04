@@ -1,5 +1,6 @@
 import TagBuddy from "main";
 import { App, PluginSettingTab, Setting } from "obsidian";
+import * as Utils from './utils';
 
 export class TBSettingsTab extends PluginSettingTab {
     plugin: TagBuddy;
@@ -8,20 +9,16 @@ export class TBSettingsTab extends PluginSettingTab {
         super(app, plugin);
         this.plugin = plugin;
     }
-    
+
     display(): void {
         let { containerEl } = this;
-        containerEl.empty(); 
+        containerEl.empty();
 
-
-        function isValidTag(tag) {
-            const tagPattern = /^#[\w]+$/;
-            return tagPattern.test(tag);
-        }
-
-        function filterAndJoinTags(tagsString) {
-            const tagsArray = tagsString.split(", ");
-            const validTags = tagsArray.filter(isValidTag);
+        function filterAndJoinTags(tagsString: string): string {
+            const tagsArray = tagsString.split(",");
+            const validTags = tagsArray
+                .map((tag: string) => Utils.normalizeTagInput(tag, true))
+                .filter((tag: string | null): tag is string => tag != null);
             return validTags.join(", ");
         }
 
@@ -349,7 +346,7 @@ export class TBSettingsTab extends PluginSettingTab {
             })
         );
 
-        
+
 
         new Setting(containerEl)
         .setName("Show tag summary paragraph buttons")
@@ -371,7 +368,7 @@ export class TBSettingsTab extends PluginSettingTab {
         const donateButton = createEl('img');
         donateButton.setAttribute('src', 'https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png');
         donateButton.setAttribute('alt', 'Buy Me A Coffee');
-        donateButton.style = 'height: 40px !important;width: 150px !important;'
+        donateButton.style.cssText = 'height: 40px !important;width: 150px !important;'
         donateLink.appendChild(donateButton)
         //.innerHTML = `<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>`;
 
@@ -392,4 +389,3 @@ export class TBSettingsTab extends PluginSettingTab {
         );
     }
 }
-

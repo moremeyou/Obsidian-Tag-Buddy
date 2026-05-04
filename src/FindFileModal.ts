@@ -1,7 +1,6 @@
-import { App, TFile, Notice, FuzzySuggestModal, SuggestModal } from "obsidian";
+import { App, TFile, SuggestModal } from "obsidian";
 
 export class SelectFileModal extends SuggestModal<TFile> {
-  result: TFile;
   onSubmit: (result: TFile) => void;
   fileList: TFile[];
 

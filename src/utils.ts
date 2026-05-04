@@ -1,38 +1,66 @@
-import { Notice, TFile, Platform } from 'obsidian';
+import { App, Notice, TFile, Platform } from 'obsidian';
+
+declare const app: App;
+
+type PlatformApp = App & { isMobile?: boolean };
+
+interface Heading {
+    fullText: string;
+    level: number;
+    text: string;
+    line: number;
+    startIndex: number;
+    endIndex: number;
+}
+
+interface WordMatch {
+    text: string | null;
+    index: number | undefined;
+}
+
+interface ClickedText {
+    text: string;
+    index: number;
+    el: ParentNode | null;
+}
+
+interface SummaryFileObj {
+    fileName: string;
+    title: string;
+}
 
 export function getTagElement(
-    paragraphEl: HTMLElement, 
+    paragraphEl: HTMLElement,
     tagText: string
-): HTMLElement {
-    const els = paragraphEl.querySelectorAll('.tag'); 
+): HTMLElement | null {
+    const els = Array.from(paragraphEl.querySelectorAll<HTMLElement>('.tag'));
     let tagElText = '';
-    let tagElHasSub:boolean;
     for (let el of els) {
         tagElText = el.innerText.trim();
         if (tagElText === tagText) {
-            return el
+            return el;
         }
-    }    
+    }
     //console.warn(`Element with text "${tagText}" not found`);
     return null;
 }
 
-export function platformSettingCheck (app: App, value) {
-    return (value == 'always' || (value == 'desktop' && !app.isMobile) || (value == 'mobile' && app.isMobile))
+export function platformSettingCheck (app: PlatformApp, value: string): boolean {
+    return (value == 'always' || (value == 'desktop' && !app.isMobile) || (value == 'mobile' && !!app.isMobile))
 }
 
-export function platformSettingCheckMultiple (app: App, values: Array []) {
+export function platformSettingCheckMultiple (app: PlatformApp, values: string[]): boolean {
     for (let value of values) {
         if (platformSettingCheck(app, value)) {
-            return true; 
+            return true;
         }
     }
     return false;
 }
 
 export function isWordNearEnd(
-    str: string, 
-    word: string, 
+    str: string,
+    word: string,
     charDistance: number = 0
 ): boolean {
     // Find the last occurrence of the word
@@ -52,10 +80,10 @@ export function isWordNearEnd(
 }
 
 export function getWordObjFromString(
-    sourceText: string, 
+    sourceText: string,
     offset: number
-):Object {
-    
+): WordMatch {
+
     let wordRegex = /[^\s]+(?=[.,:!?]?(\s|$))/g;
     let match;
     let index;
@@ -68,38 +96,38 @@ export function getWordObjFromString(
         }
     }
     return {
-        text: word, 
+        text: word,
         index: index
     };
 }
 
 export function getClickedTextObjFromDoc(
-    x, 
-    y, 
-    minNodeLength: string=10
-):string {
-    
+    x: number,
+    y: number,
+    minNodeLength: number = 10
+): ClickedText | null {
+
     // Get the word under the click position
     let range, nodeText, offset;
 
     if (document.caretRangeFromPoint) {
         range = document.caretRangeFromPoint(x, y);
 //console.log(x, y, range)
-        if (range.startContainer.nodeType === Node.TEXT_NODE) {
-            nodeText = range.startContainer.nodeValue.trim();
+        if (range && range.startContainer.nodeType === Node.TEXT_NODE) {
+            nodeText = range.startContainer.nodeValue?.trim();
         } else {
             return null;
         }
         offset = range.startOffset;
     }
 
-    if (nodeText.length < minNodeLength) {
+    if (!nodeText || offset == null || !range || nodeText.length < minNodeLength) {
         return null;
     }
 //console.log(nodeText, offset, range.startContainer.parentNode)
     return {
-        text: nodeText, 
-        index: offset, 
+        text: nodeText,
+        index: offset,
         el: range.startContainer.parentNode
     };
 }
@@ -108,14 +136,14 @@ export function getMarkdownHeadings(
     bodyLines: string[],
     headingFilter: string = ''
 ): Heading[] {
-    
+
     const headers: Heading[] = [];
     let accumulatedIndex = 0;
 
     bodyLines.forEach((line, index) => {
         const match = line.match(/^(#+)[\s]?(.*)$/);
 
-        if (match && 
+        if (match &&
             (headingFilter == '' || match[2] == headingFilter)) {
             headers.push({
                 fullText: match[0],
@@ -171,7 +199,7 @@ export function fileContainsHeading(
     return (mdHeadings.length > 0)
 }
 
-export function findFirstLineAfterFrontMatter(markdown: String): Number {
+export function findFirstLineAfterFrontMatter(markdown: string): number {
     // Split the markdown string into lines.
     const lines = getLinesInString(markdown); //markdown.split('\n');
 
@@ -199,7 +227,7 @@ export function findFirstLineAfterFrontMatter(markdown: String): Number {
 
 export function getLinesInString(
     input: string
-): Array {
+): string[] {
     /*const lines: string[] = [];
     let tempString = input;
 
@@ -222,7 +250,7 @@ export function getLinesInString(
     return lines;
 }
 
-export function getLineChrIndex(content, lineNumber) {
+export function getLineChrIndex(content: string, lineNumber: number): number {
   const lines = content.split('\n');
   if (lineNumber >= lines.length) {
     return -1;
@@ -238,12 +266,12 @@ export function getLineChrIndex(content, lineNumber) {
 }
 
 export function insertTextAfterLine(
-    text: string, 
-    body: string, 
-    line: number, 
-    filePath
+    text: string,
+    body: string,
+    line: number,
+    filePath?: string
 ): string {
-    
+
     const splitContent = body.split("\n");
     const pre = splitContent.slice(0, line + 1).join("\n");
     const post = splitContent.slice(line + 1).join("\n");
@@ -256,51 +284,51 @@ export function getListTypeFromLineNumber(fullText: string, lineNumber: number):
     if (lineNumber >= 0 && lineNumber < lines.length) {
         const line = lines[lineNumber];
 
-        const leadingWhitespace = line.match(/^\s*/)[0];
+        const leadingWhitespace = line.match(/^\s*/)?.[0] ?? '';
 
         // Check for unchecked checkbox list items first
         if (/^\s*-\s\[\s\]\s/.test(line)) {
             //console.log("Detected an unchecked checkbox");
             return leadingWhitespace + "- [ ] ";
-        } 
+        }
         // Check for a "checked" checkbox
         else if (/^\s*-\s\[x\]\s/.test(line)) {
             //console.log("Detected a checked checkbox, converting to unchecked");
             return leadingWhitespace + "- [ ] ";
-        } 
+        }
         // Then check for normal dash list items
         else if (/^\s*-\s/.test(line)) {
             //console.log("Detected a normal bullet");
             return leadingWhitespace + "- ";
-        } 
+        }
         // Check for numbered list items
         else if (/^\s*\d+\.\s/.test(line)) {
-            const num = parseInt(line.match(/^\s*(\d+)\./)[1], 10);
+            const num = parseInt(line.match(/^\s*(\d+)\./)?.[1] ?? '1', 10);
             return leadingWhitespace + `${num}. `;
             //return leadingWhitespace + `${num + 1}. `;
-        } 
+        }
         // Check for arrow items
         else if (/^\s*>\s/.test(line)) {
             return leadingWhitespace + "> ";
         }
     } else {
     }
-    return ""; 
+    return "";
 }
 
 
 
 export function removeTagFromString(
-    inputText, 
-    hashtagToRemove, 
+    inputText: string,
+    hashtagToRemove: string,
     all:boolean=true
-): string {  
-    
+): string {
+
     //const regex = new RegExp("\\s?" + hashtagToRemove + "\\b", all?"gi":"i");
     const regex = new RegExp(
-        "\\s?" + 
-        hashtagToRemove.replace(/#/g, '\\#') + 
-        "(?!\\w|\\/)", 
+        "\\s?" +
+        hashtagToRemove.replace(/#/g, '\\#') +
+        "(?!\\w|\\/)",
         all?"gi":"i"
     );
 
@@ -308,8 +336,8 @@ export function removeTagFromString(
 }
 
 export function insertTextInString (
-    newText: string, 
-    sourceText: string, 
+    newText: string,
+    sourceText: string,
     charPos: number
 ):string { // pass 0 for the start or sourceText.length-1 for the end
     //console.log(JSON.stringify(newText));
@@ -317,8 +345,8 @@ export function insertTextInString (
 }
 
 export function removeTextFromString (
-    removeText: string, 
-    sourceText: string, 
+    removeText: string,
+    sourceText: string,
     all:boolean=false
 ):string {
     //const regex = new RegExp(this.escapeRegExp(removeText), all ? "gi" : "i");
@@ -327,9 +355,9 @@ export function removeTextFromString (
 }
 
 export function replaceTextInString (
-    replaceText: string, 
-    sourceText: string, 
-    newText: string, 
+    replaceText: string,
+    sourceText: string,
+    newText: string,
     all: boolean = false
 ):string {
 /*console.log('REPLACE TEXT');
@@ -352,22 +380,22 @@ console.log('>>'+newText+'<<')*/
 }
 
 export function truncateStringAtWord(
-    str: string, 
+    str: string,
     maxChars:number=16
 ):string {
 
     if (str.length <= maxChars) return str;
-    let truncated = str.substr(0, maxChars);  
-    const lastSpace = truncated.lastIndexOf(' '); 
+    let truncated = str.substr(0, maxChars);
+    const lastSpace = truncated.lastIndexOf(' ');
     if (lastSpace > 0) truncated = truncated.substr(0, lastSpace);
 
     return truncated
 }
 
 export function contentChangedTooMuch(
-    original: string, 
-    modified: string, 
-    tag: string, 
+    original: string,
+    modified: string,
+    tag: string,
     buffer = 5
 ): boolean {
   const expectedChange = tag.length; // including the '#' symbol
@@ -378,8 +406,8 @@ export function contentChangedTooMuch(
 }
 
 export function fileObjFromTags(
-    tags: Array
-): Object {
+    tags: string[]
+): SummaryFileObj {
 
     // Remove hashes and split tags into an array
     let tagsArray = tags.map(tag => tag.replace(/#/g, '').toLowerCase());
@@ -415,9 +443,9 @@ export function fileObjFromTags(
 
 
 export function getActiveFileFolder(
-    activeFile: TFile
-): string {
-    
+    activeFile: TFile | null
+): string | null {
+
     //const activeFile = app.workspace.activeLeaf.view.file;
     //const activeFile = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!activeFile) return null;
@@ -444,9 +472,9 @@ export function getActiveFileFolder(
 
 export function getTagsFromApp(
     app: App,
-    recentTags: Array
+    recentTags: string[]
 ): string[] {
-    const tagsObject = app.metadataCache.getTags();
+    const tagsObject = (app.metadataCache as unknown as { getTags(): Record<string, number> }).getTags();
 
     // Convert tagsObject to an array of [tag, count] tuples
     const tagsArray = Object.entries(tagsObject);
@@ -461,7 +489,7 @@ export function getTagsFromApp(
     if (recentTags.length>0) {
         //console.log(recentTags)
         // convert them to [tag, count] tuples for consistency
-        const recentTagsAsTuples = recentTags.map(tag => [tag, 0]);
+        const recentTagsAsTuples: [string, number][] = recentTags.map(tag => [tag, 0]);
         // Concatenate the two arrays
         const recentAndAllTags = recentTagsAsTuples.concat(tagsArray);
         // Extract tag names after removing the #
@@ -473,7 +501,7 @@ export function getTagsFromApp(
 
  export async function validateFilePath (
     filePath: string
-): TFile {
+): Promise<TFile | null> {
     const normalizedPath = filePath?.trim();
     if (!normalizedPath) {
         new Notice('Tag Buddy: No file path found. Try again, or this tag might be in an unsupported embed type.');
@@ -520,7 +548,7 @@ export function getTagsFromApp(
 */
 
 export function ctrlCmdKey (
-    event: Event
+    event: MouseEvent | KeyboardEvent
 ): boolean {
     const isMac = Platform.isMacOS // (navigator.platform.toUpperCase().indexOf('MAC') >= 0);
 
@@ -529,7 +557,7 @@ export function ctrlCmdKey (
 }
 
 export function tagsInString(
-    string: string, 
+    string: string,
     tag?: string
 ): string[] {
     let regex;
@@ -545,8 +573,8 @@ export function tagsInString(
 }
 
 export function countOccurrences(
-    summaryTags: Array, 
-    contentTags
+    summaryTags: string[],
+    contentTags: string[]
 ): number {
     let count = 0;
     for (let tag of summaryTags) {
@@ -570,8 +598,9 @@ export function escapeRegExp(
 
 export async function getEmbedFile (
     el: HTMLElement
-):TFile {
+): Promise<TFile | null> {
     let filePath = el.getAttribute('src');
+    if (!filePath) return null;
     const linkArray = filePath.split('#');
     filePath = linkArray[0].trim() + '.md';
     const file = await validateFilePath(filePath);
@@ -579,14 +608,33 @@ export async function getEmbedFile (
 }
 
 export function isTagValid (
-    tag: String,
-    fullTag: Boolean = false
-):boolean { 
-    let tagPattern 
+    tag: string,
+    fullTag: boolean = false
+):boolean {
+    let tagPattern
     if (fullTag) tagPattern = /^#[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
     //else tagPattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g
     else tagPattern = /^[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
     return tagPattern.test(tag);
+}
+
+export function normalizeTagInput (
+    tag: string | null | undefined,
+    includeHash: boolean = true
+): string | null {
+    const trimmedTag = tag?.toString().trim();
+    if (!trimmedTag) return null;
+
+    const tagText = trimmedTag.startsWith('#') ? trimmedTag.substring(1) : trimmedTag;
+    if (!isTagValid(tagText, false)) return null;
+
+    return includeHash ? '#' + tagText : tagText;
+}
+
+export function isTagInputValid (
+    tag: string | null | undefined
+): boolean {
+    return normalizeTagInput(tag) != null;
 }
 
 export function extractValidTags(tagsString: string): string[] {
