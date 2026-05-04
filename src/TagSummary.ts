@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, CachedMetadata, MarkdownPostProcessorContext, DropdownComponent, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, MarkdownRenderer, MarkdownPostProcessorContext, DropdownComponent, Component, TFile, getAllTags, Notice } from 'obsidian';
 import TagBuddy from "main";
 import * as Utils from './utils';
 
@@ -6,8 +6,6 @@ export class TagSummary {
 	app: App;
 	plugin: TagBuddy;
 	selectedBlocks: number[];
-	blocks: string[];
-	private static fileSummaries: Map<TFile, Set<HTMLElement>> = new Map();
 
 	constructor(
 		app: App,
@@ -40,40 +38,24 @@ export class TagSummary {
 			)
 			await this.app.vault.modify(file, newFileContent);
 
-			const notice = new Notice ('Tag summary flattened to active note.');
+			new Notice ('Tag summary flattened to active note.');
 		} else {
 			new Notice ('⚠️ Tag Buddy: Can\'t find code block source. This is a BUG.');
 		}
 	}
-
-	/*public static addSummary(file: TFile, summary: HTMLElement): void {
-        if (!this.fileSummaries.has(file)) {
-            this.fileSummaries.set(file, new Set([summary]));
-        } else {
-            const summaries = this.fileSummaries.get(file);
-            summaries?.add(summary);
-        }
-    }
-
-    // Method to retrieve an array of unique summary elements for a given file
-    public static getSummariesByFile(file: TFile): HTMLElement[] {
-        const summaries = this.fileSummaries.get(file);
-        return summaries ? Array.from(summaries) : [];
-    }*/
 
 	copyBtnHandler (e: Event, content: string): void {
 
 		//e.stopPropagation();
 
 		const selection = window.getSelection()?.toString() ?? '';
-		let notice;
 
 		if (selection != '') {
 			navigator.clipboard.writeText(selection);
-			notice = new Notice ('Selection copied to clipboard.');
+			new Notice ('Selection copied to clipboard.');
 		} else {
 			navigator.clipboard.writeText(content);
-			notice = new Notice ('Tagged paragraph copied to clipboard.');
+			new Notice ('Tagged paragraph copied to clipboard.');
 		}
 
 		//navigator.clipboard.writeText(content);
@@ -173,7 +155,6 @@ export class TagSummary {
 					// renive the tag before copying
 					await this.app.vault.modify(file, newFileContent);
 
-						const copiedToWhere: string = dropdown.getValue()=='top' ? 'top of note' : dropdown.getValue()=='end' ? 'end of note' : dropdown.getValue()
 					notice = new Notice(
 						//'Moved to section: ' + dropdown.getValue() +
 						//'.\n🔗 Open source note.',
@@ -231,7 +212,6 @@ export class TagSummary {
 		//const newNoteObj = this.fileObjFromTags(tags);
 		const newNoteObj = Utils.fileObjFromTags(tags);
 		let fileContent = code ? summaryMd : '## ' + newNoteObj.title + '\n\n' + summaryMd;
-		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
 		//const fileName = this.getActiveFileFolder()+newNoteObj.fileName;
 		// const fileName = Utils.getActiveFileFolder(view)+newNoteObj.fileName;
 		const filePath = Utils.getActiveFileFolder(this.app.workspace.getActiveFile()) ?? '';
@@ -492,7 +472,6 @@ export class TagSummary {
 		const summaryContainer = createEl('div');
 		//summaryContainer.appendChild(createEl('hr'));
 		this.selectedBlocks = [];
-		this.blocks = [];
 
 		summaryContainer.setAttribute(
 			'class',

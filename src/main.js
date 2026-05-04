@@ -1125,35 +1125,20 @@ var TagSummary = class {
         summaryMd
       );
       await this.app.vault.modify(file, newFileContent);
-      const notice = new import_obsidian7.Notice("Tag summary flattened to active note.");
+      new import_obsidian7.Notice("Tag summary flattened to active note.");
     } else {
       new import_obsidian7.Notice("\u26A0\uFE0F Tag Buddy: Can't find code block source. This is a BUG.");
     }
   }
-  /*public static addSummary(file: TFile, summary: HTMLElement): void {
-          if (!this.fileSummaries.has(file)) {
-              this.fileSummaries.set(file, new Set([summary]));
-          } else {
-              const summaries = this.fileSummaries.get(file);
-              summaries?.add(summary);
-          }
-      }
-  
-      // Method to retrieve an array of unique summary elements for a given file
-      public static getSummariesByFile(file: TFile): HTMLElement[] {
-          const summaries = this.fileSummaries.get(file);
-          return summaries ? Array.from(summaries) : [];
-      }*/
   copyBtnHandler(e, content) {
     var _a, _b;
     const selection = (_b = (_a = window.getSelection()) == null ? void 0 : _a.toString()) != null ? _b : "";
-    let notice;
     if (selection != "") {
       navigator.clipboard.writeText(selection);
-      notice = new import_obsidian7.Notice("Selection copied to clipboard.");
+      new import_obsidian7.Notice("Selection copied to clipboard.");
     } else {
       navigator.clipboard.writeText(content);
-      notice = new import_obsidian7.Notice("Tagged paragraph copied to clipboard.");
+      new import_obsidian7.Notice("Tagged paragraph copied to clipboard.");
     }
   }
   async removeTagBtnHandler(e, paragraphEl, tag) {
@@ -1222,7 +1207,6 @@ var TagSummary = class {
         ).trim();
         if (fileContent != newFileContent) {
           await this.app.vault.modify(file, newFileContent);
-          const copiedToWhere = dropdown.getValue() == "top" ? "top of note" : dropdown.getValue() == "end" ? "end of note" : dropdown.getValue();
           notice = new import_obsidian7.Notice(
             //'Moved to section: ' + dropdown.getValue() +
             //'.\n🔗 Open source note.',
@@ -1260,7 +1244,6 @@ var TagSummary = class {
     var _a;
     const newNoteObj = fileObjFromTags(tags);
     let fileContent = code ? summaryMd : "## " + newNoteObj.title + "\n\n" + summaryMd;
-    const view = await this.app.workspace.getActiveViewOfType(import_obsidian7.MarkdownView);
     const filePath = (_a = getActiveFileFolder(this.app.workspace.getActiveFile())) != null ? _a : "";
     const fileName = filePath + newNoteObj.fileName;
     const file = this.app.vault.getAbstractFileByPath(fileName);
@@ -1420,7 +1403,6 @@ var TagSummary = class {
     const tempComponent = new TempComponent();
     const summaryContainer = createEl("div");
     this.selectedBlocks = [];
-    this.blocks = [];
     summaryContainer.setAttribute(
       "class",
       "tag-summary-block"
@@ -1735,7 +1717,6 @@ var TagSummary = class {
     return [];
   }
 };
-TagSummary.fileSummaries = /* @__PURE__ */ new Map();
 var TempComponent = class extends import_obsidian7.Component {
   constructor() {
     super(...arguments);
