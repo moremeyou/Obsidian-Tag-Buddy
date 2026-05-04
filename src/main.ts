@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownRenderer, debounce, MarkdownPostProcessor, MarkdownPostProcessorContext, Component, TFile, getAllTags, MarkdownPreviewView, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { TFile, MarkdownView, Notice, Plugin } from 'obsidian';
 import { TBSettingsTab } from "./settings";
 import { GUI } from "./gui";
 import { TagSummary } from './TagSummary';
@@ -129,7 +129,7 @@ export default class TagBuddy extends Plugin {
 
 			this.registerEvent(this.app.on(
 				'layout-change',
-				async (event: EditorEvent) => {
+				async () => {
 					const mode = this.app.workspace.getActiveViewOfType(MarkdownView)?.getMode();
 					if (this.settings.debugMode) console.log('Tag Buddy: layout-change:', mode);
 					if (mode == 'preview') {
@@ -144,7 +144,7 @@ export default class TagBuddy extends Plugin {
 			this.registerEvent(this.app.workspace.on(
 				'file-open',
 				//debounce(
-				async (event: EditorEvent) => {
+				async () => {
 					const activeFile = await this.app.workspace.getActiveFile();
 					if (this.settings.debugMode) console.log('Tag Buddy: last active file:', this.activeFile?.name);
 					if (this.settings.debugMode) console.log('Tag Buddy: file open:', activeFile?.name)

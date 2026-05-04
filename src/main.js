@@ -2666,7 +2666,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
       );
       this.registerEvent(this.app.on(
         "layout-change",
-        async (event) => {
+        async () => {
           var _a;
           const mode = (_a = this.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView)) == null ? void 0 : _a.getMode();
           if (this.settings.debugMode)
@@ -2681,7 +2681,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
       this.registerEvent(this.app.workspace.on(
         "file-open",
         //debounce(
-        async (event) => {
+        async () => {
           var _a, _b;
           const activeFile = await this.app.workspace.getActiveFile();
           if (this.settings.debugMode)
