@@ -1965,19 +1965,11 @@ var TagProcessor = class {
     return tagPositions;
   }
   assignMarkdownTags(tagPositions, tagElements, startIndex, type) {
-    var _a;
     if (type == "active") {
       if (this.plugin.settings.debugMode) {
-        const activeFilePath = (_a = this.app.workspace.getActiveFile()) == null ? void 0 : _a.path;
         console.log(tagPositions.length, tagElements.length);
-        const temp1 = [];
-        tagPositions.forEach((nodeObj) => {
-          temp1.push(nodeObj.tag);
-        });
-        const temp2 = [];
-        Array.from(tagElements).forEach((nodeObj) => {
-          temp2.push(nodeObj.innerText);
-        });
+        const temp1 = tagPositions.map((nodeObj) => nodeObj.tag);
+        const temp2 = Array.from(tagElements).map((nodeObj) => nodeObj.innerText);
         console.log(temp1, temp2);
       }
       if (tagPositions.length != tagElements.length) {
@@ -2047,7 +2039,8 @@ var TagProcessor = class {
         }
         const tempComponent = new TempComponent2();
         const tempContainerHTML = createEl("div");
-        await import_obsidian8.MarkdownRenderer.renderMarkdown(
+        await import_obsidian8.MarkdownRenderer.render(
+          this.app,
           fileContent,
           tempContainerHTML,
           "noFile",

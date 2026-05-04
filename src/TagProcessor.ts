@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, MarkdownPostProcessor, debounce, MarkdownPostProcessorContext, Component, TFile, getAllTags, MarkdownPreviewView, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, MarkdownRenderer, debounce, Debouncer, MarkdownPostProcessorContext, Component, TFile, getAllTags, MarkdownView, Notice } from 'obsidian';
 import TagBuddy from "main";
 import * as Utils from './utils';
 
@@ -18,7 +18,7 @@ export class TagProcessor {
 	app: App;
 	plugin: TagBuddy;
 	private outOfSync: boolean = false;
-	debouncedProcessActiveFileTagEls: Function;
+	debouncedProcessActiveFileTagEls: Debouncer<[], Promise<void>>;
 
 	constructor(
 		app: App,
@@ -224,7 +224,7 @@ export class TagProcessor {
 		);
 		this.assignMarkdownTags(
 			mdTags,
-			paragraphEl.querySelectorAll('.tag'),
+			paragraphEl.querySelectorAll<HTMLElement>('.tag'),
 			startIndex,
 			'plugin-summary'
 		);
@@ -338,13 +338,10 @@ export class TagProcessor {
 		if (type == 'active') {
 				//console.log(startIndex);
 				if (this.plugin.settings.debugMode) {
-					const activeFilePath = this.app.workspace.getActiveFile()?.path;
 					console.log(tagPositions.length, tagElements.length)
 					//console.log(tagPositions, tagElements, this.tagFileManager.getTags(activeFilePath))
-					const temp1: string[] = [];
-					tagPositions.forEach((nodeObj) => { temp1.push(nodeObj.tag) });
-					const temp2: string[] = [];
-					Array.from(tagElements).forEach((nodeObj) => { temp2.push(nodeObj.innerText) });
+					const temp1 = tagPositions.map((nodeObj) => nodeObj.tag);
+					const temp2 = Array.from(tagElements).map((nodeObj) => nodeObj.innerText);
 
 				console.log(temp1, temp2)
 
@@ -432,7 +429,8 @@ export class TagProcessor {
 				const tempComponent = new TempComponent();
 				const tempContainerHTML = createEl("div");
 
-				await MarkdownRenderer.renderMarkdown(
+				await MarkdownRenderer.render(
+					this.app,
 					fileContent,
 					tempContainerHTML,
 					'noFile', //file.path,
