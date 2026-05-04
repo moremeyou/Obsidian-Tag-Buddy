@@ -1762,6 +1762,15 @@ var TempComponent = class extends import_obsidian7.Component {
 
 // TagProcessor.ts
 var import_obsidian8 = require("obsidian");
+
+// tagPatterns.ts
+var CODE_FENCE_MARKER = "```";
+var NUMBERED_LIST_LINE_PATTERN = /^\d+\./;
+function createMarkdownTagOrCodeFencePattern() {
+  return /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g;
+}
+
+// TagProcessor.ts
 var TagProcessor = class {
   constructor(app2, plugin) {
     this.outOfSync = false;
@@ -1915,7 +1924,7 @@ var TagProcessor = class {
     const tagPositions = [];
     const processedPositions = /* @__PURE__ */ new Set();
     let match;
-    const regex = /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g;
+    const regex = createMarkdownTagOrCodeFencePattern();
     let currentContext = "normal";
     let insideCodeBlock = false;
     let invalidBlockquote = false;
@@ -1927,7 +1936,7 @@ var TagProcessor = class {
           console.log(`Skipping duplicate tag at position ${matchIndex}: ${matchedString}`);
         continue;
       }
-      if (matchedString === "```") {
+      if (matchedString === CODE_FENCE_MARKER) {
         insideCodeBlock = !insideCodeBlock;
         if (this.plugin.settings.debugMode)
           console.log(`Toggled insideCodeBlock to ${insideCodeBlock}`);
@@ -1948,7 +1957,7 @@ var TagProcessor = class {
           if (this.plugin.settings.debugMode)
             console.log(`Invalid blockquote triggered at line: ${fileContent.substring(0, matchIndex).split("\n").length}`);
         }
-      } else if (line.trim().startsWith("-") || line.trim().match(/^\d+\./)) {
+      } else if (line.trim().startsWith("-") || NUMBERED_LIST_LINE_PATTERN.test(line.trim())) {
         currentContext = "list";
         invalidBlockquote = false;
       } else if (line.startsWith("	")) {

@@ -2,6 +2,7 @@ import { App, MarkdownRenderer, debounce, Debouncer, MarkdownPostProcessorContex
 import TagBuddy from "main";
 import * as Utils from './utils';
 import { NOTICE_TEXT, markdownRenderedTagsOutOfSync } from './userText';
+import { CODE_FENCE_MARKER, NUMBERED_LIST_LINE_PATTERN, createMarkdownTagOrCodeFencePattern } from './tagPatterns';
 
 interface MarkdownTagPosition {
 	tag: string;
@@ -228,7 +229,7 @@ export class TagProcessor {
 	    const tagPositions: MarkdownTagPosition[] = [];
 	    const processedPositions = new Set<number>(); // Track positions to prevent duplicate processing
 	    let match: RegExpExecArray | null;
-    const regex = /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g; // Original regex
+    const regex = createMarkdownTagOrCodeFencePattern();
 
     // Context tracking
     let currentContext = "normal";
@@ -247,7 +248,7 @@ export class TagProcessor {
         }
 
         // Toggle code block state when encountering a fence
-        if (matchedString === "```") {
+        if (matchedString === CODE_FENCE_MARKER) {
             insideCodeBlock = !insideCodeBlock;
             if (this.plugin.settings.debugMode) console.log(`Toggled insideCodeBlock to ${insideCodeBlock}`);
             continue; // Skip processing the fence line itself
@@ -272,7 +273,7 @@ export class TagProcessor {
                 invalidBlockquote = true;
                 if (this.plugin.settings.debugMode) console.log(`Invalid blockquote triggered at line: ${fileContent.substring(0, matchIndex).split("\n").length}`);
             }
-        } else if (line.trim().startsWith("-") || line.trim().match(/^\d+\./)) {
+        } else if (line.trim().startsWith("-") || NUMBERED_LIST_LINE_PATTERN.test(line.trim())) {
             currentContext = "list";
             invalidBlockquote = false; // Reset invalid blockquote state
         } else if (line.startsWith("\t")) {
