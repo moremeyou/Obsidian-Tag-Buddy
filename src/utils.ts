@@ -1,4 +1,5 @@
 import { App, Notice, TFile, Platform } from 'obsidian';
+import { NOTICE_TEXT } from './userText';
 
 declare const app: App;
 
@@ -504,7 +505,7 @@ export function getTagsFromApp(
 ): Promise<TFile | null> {
     const normalizedPath = filePath?.trim();
     if (!normalizedPath) {
-        new Notice('Tag Buddy: No file path found. Try again, or this tag might be in an unsupported embed type.');
+        new Notice(NOTICE_TEXT.noFilePathForTagSource);
         return null;
     }
 
@@ -517,10 +518,10 @@ export function getTagsFromApp(
     if (matchingFiles.length === 1) {
         return matchingFiles[0];
     } else if (matchingFiles.length > 1) {
-        new Notice('Tag Buddy: Multiple files found with the same name. Can\'t safely edit tag.');
+        new Notice(NOTICE_TEXT.multipleFilesForTagSource);
         return null;
     } else {
-        new Notice('Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.');
+        new Notice(NOTICE_TEXT.noFileForTagSource);
         return null;
     }
 }

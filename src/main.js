@@ -34,6 +34,38 @@ var import_obsidian2 = require("obsidian");
 
 // utils.ts
 var import_obsidian = require("obsidian");
+
+// userText.ts
+var SOURCE_NOTE_READING_MODE = "Open the source note in Reading Mode and try again.";
+var NOTICE_TEXT = {
+  cannotIdentifyTagLocationRefresh: "Tag Buddy: Can't identify tag location. Please refresh and try again.",
+  cannotIdentifyTagLocationTryAgain: "Tag Buddy: Can't identify tag location. Please try again.",
+  cannotIdentifySummarySource: "Tag Buddy: Can't identify summary source note. Refresh this summary and try again.",
+  cannotSafelyEditChangedSource: "Tag Buddy: Can't safely edit tag: source text changed. Edit blocked.",
+  cannotSafelyEditUnsupportedView: `Tag Buddy: Can't safely edit this tag from this view. ${SOURCE_NOTE_READING_MODE}`,
+  cannotSafelyEditUnsupportedContext: `Tag Buddy: Can't safely edit this tag here. ${SOURCE_NOTE_READING_MODE}`,
+  markdownRenderedTagsOutOfSync: "Tag Buddy: Markdown source and rendered tags are out of sync. Switch Reading Mode off and on, then check for tag syntax errors.",
+  noFilePathForTagSource: "Tag Buddy: No file path found. Try again, or this tag might be in an unsupported embed type.",
+  noFileForTagSource: "Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.",
+  multipleFilesForTagSource: "Tag Buddy: Multiple files found with the same name. Can't safely edit tag.",
+  refreshRenderedTagPositionsAttempt: "Tag Buddy: Tried refreshing rendered tag positions. Try again.",
+  refreshRenderedTagPositionsSuccess: "Tag Buddy: Refreshed rendered tag positions. Try again.",
+  refreshEmbeddedTagPositionsSuccess: "Tag Buddy: Refreshed embedded tag positions. Try again.",
+  refreshSummaryTagPositionsSuccess: "Tag Buddy: Refreshed summary tag positions. Try again."
+};
+function markdownRenderedTagsOutOfSync(type) {
+  let message = "Tag Buddy: Markdown source and rendered tags are out of sync.";
+  if (type == "active") {
+    message += " Try switching Reading Mode off and on, then check for tag syntax errors or conflicts in metadata.";
+  } else if (type == "plugin-summary") {
+    message += " Refresh this summary, then check for duplicate paragraphs or tag syntax errors.";
+  } else if (type == "native-embed") {
+    message += " Refresh this note or embed, then check for tag syntax errors in the embedded note.";
+  }
+  return message + " Please report if this error persists.";
+}
+
+// utils.ts
 function getTagElement(paragraphEl, tagText) {
   const els = Array.from(paragraphEl.querySelectorAll(".tag"));
   let tagElText = "";
@@ -281,7 +313,7 @@ function getTagsFromApp(app2, recentTags) {
 async function validateFilePath(filePath) {
   const normalizedPath = filePath == null ? void 0 : filePath.trim();
   if (!normalizedPath) {
-    new import_obsidian.Notice("Tag Buddy: No file path found. Try again, or this tag might be in an unsupported embed type.");
+    new import_obsidian.Notice(NOTICE_TEXT.noFilePathForTagSource);
     return null;
   }
   const fileFromPath = app.vault.getAbstractFileByPath(normalizedPath);
@@ -292,10 +324,10 @@ async function validateFilePath(filePath) {
   if (matchingFiles.length === 1) {
     return matchingFiles[0];
   } else if (matchingFiles.length > 1) {
-    new import_obsidian.Notice("Tag Buddy: Multiple files found with the same name. Can't safely edit tag.");
+    new import_obsidian.Notice(NOTICE_TEXT.multipleFilesForTagSource);
     return null;
   } else {
-    new import_obsidian.Notice("Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.");
+    new import_obsidian.Notice(NOTICE_TEXT.noFileForTagSource);
     return null;
   }
 }
@@ -1747,16 +1779,7 @@ var TagProcessor = class {
   markOutOfSync(type) {
     if (type == "active")
       this.outOfSync = true;
-    let message = "Tag Buddy: Markdown source and rendered tags are out of sync.";
-    if (type == "active") {
-      message += " Try switching Reading Mode off and on, then check for tag syntax errors or conflicts in metadata.";
-    } else if (type == "plugin-summary") {
-      message += " Refresh this summary, then check for duplicate paragraphs or tag syntax errors.";
-    } else if (type == "native-embed") {
-      message += " Refresh this note or embed, then check for tag syntax errors in the embedded note.";
-    }
-    message += " Please report if this error persists.";
-    new import_obsidian8.Notice(message, 1e4);
+    new import_obsidian8.Notice(markdownRenderedTagsOutOfSync(type), 1e4);
   }
   filterActiveFileTagEls(tags) {
     const filteredTagElements = Array.from(tags).filter((tag) => {
@@ -1872,7 +1895,7 @@ var TagProcessor = class {
       return;
     const file = this.app.vault.getAbstractFileByPath(filePath);
     if (!(file instanceof import_obsidian8.TFile)) {
-      new import_obsidian8.Notice("Tag Buddy: Can't identify summary source note. Refresh this summary and try again.");
+      new import_obsidian8.Notice(NOTICE_TEXT.cannotIdentifySummarySource);
       return;
     }
     const fileContent = await this.app.vault.read(file);
@@ -2097,11 +2120,11 @@ var ReadingModeTagEditor = class {
   getValidatedTagIndex(tag, index, fileContent) {
     const tagIndex = Number(index);
     if (!Number.isInteger(tagIndex) || tagIndex < 0) {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't identify tag location. Please refresh and try again.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotIdentifyTagLocationRefresh);
       return null;
     }
     if (fileContent.substring(tagIndex, tagIndex + tag.length) !== tag) {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't safely edit tag: source text changed. Edit blocked.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotSafelyEditChangedSource);
       return null;
     }
     return tagIndex;
@@ -2111,22 +2134,22 @@ var ReadingModeTagEditor = class {
     const tagContainerType = tagEl == null ? void 0 : tagEl.getAttribute("type");
     const activeFilePath = (_a = this.app.workspace.getActiveFile()) == null ? void 0 : _a.path;
     const tagFilePath = tagEl == null ? void 0 : tagEl.getAttribute("file-source");
-    let refreshNotice = "Tag Buddy: Tried refreshing rendered tag positions. Try again.";
+    let refreshNotice = NOTICE_TEXT.refreshRenderedTagPositionsAttempt;
     try {
       if (tagContainerType == "active" || tagFilePath == activeFilePath) {
         await this.plugin.tagProcessor.processActiveFileTags();
-        refreshNotice = "Tag Buddy: Refreshed rendered tag positions. Try again.";
+        refreshNotice = NOTICE_TEXT.refreshRenderedTagPositionsSuccess;
       } else if (tagContainerType == "native-embed") {
         const embedEl = tagContainer != null ? tagContainer : tagEl == null ? void 0 : tagEl.closest(".markdown-embed");
         if (embedEl) {
           await this.plugin.tagProcessor.processNativeEmbed(embedEl, true);
-          refreshNotice = "Tag Buddy: Refreshed embedded tag positions. Try again.";
+          refreshNotice = NOTICE_TEXT.refreshEmbeddedTagPositionsSuccess;
         }
       } else if (tagContainerType == "plugin-summary") {
         const paragraphEl = tagContainer != null ? tagContainer : tagEl == null ? void 0 : tagEl.closest(".tag-summary-paragraph");
         if (paragraphEl) {
           await this.plugin.tagProcessor.processTagSummaryParagraph(paragraphEl);
-          refreshNotice = "Tag Buddy: Refreshed summary tag positions. Try again.";
+          refreshNotice = NOTICE_TEXT.refreshSummaryTagPositionsSuccess;
         }
       } else {
         await this.plugin.tagProcessor.processActiveFileTags();
@@ -2324,7 +2347,7 @@ var ReadingModeTagEditor = class {
   async edit(tagEl, event, _paragraphEl, editType, newName = "") {
     var _a;
     if (!tagEl) {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't identify tag location. Please try again.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotIdentifyTagLocationTryAgain);
       return;
     }
     let tagContainer = null;
@@ -2498,7 +2521,7 @@ var ReadingModeTagEditor = class {
       }
       this.plugin.tagProcessor.debouncedProcessActiveFileTagEls();
     } else {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't identify tag location. Please try again.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotIdentifyTagLocationTryAgain);
     }
   }
 };
@@ -2791,7 +2814,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
     const view = await this.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView);
     const modKey = ctrlCmdKey(event) ? "CMD" : event.altKey ? "OPT" : "";
     if (!view && target.matches(".tag")) {
-      new import_obsidian10.Notice("Tag Buddy: Can't edit tag. Unsupported view type. Try again within the source note.");
+      new import_obsidian10.Notice(NOTICE_TEXT.cannotSafelyEditUnsupportedView);
       return;
     }
     if (view) {
@@ -2824,7 +2847,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
     }
     if (target && target.matches(".tag")) {
       if (this.tagProcessor.isOutOfSync()) {
-        new import_obsidian10.Notice("Tag Buddy: Markdown source and rendered tags are out of sync. Switch Reading Mode off and on, then check for tag syntax errors.");
+        new import_obsidian10.Notice(NOTICE_TEXT.markdownRenderedTagsOutOfSync);
         return;
       }
       let editType = "";
@@ -2865,12 +2888,12 @@ var TagBuddy = class extends import_obsidian10.Plugin {
               ""
             );
           } else {
-            new import_obsidian10.Notice("Tag Buddy: Tried refreshing rendered tag positions. Try again.", 5e3);
+            new import_obsidian10.Notice(NOTICE_TEXT.refreshRenderedTagPositionsAttempt, 5e3);
           }
         }, 300);
       }
     } else if (!view && target.matches(".tag")) {
-      new import_obsidian10.Notice("Tag Buddy: Can't edit tag. Might be in an unsupported view type.");
+      new import_obsidian10.Notice(NOTICE_TEXT.cannotSafelyEditUnsupportedContext);
     }
   }
   async loadSettings() {

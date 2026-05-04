@@ -6,6 +6,7 @@ import { TagProcessor } from './TagProcessor';
 import { ReadingModeTagEditor } from './ReadingModeTagEditor';
 import * as Utils from './utils';
 import * as Mobile from './Mobile';
+import { NOTICE_TEXT } from './userText';
 
 interface TBSettings {
 	removeOnClick: boolean; // ctrl
@@ -316,7 +317,7 @@ export default class TagBuddy extends Plugin {
 		// This condition it in case we click on a tag in another plugin like repeat or checklist
 		// Can't edit tags in these cases. For now.
 		if (!view && target.matches('.tag')) {
-			new Notice('Tag Buddy: Can\'t edit tag. Unsupported view type. Try again within the source note.');
+			new Notice(NOTICE_TEXT.cannotSafelyEditUnsupportedView);
 			return;
 		}
 
@@ -376,7 +377,7 @@ export default class TagBuddy extends Plugin {
 			// const scrollState = this.app.workspace.getActiveViewOfType(MarkdownView)?.currentMode?.getScroll();
 
 			if (this.tagProcessor.isOutOfSync()) {
-				new Notice('Tag Buddy: Markdown source and rendered tags are out of sync. Switch Reading Mode off and on, then check for tag syntax errors.');
+				new Notice(NOTICE_TEXT.markdownRenderedTagsOutOfSync);
 				return;
 			}
 
@@ -434,13 +435,13 @@ export default class TagBuddy extends Plugin {
 							''
 						);
 					} else {
-						new Notice('Tag Buddy: Tried refreshing rendered tag positions. Try again.', 5000);
+						new Notice(NOTICE_TEXT.refreshRenderedTagPositionsAttempt, 5000);
 					}
 				}, 300);
 			}
 
 		} else if (!view && target.matches('.tag')) {
-			new Notice('Tag Buddy: Can\'t edit tag. Might be in an unsupported view type.');
+			new Notice(NOTICE_TEXT.cannotSafelyEditUnsupportedContext);
 		}
 	}
 

@@ -1,6 +1,7 @@
 import { App, MarkdownRenderer, debounce, Debouncer, MarkdownPostProcessorContext, Component, TFile, getAllTags, MarkdownView, Notice } from 'obsidian';
 import TagBuddy from "main";
 import * as Utils from './utils';
+import { NOTICE_TEXT, markdownRenderedTagsOutOfSync } from './userText';
 
 interface MarkdownTagPosition {
 	tag: string;
@@ -46,17 +47,7 @@ export class TagProcessor {
 	markOutOfSync(type: string) {
 		if (type == 'active') this.outOfSync = true;
 
-		let message = 'Tag Buddy: Markdown source and rendered tags are out of sync.';
-		if (type == 'active') {
-			message += ' Try switching Reading Mode off and on, then check for tag syntax errors or conflicts in metadata.';
-		} else if (type == 'plugin-summary') {
-			message += ' Refresh this summary, then check for duplicate paragraphs or tag syntax errors.';
-		} else if (type == 'native-embed') {
-			message += ' Refresh this note or embed, then check for tag syntax errors in the embedded note.';
-		}
-		message += ' Please report if this error persists.';
-
-		new Notice(message, 10000);
+		new Notice(markdownRenderedTagsOutOfSync(type), 10000);
 	}
 
 	filterActiveFileTagEls (
@@ -213,7 +204,7 @@ export class TagProcessor {
 		if (!filePath || !markdownBlock) return;
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (!(file instanceof TFile)) {
-			new Notice('Tag Buddy: Can\'t identify summary source note. Refresh this summary and try again.');
+			new Notice(NOTICE_TEXT.cannotIdentifySummarySource);
 			return;
 		}
 		const fileContent = await this.app.vault.read(file);

@@ -2,6 +2,7 @@ import { App, TFile, getAllTags, MarkdownView, Notice } from 'obsidian';
 import TagBuddy from "main";
 import { TagSummary } from './TagSummary';
 import * as Utils from './utils';
+import { NOTICE_TEXT } from './userText';
 
 interface MarkdownTagPosition {
 	tag: string;
@@ -28,12 +29,12 @@ export class ReadingModeTagEditor {
 	): number | null {
 		const tagIndex = Number(index);
 		if (!Number.isInteger(tagIndex) || tagIndex < 0) {
-			new Notice('⚠️ Can\'t identify tag location. Please refresh and try again.');
+			new Notice(NOTICE_TEXT.cannotIdentifyTagLocationRefresh);
 			return null;
 		}
 
 		if (fileContent.substring(tagIndex, tagIndex + tag.length) !== tag) {
-			new Notice('⚠️ Can\'t safely edit tag: source text changed. Edit blocked.');
+			new Notice(NOTICE_TEXT.cannotSafelyEditChangedSource);
 			return null;
 		}
 
@@ -47,23 +48,23 @@ export class ReadingModeTagEditor {
 		const tagContainerType = tagEl?.getAttribute('type');
 		const activeFilePath = this.app.workspace.getActiveFile()?.path;
 		const tagFilePath = tagEl?.getAttribute('file-source');
-		let refreshNotice = 'Tag Buddy: Tried refreshing rendered tag positions. Try again.';
+		let refreshNotice: string = NOTICE_TEXT.refreshRenderedTagPositionsAttempt;
 
 		try {
 			if (tagContainerType == 'active' || tagFilePath == activeFilePath) {
 				await this.plugin.tagProcessor.processActiveFileTags();
-				refreshNotice = 'Tag Buddy: Refreshed rendered tag positions. Try again.';
+				refreshNotice = NOTICE_TEXT.refreshRenderedTagPositionsSuccess;
 			} else if (tagContainerType == 'native-embed') {
 				const embedEl = tagContainer ?? (tagEl?.closest('.markdown-embed') as HTMLElement | null);
 				if (embedEl) {
 					await this.plugin.tagProcessor.processNativeEmbed(embedEl, true);
-					refreshNotice = 'Tag Buddy: Refreshed embedded tag positions. Try again.';
+					refreshNotice = NOTICE_TEXT.refreshEmbeddedTagPositionsSuccess;
 				}
 			} else if (tagContainerType == 'plugin-summary') {
 				const paragraphEl = tagContainer ?? (tagEl?.closest('.tag-summary-paragraph') as HTMLElement | null);
 				if (paragraphEl) {
 					await this.plugin.tagProcessor.processTagSummaryParagraph(paragraphEl);
-					refreshNotice = 'Tag Buddy: Refreshed summary tag positions. Try again.';
+					refreshNotice = NOTICE_TEXT.refreshSummaryTagPositionsSuccess;
 				}
 			} else {
 				await this.plugin.tagProcessor.processActiveFileTags();
@@ -373,7 +374,7 @@ export class ReadingModeTagEditor {
 		): Promise<void> {
 //console.log(tagEl)
 		if (!tagEl) {
-			new Notice('⚠️ Can\'t identify tag location. Please try again.');
+			new Notice(NOTICE_TEXT.cannotIdentifyTagLocationTryAgain);
 			return;
 		}
 
@@ -651,7 +652,7 @@ export class ReadingModeTagEditor {
 			this.plugin.tagProcessor.debouncedProcessActiveFileTagEls();
 
 		} else {
-			new Notice('⚠️ Can\'t identify tag location. Please try again.');
+			new Notice(NOTICE_TEXT.cannotIdentifyTagLocationTryAgain);
 		}
 	}
 
