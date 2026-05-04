@@ -644,7 +644,7 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
     this.settings.originalIndex = index;
   }
   onOpen() {
-    let { contentEl, titleEl, modalEl, containerEl } = this;
+    const { contentEl, titleEl } = this;
     titleEl.setText("Tag Actions");
     this.editDiv = createEl("div");
     this.editDiv.classList.add("tag-editor-edit-div");
@@ -668,8 +668,8 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
         this.showEditTagOptions(value);
       }
     });
-    const submitBtn = new import_obsidian4.ButtonComponent(contentEl).setClass("tag-editor-submit").setButtonText("Submit").onClick(
-      async (evt) => {
+    new import_obsidian4.ButtonComponent(contentEl).setClass("tag-editor-submit").setButtonText("Submit").onClick(
+      async () => {
         await this.submitTagEdit();
       }
     );
@@ -731,7 +731,7 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
     this.input.setValue(this.settings.originalTag);
     this.input.setDisabled(true);
     if (editType == "rename") {
-      const newName = new import_obsidian4.Setting(this.optionsDiv).setName("New name").setDesc("Enter the tag with or without #. Tags can include letters, numbers, underscores (_), hyphens (-), and forward slashes (/) for nested tags.").addText(
+      new import_obsidian4.Setting(this.optionsDiv).setName("New name").setDesc("Enter the tag with or without #. Tags can include letters, numbers, underscores (_), hyphens (-), and forward slashes (/) for nested tags.").addText(
         (opt) => opt.setValue("").onChange(
           (value) => {
             this.settings.newName = value;
@@ -755,7 +755,7 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
     );
   }
   onClose() {
-    let { contentEl } = this;
+    const { contentEl } = this;
     contentEl.empty();
   }
 };

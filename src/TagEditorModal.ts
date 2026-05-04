@@ -56,7 +56,7 @@ export class TBTagEditorModal extends Modal {
     }
 
     onOpen () {
-        let { contentEl, titleEl , modalEl, containerEl } = this;
+        const { contentEl, titleEl } = this;
 
         titleEl.setText("Tag Actions")
 
@@ -95,10 +95,10 @@ export class TBTagEditorModal extends Modal {
             }
         });
 
-        const submitBtn = new ButtonComponent(contentEl)
+        new ButtonComponent(contentEl)
             .setClass ('tag-editor-submit')
             .setButtonText('Submit')
-            .onClick (async (evt) => {
+            .onClick (async () => {
                 await this.submitTagEdit();
             }
         )
@@ -205,7 +205,7 @@ export class TBTagEditorModal extends Modal {
         this.input.setDisabled(true)
 
         if (editType == 'rename') {
-            const newName = new Setting(this.optionsDiv)
+            new Setting(this.optionsDiv)
                 .setName("New name")
                 .setDesc("Enter the tag with or without #. Tags can include letters, numbers, underscores (_), hyphens (-), and forward slashes (/) for nested tags.")
                 .addText((opt) =>
@@ -245,7 +245,7 @@ export class TBTagEditorModal extends Modal {
     }
 
     onClose() {
-        let { contentEl } = this;
+        const { contentEl } = this;
         contentEl.empty();
     }
 
