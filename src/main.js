@@ -2321,7 +2321,7 @@ var ReadingModeTagEditor = class {
       }, 200);
     }
   }
-  async edit(tagEl, event, pragraphEl, editType, newName = "") {
+  async edit(tagEl, event, _paragraphEl, editType, newName = "") {
     var _a;
     if (!tagEl) {
       new import_obsidian9.Notice("\u26A0\uFE0F Can't identify tag location. Please try again.");
@@ -2415,7 +2415,7 @@ var ReadingModeTagEditor = class {
       }
       let refreshAfterModify = () => {
       };
-      if (tagEl.getAttribute("type") == "plugin-summary") {
+      if (tagContainerType == "plugin-summary") {
         const summaryEl = tagEl.closest(".tag-summary-paragraph");
         const mdSource = (_a = summaryEl == null ? void 0 : summaryEl.getAttribute("md-source")) == null ? void 0 : _a.trim();
         if (!mdSource) {
@@ -2477,7 +2477,7 @@ var ReadingModeTagEditor = class {
             this.plugin.tagSummary.update(tagSummaryBlock);
           }
         }, 200);
-      } else if (tagEl.getAttribute("type") == "native-embed") {
+      } else if (tagContainerType == "native-embed") {
         refreshAfterModify = () => setTimeout(async () => {
           if (tagContainer)
             await this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);

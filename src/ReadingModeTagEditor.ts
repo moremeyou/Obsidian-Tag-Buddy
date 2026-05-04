@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, TFile, getAllTags, MarkdownView, Notice } from 'obsidian';
 import TagBuddy from "main";
 import { TagSummary } from './TagSummary';
 import * as Utils from './utils';
@@ -54,13 +54,13 @@ export class ReadingModeTagEditor {
 				await this.plugin.tagProcessor.processActiveFileTags();
 				refreshNotice = 'Tag Buddy: Refreshed rendered tag positions. Try again.';
 			} else if (tagContainerType == 'native-embed') {
-				const embedEl = tagContainer ?? tagEl?.closest('.markdown-embed') as HTMLElement;
+				const embedEl = tagContainer ?? (tagEl?.closest('.markdown-embed') as HTMLElement | null);
 				if (embedEl) {
 					await this.plugin.tagProcessor.processNativeEmbed(embedEl, true);
 					refreshNotice = 'Tag Buddy: Refreshed embedded tag positions. Try again.';
 				}
 			} else if (tagContainerType == 'plugin-summary') {
-				const paragraphEl = tagContainer ?? tagEl?.closest('.tag-summary-paragraph') as HTMLElement;
+				const paragraphEl = tagContainer ?? (tagEl?.closest('.tag-summary-paragraph') as HTMLElement | null);
 				if (paragraphEl) {
 					await this.plugin.tagProcessor.processTagSummaryParagraph(paragraphEl);
 					refreshNotice = 'Tag Buddy: Refreshed summary tag positions. Try again.';
@@ -367,7 +367,7 @@ export class ReadingModeTagEditor {
 		async edit (
 			tagEl: HTMLElement,
 			event: Event | null,
-			pragraphEl: HTMLElement | null,
+			_paragraphEl: HTMLElement | null,
 			editType: string,
 			newName: string = ''
 		): Promise<void> {
@@ -540,9 +540,7 @@ export class ReadingModeTagEditor {
 
 			let refreshAfterModify = () => {};
 
-			if (tagEl.getAttribute('type') == 'plugin-summary') {
-			// can we be using tagContainerType from above?
-
+			if (tagContainerType == 'plugin-summary') {
 				// Safety check 1
 					const summaryEl = tagEl.closest('.tag-summary-paragraph');
 					const mdSource = summaryEl?.getAttribute('md-source')?.trim();
@@ -620,7 +618,7 @@ export class ReadingModeTagEditor {
 					}
 				}, 200);
 
-				} else if (tagEl.getAttribute('type') == 'native-embed') {
+				} else if (tagContainerType == 'native-embed') {
 
 					refreshAfterModify = () => setTimeout(async () => {
 						if (tagContainer) await this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);
