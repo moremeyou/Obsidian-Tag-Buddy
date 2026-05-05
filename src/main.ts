@@ -6,7 +6,7 @@ import { TagProcessor } from './TagProcessor';
 import { ReadingModeTagEditor } from './ReadingModeTagEditor';
 import * as Utils from './utils';
 import * as Mobile from './Mobile';
-import { NOTICE_TEXT } from './userText';
+import { NOTICE_TEXT, cannotSafelyEditUnsupportedTagContext } from './userText';
 
 interface TBSettings {
 	removeOnClick: boolean; // ctrl
@@ -314,15 +314,19 @@ export default class TagBuddy extends Plugin {
 		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
 		const modKey = Utils.ctrlCmdKey(event) ? 'CMD' : (event.altKey ? 'OPT' : '');
 
-		// This condition it in case we click on a tag in another plugin like repeat or checklist
-		// Can't edit tags in these cases. For now.
+		// Non-Markdown views can render tags, but Tag Buddy cannot safely map them to source.
 		if (!view && target.matches('.tag')) {
-			new Notice(NOTICE_TEXT.cannotSafelyEditUnsupportedView);
+			new Notice(cannotSafelyEditUnsupportedTagContext(target), 7000);
 			return;
 		}
 
 		if (view) {
-			if (view.getMode() != 'preview' || !this.viewContainsEventTarget(view, event)) return;
+			if (view.getMode() != 'preview' || !this.viewContainsEventTarget(view, event)) {
+				if (target.matches('.tag') && !target.closest('.markdown-reading-view')) {
+					new Notice(cannotSafelyEditUnsupportedTagContext(target), 7000);
+				}
+				return;
+			}
 		}
 
 
@@ -440,8 +444,6 @@ export default class TagBuddy extends Plugin {
 				}, 300);
 			}
 
-		} else if (!view && target.matches('.tag')) {
-			new Notice(NOTICE_TEXT.cannotSafelyEditUnsupportedContext);
 		}
 	}
 
