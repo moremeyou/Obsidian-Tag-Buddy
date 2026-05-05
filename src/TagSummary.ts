@@ -40,6 +40,8 @@ interface SummaryItemLinkInfo {
 	sourcePath: string;
 }
 
+type SummaryCopyMode = 'link' | 'copy' | 'move' | 'note';
+
 export class TagSummary {
 	app: App;
 	plugin: TagBuddy;
@@ -111,7 +113,7 @@ export class TagSummary {
 
 	async copyToBtnHandler (
 		e: Event,
-		mode: string,
+		mode: SummaryCopyMode,
 		dropdown: DropdownComponent,
 		paragraphEl: HTMLElement,
 		summaryEl: HTMLElement,
@@ -120,24 +122,14 @@ export class TagSummary {
 		filePath: string,
 		selectedFile: TFile | null = null
 	): Promise<void> {
+		const section = dropdown.getValue();
 		const selection = window.getSelection()?.toString() ?? '';
-		let newContent = selection == '' ? content : selection;
+		const newContent = this.buildCopyToContent(mode, content, selection, tags, filePath);
 		let notice;
-
-		if (mode == 'link') {
-			const fileName = filePath.split('/').pop()?.replace(/\.md$/, '') ?? filePath.replace(/\.md$/, '');
-			newContent = '[[' + filePath + '|' + fileName + ']]';
-		}
-
-		if (mode != 'link' && !selection) {
-			for (const tag of tags) {
-				newContent = Utils.removeTagFromString(newContent, tag).trim();
-			}
-		}
 
 		const copySuccess = await this.copyTextToSection(
 			newContent,
-			dropdown.getValue(),
+			section,
 			filePath,
 			mode != 'link',
 			selectedFile
@@ -151,12 +143,10 @@ export class TagSummary {
 				}
 
 				notice = new Notice(
-					'Copied to section: ' + dropdown.getValue() + ' in ' + selectedFile.name + ' 🔗',
+					'Copied to section: ' + section + ' in ' + selectedFile.name + ' 🔗',
 					5000
 				);
-				this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
-					this.app.workspace.openLinkText(selectedFile.path + '#' + dropdown.getValue(), '');
-				});
+				this.registerNoticeLinkToSection(notice, selectedFile.path, section);
 
 			} else if (mode == 'move' && !selection) {
 				const file = await this.app.vault.getAbstractFileByPath(filePath.split('#')[0]);
@@ -176,7 +166,7 @@ export class TagSummary {
 					await this.app.vault.modify(file, newFileContent);
 
 					notice = new Notice(
-						'Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue() == 'top' || dropdown.getValue() == 'end') ? '' : '🔗'),
+						this.getCopiedToSectionNoticeText(section),
 						5000
 					);
 
@@ -184,26 +174,16 @@ export class TagSummary {
 						this.update(summaryEl);
 					}, 300);
 
-					if (dropdown.getValue() != 'top' && dropdown.getValue() != 'end') {
-						this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
-							const activeFile = this.app.workspace.getActiveFile();
-							if (activeFile) this.app.workspace.openLinkText(activeFile.path + '#' + dropdown.getValue(), '');
-						});
-					}
+					this.registerNoticeLinkToActiveSection(notice, section);
 
 				} else {
-					new Notice ('Copied to section: ' + dropdown.getValue()
+					new Notice ('Copied to section: ' + section
 						+ '.\nCan\'t update source file.');
 				}
 
 			} else if (mode == 'copy' || mode == 'link') {
-				notice = new Notice ('Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue() == 'top' || dropdown.getValue() == 'end') ? '' : '🔗'));
-				if (dropdown.getValue() != 'top' && dropdown.getValue() != 'end') {
-					this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
-						const activeFile = this.app.workspace.getActiveFile();
-						if (activeFile) this.app.workspace.openLinkText(activeFile.path + '#' + dropdown.getValue(), '');
-					});
-				}
+				notice = new Notice (this.getCopiedToSectionNoticeText(section));
+				this.registerNoticeLinkToActiveSection(notice, section);
 			}
 		}
 	}
@@ -588,6 +568,50 @@ export class TagSummary {
 		const newContent = Utils.insertTextAfterLine(finalText, fileContent, targetLine);
 		await this.app.vault.modify(file, newContent);
 		return true;
+	}
+
+	private buildCopyToContent(
+		mode: SummaryCopyMode,
+		content: string,
+		selection: string,
+		tags: string[],
+		filePath: string
+	): string {
+		if (mode == 'link') {
+			const fileName = filePath.split('/').pop()?.replace(/\.md$/, '') ?? filePath.replace(/\.md$/, '');
+			return '[[' + filePath + '|' + fileName + ']]';
+		}
+
+		let newContent = selection == '' ? content : selection;
+		if (!selection) {
+			for (const tag of tags) {
+				newContent = Utils.removeTagFromString(newContent, tag).trim();
+			}
+		}
+		return newContent;
+	}
+
+	private getCopiedToSectionNoticeText(section: string): string {
+		return 'Copied to section: ' + section + '. ' + (this.canLinkToSection(section) ? '🔗' : '');
+	}
+
+	private registerNoticeLinkToActiveSection(notice: Notice, section: string): void {
+		if (!this.canLinkToSection(section)) return;
+
+		this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
+			const activeFile = this.app.workspace.getActiveFile();
+			if (activeFile) this.app.workspace.openLinkText(activeFile.path + '#' + section, '');
+		});
+	}
+
+	private registerNoticeLinkToSection(notice: Notice, filePath: string, section: string): void {
+		this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
+			this.app.workspace.openLinkText(filePath + '#' + section, '');
+		});
+	}
+
+	private canLinkToSection(section: string): boolean {
+		return section != 'top' && section != 'end';
 	}
 
 	async readFiles(

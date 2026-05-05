@@ -1224,22 +1224,14 @@ var TagSummary = class _TagSummary {
     }, 800);
   }
   async copyToBtnHandler(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath, selectedFile = null) {
-    var _a, _b, _c, _d;
+    var _a, _b;
+    const section = dropdown.getValue();
     const selection = (_b = (_a = window.getSelection()) == null ? void 0 : _a.toString()) != null ? _b : "";
-    let newContent = selection == "" ? content : selection;
+    const newContent = this.buildCopyToContent(mode, content, selection, tags, filePath);
     let notice;
-    if (mode == "link") {
-      const fileName = (_d = (_c = filePath.split("/").pop()) == null ? void 0 : _c.replace(/\.md$/, "")) != null ? _d : filePath.replace(/\.md$/, "");
-      newContent = "[[" + filePath + "|" + fileName + "]]";
-    }
-    if (mode != "link" && !selection) {
-      for (const tag of tags) {
-        newContent = removeTagFromString(newContent, tag).trim();
-      }
-    }
     const copySuccess = await this.copyTextToSection(
       newContent,
-      dropdown.getValue(),
+      section,
       filePath,
       mode != "link",
       selectedFile
@@ -1251,12 +1243,10 @@ var TagSummary = class _TagSummary {
           return;
         }
         notice = new import_obsidian7.Notice(
-          "Copied to section: " + dropdown.getValue() + " in " + selectedFile.name + " \u{1F517}",
+          "Copied to section: " + section + " in " + selectedFile.name + " \u{1F517}",
           5e3
         );
-        this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
-          this.app.workspace.openLinkText(selectedFile.path + "#" + dropdown.getValue(), "");
-        });
+        this.registerNoticeLinkToSection(notice, selectedFile.path, section);
       } else if (mode == "move" && !selection) {
         const file = await this.app.vault.getAbstractFileByPath(filePath.split("#")[0]);
         if (!(file instanceof import_obsidian7.TFile)) {
@@ -1273,31 +1263,19 @@ var TagSummary = class _TagSummary {
         if (fileContent != newFileContent) {
           await this.app.vault.modify(file, newFileContent);
           notice = new import_obsidian7.Notice(
-            "Copied to section: " + dropdown.getValue() + ". " + (dropdown.getValue() == "top" || dropdown.getValue() == "end" ? "" : "\u{1F517}"),
+            this.getCopiedToSectionNoticeText(section),
             5e3
           );
           setTimeout(async () => {
             this.update(summaryEl);
           }, 300);
-          if (dropdown.getValue() != "top" && dropdown.getValue() != "end") {
-            this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
-              const activeFile = this.app.workspace.getActiveFile();
-              if (activeFile)
-                this.app.workspace.openLinkText(activeFile.path + "#" + dropdown.getValue(), "");
-            });
-          }
+          this.registerNoticeLinkToActiveSection(notice, section);
         } else {
-          new import_obsidian7.Notice("Copied to section: " + dropdown.getValue() + ".\nCan't update source file.");
+          new import_obsidian7.Notice("Copied to section: " + section + ".\nCan't update source file.");
         }
       } else if (mode == "copy" || mode == "link") {
-        notice = new import_obsidian7.Notice("Copied to section: " + dropdown.getValue() + ". " + (dropdown.getValue() == "top" || dropdown.getValue() == "end" ? "" : "\u{1F517}"));
-        if (dropdown.getValue() != "top" && dropdown.getValue() != "end") {
-          this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
-            const activeFile = this.app.workspace.getActiveFile();
-            if (activeFile)
-              this.app.workspace.openLinkText(activeFile.path + "#" + dropdown.getValue(), "");
-          });
-        }
+        notice = new import_obsidian7.Notice(this.getCopiedToSectionNoticeText(section));
+        this.registerNoticeLinkToActiveSection(notice, section);
       }
     }
   }
@@ -1600,6 +1578,40 @@ var TagSummary = class _TagSummary {
     const newContent = insertTextAfterLine(finalText, fileContent, targetLine);
     await this.app.vault.modify(file, newContent);
     return true;
+  }
+  buildCopyToContent(mode, content, selection, tags, filePath) {
+    var _a, _b;
+    if (mode == "link") {
+      const fileName = (_b = (_a = filePath.split("/").pop()) == null ? void 0 : _a.replace(/\.md$/, "")) != null ? _b : filePath.replace(/\.md$/, "");
+      return "[[" + filePath + "|" + fileName + "]]";
+    }
+    let newContent = selection == "" ? content : selection;
+    if (!selection) {
+      for (const tag of tags) {
+        newContent = removeTagFromString(newContent, tag).trim();
+      }
+    }
+    return newContent;
+  }
+  getCopiedToSectionNoticeText(section) {
+    return "Copied to section: " + section + ". " + (this.canLinkToSection(section) ? "\u{1F517}" : "");
+  }
+  registerNoticeLinkToActiveSection(notice, section) {
+    if (!this.canLinkToSection(section))
+      return;
+    this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
+      const activeFile = this.app.workspace.getActiveFile();
+      if (activeFile)
+        this.app.workspace.openLinkText(activeFile.path + "#" + section, "");
+    });
+  }
+  registerNoticeLinkToSection(notice, filePath, section) {
+    this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
+      this.app.workspace.openLinkText(filePath + "#" + section, "");
+    });
+  }
+  canLinkToSection(section) {
+    return section != "top" && section != "end";
   }
   async readFiles(listFiles) {
     const list = [];
