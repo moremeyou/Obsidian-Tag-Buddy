@@ -1,6 +1,20 @@
 import { App, MarkdownRenderer, MarkdownPostProcessorContext, DropdownComponent, Component, TFile, getAllTags, Notice } from 'obsidian';
 import TagBuddy from "main";
 import * as Utils from './utils';
+import {
+	TAG_SUMMARY_BLOCK_SPLIT_PATTERN,
+	TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN,
+	TAG_SUMMARY_INCLUDE_PREFIX_PATTERN,
+	TAG_SUMMARY_MAX_LINE_PATTERN,
+	TAG_SUMMARY_SECTIONS_PREFIX_PATTERN,
+	TAG_SUMMARY_TAG_TOKEN_PATTERN,
+	TAG_SUMMARY_TAGS_PREFIX_PATTERN,
+	createTagSummaryBlockLinkPattern,
+	createTagSummaryMatchedTagPattern,
+	createTagSummaryParagraphTagPattern,
+	createTagSummarySectionsLinePattern,
+	createTagSummaryTagListLinePattern,
+} from './tagPatterns';
 
 export class TagSummary {
 	app: App;
@@ -312,20 +326,19 @@ export class TagSummary {
 		let exclude: string[] = Array();
 		let sections: string[] = Array();
 		let max: number = 50;
-		const maxPattern = /^\s*max:\s*(\d+)\s*$/;
 		let match;
 
 		// Process rows inside codeblock
 		const rows = source.split("\n").filter((row) => row.length > 0);
 		rows.forEach((line) => {
 			// Check if the line specifies the tags (OR)
-			if (line.match(/^\s*tags:[\p{L}0-9_\-/# ]+$/gu)) {
-				const content = line.replace(/^\s*tags:/, "").trim();
+			if (line.match(createTagSummaryTagListLinePattern('tags'))) {
+				const content = line.replace(TAG_SUMMARY_TAGS_PREFIX_PATTERN, "").trim();
 
 				// Get the list of valid tags and assign them to the tags variable
 				let list = content.split(/\s+/).map((tag) => tag.trim());
 				list = list.filter((tag) => {
-					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+					if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
 						return true;
 					} else {
 						return false;
@@ -335,13 +348,13 @@ export class TagSummary {
 			}
 
 			// Check if the line specifies the tags to include (AND)
-			if (line.match(/^\s*include:[\p{L}0-9_\-/# ]+$/gu)) {
-				const content = line.replace(/^\s*include:/, "").trim();
+			if (line.match(createTagSummaryTagListLinePattern('include'))) {
+				const content = line.replace(TAG_SUMMARY_INCLUDE_PREFIX_PATTERN, "").trim();
 
 				// Get the list of valid tags and assign them to the include variable
 				let list = content.split(/\s+/).map((tag) => tag.trim());
 				list = list.filter((tag) => {
-					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+					if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
 						return true;
 					} else {
 						return false;
@@ -351,13 +364,13 @@ export class TagSummary {
 			}
 
 			// Check if the line specifies the tags to exclude (NOT)
-			if (line.match(/^\s*exclude:[\p{L}0-9_\-/# ]+$/gu)) {
-				const content = line.replace(/^\s*exclude:/, "").trim();
+			if (line.match(createTagSummaryTagListLinePattern('exclude'))) {
+				const content = line.replace(TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN, "").trim();
 
 				// Get the list of valid tags and assign them to the exclude variable
 				let list = content.split(/\s+/).map((tag) => tag.trim());
 				list = list.filter((tag) => {
-					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+					if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
 						return true;
 					} else {
 						return false;
@@ -367,15 +380,15 @@ export class TagSummary {
 			}
 
 			// Check if the line specifies section targets for copy/move actions
-			if (line.match(/^\s*sections?:[\p{L}0-9_\-/#, ]+$/gu)) {
-				const content = line.replace(/^\s*sections?:/, "").trim();
+			if (line.match(createTagSummarySectionsLinePattern())) {
+				const content = line.replace(TAG_SUMMARY_SECTIONS_PREFIX_PATTERN, "").trim();
 				// Get the list of sections and assign them to the sections variable
 				let list = content.split(',').map((sec) => sec.trim());
 				sections = list;
 			}
 
 			// Check if the line specifies max number of blocks to display
-			match = line.match(maxPattern);
+			match = line.match(TAG_SUMMARY_MAX_LINE_PATTERN);
 			if (match) {
 			max = Math.min(50, Number(match[1]));
 			}
@@ -537,7 +550,7 @@ export class TagSummary {
 			// Update to treat list items as paragraph breaks
 			let listParagraphs: string[] = Array();
 			const blocks = item[1]
-			  .split(/(?:\n\s*\n|(?<=^|\n)[*-]\s|(?<=^|\n)\d+\.\s)/)
+			  .split(TAG_SUMMARY_BLOCK_SPLIT_PATTERN)
 			  .filter((row) => row.trim().length > 0);
 
 
@@ -547,7 +560,7 @@ export class TagSummary {
 				// Check if the paragraph is another plugin
 				let valid = false;
 				//let listTags = paragraph.match(/#[\p{L}0-9_\-/#]+/gu);
-				let listTags = paragraph.match(/(?<=^|\s)(#[^\s#.,;!?:]+)/g); // revised to not match hash in middle of word
+				let listTags = paragraph.match(createTagSummaryParagraphTagPattern()); // revised to not match hash in middle of word
 
 				if (listTags != null && listTags.length > 0) {
 					if (!paragraph.includes("```") && !paragraph.includes("---")) {
@@ -569,14 +582,10 @@ export class TagSummary {
 				// Restore newline at the end
 				paragraph += "\n";
 
-					let regex = /$^/;
-
 					// Check which tag matches in this paragraph.
-					let tagText = '';
 					let tagSection: string | null = null;
 				tags.forEach((tag) => {
-					tagText = tag.replace('#', '\\#');
-					regex = new RegExp(`${tagText}(\\W|$)`, 'g');
+					const regex = createTagSummaryMatchedTagPattern(tag);
 		if (paragraph.match(regex) != null) {
 			tagSection = tag
 		}
@@ -592,7 +601,7 @@ export class TagSummary {
 
 				paragraphEl.setAttribute('class', 'tag-summary-paragraph');
 
-				const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu);
+				const blockLink = paragraph.match(createTagSummaryBlockLinkPattern());
 
 				// Check if there's a header in this paragaph
 				const header = Utils.findClosestHeaderWithLink(paragraph);

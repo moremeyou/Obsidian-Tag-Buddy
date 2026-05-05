@@ -70,6 +70,29 @@ var CODE_FENCE_MARKER = "```";
 var NUMBERED_LIST_LINE_PATTERN = /^\d+\./;
 var BARE_TAG_INPUT_PATTERN = /^[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
 var FULL_TAG_INPUT_PATTERN = /^#[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
+var TAG_SUMMARY_MAX_LINE_PATTERN = /^\s*max:\s*(\d+)\s*$/;
+var TAG_SUMMARY_TAGS_PREFIX_PATTERN = /^\s*tags:/;
+var TAG_SUMMARY_INCLUDE_PREFIX_PATTERN = /^\s*include:/;
+var TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN = /^\s*exclude:/;
+var TAG_SUMMARY_SECTIONS_PREFIX_PATTERN = /^\s*sections?:/;
+var TAG_SUMMARY_TAG_TOKEN_PATTERN = /^#[\p{L}]+[^#]*$/u;
+var TAG_SUMMARY_BLOCK_SPLIT_PATTERN = /(?:\n\s*\n|(?<=^|\n)[*-]\s|(?<=^|\n)\d+\.\s)/;
+function createTagSummaryTagListLinePattern(field) {
+  return new RegExp(String.raw`^\s*${field}:[\p{L}0-9_\-/# ]+$`, "gu");
+}
+function createTagSummarySectionsLinePattern() {
+  return /^\s*sections?:[\p{L}0-9_\-/#, ]+$/gu;
+}
+function createTagSummaryParagraphTagPattern() {
+  return /(?<=^|\s)(#[^\s#.,;!?:]+)/g;
+}
+function createTagSummaryMatchedTagPattern(tag) {
+  const tagText = tag.replace("#", "\\#");
+  return new RegExp(`${tagText}(\\W|$)`, "g");
+}
+function createTagSummaryBlockLinkPattern() {
+  return /\^[\p{L}0-9_\-/^]+/gu;
+}
 function createMarkdownTagOrCodeFencePattern() {
   return /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g;
 }
@@ -1326,15 +1349,14 @@ var TagSummary = class {
     let exclude = Array();
     let sections = Array();
     let max = 50;
-    const maxPattern = /^\s*max:\s*(\d+)\s*$/;
     let match;
     const rows = source.split("\n").filter((row) => row.length > 0);
     rows.forEach((line) => {
-      if (line.match(/^\s*tags:[\p{L}0-9_\-/# ]+$/gu)) {
-        const content = line.replace(/^\s*tags:/, "").trim();
+      if (line.match(createTagSummaryTagListLinePattern("tags"))) {
+        const content = line.replace(TAG_SUMMARY_TAGS_PREFIX_PATTERN, "").trim();
         let list = content.split(/\s+/).map((tag) => tag.trim());
         list = list.filter((tag) => {
-          if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+          if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
             return true;
           } else {
             return false;
@@ -1342,11 +1364,11 @@ var TagSummary = class {
         });
         tags = list;
       }
-      if (line.match(/^\s*include:[\p{L}0-9_\-/# ]+$/gu)) {
-        const content = line.replace(/^\s*include:/, "").trim();
+      if (line.match(createTagSummaryTagListLinePattern("include"))) {
+        const content = line.replace(TAG_SUMMARY_INCLUDE_PREFIX_PATTERN, "").trim();
         let list = content.split(/\s+/).map((tag) => tag.trim());
         list = list.filter((tag) => {
-          if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+          if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
             return true;
           } else {
             return false;
@@ -1354,11 +1376,11 @@ var TagSummary = class {
         });
         include = list;
       }
-      if (line.match(/^\s*exclude:[\p{L}0-9_\-/# ]+$/gu)) {
-        const content = line.replace(/^\s*exclude:/, "").trim();
+      if (line.match(createTagSummaryTagListLinePattern("exclude"))) {
+        const content = line.replace(TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN, "").trim();
         let list = content.split(/\s+/).map((tag) => tag.trim());
         list = list.filter((tag) => {
-          if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
+          if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
             return true;
           } else {
             return false;
@@ -1366,12 +1388,12 @@ var TagSummary = class {
         });
         exclude = list;
       }
-      if (line.match(/^\s*sections?:[\p{L}0-9_\-/#, ]+$/gu)) {
-        const content = line.replace(/^\s*sections?:/, "").trim();
+      if (line.match(createTagSummarySectionsLinePattern())) {
+        const content = line.replace(TAG_SUMMARY_SECTIONS_PREFIX_PATTERN, "").trim();
         let list = content.split(",").map((sec) => sec.trim());
         sections = list;
       }
-      match = line.match(maxPattern);
+      match = line.match(TAG_SUMMARY_MAX_LINE_PATTERN);
       if (match) {
         max = Math.min(50, Number(match[1]));
       }
@@ -1469,10 +1491,10 @@ var TagSummary = class {
       const fileName = item[0].name.replace(/.md$/g, "");
       const filePath = item[0].path;
       let listParagraphs = Array();
-      const blocks = item[1].split(/(?:\n\s*\n|(?<=^|\n)[*-]\s|(?<=^|\n)\d+\.\s)/).filter((row) => row.trim().length > 0);
+      const blocks = item[1].split(TAG_SUMMARY_BLOCK_SPLIT_PATTERN).filter((row) => row.trim().length > 0);
       blocks.forEach((paragraph) => {
         let valid = false;
-        let listTags = paragraph.match(/(?<=^|\s)(#[^\s#.,;!?:]+)/g);
+        let listTags = paragraph.match(createTagSummaryParagraphTagPattern());
         if (listTags != null && listTags.length > 0) {
           if (!paragraph.includes("```") && !paragraph.includes("---")) {
             valid = this.isValidText(listTags, tags, include, exclude);
@@ -1486,12 +1508,9 @@ var TagSummary = class {
           break;
         count++;
         paragraph += "\n";
-        let regex = /$^/;
-        let tagText = "";
         let tagSection = null;
         tags.forEach((tag) => {
-          tagText = tag.replace("#", "\\#");
-          regex = new RegExp(`${tagText}(\\W|$)`, "g");
+          const regex = createTagSummaryMatchedTagPattern(tag);
           if (paragraph.match(regex) != null) {
             tagSection = tag;
           }
@@ -1502,7 +1521,7 @@ var TagSummary = class {
         paragraphEl.setAttribute("file-source", filePath);
         paragraphEl.setAttribute("index", String(count - 1));
         paragraphEl.setAttribute("class", "tag-summary-paragraph");
-        const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu);
+        const blockLink = paragraph.match(createTagSummaryBlockLinkPattern());
         const header = findClosestHeaderWithLink(paragraph);
         let headerLink = removeTextFromString("#", header.link, true);
         headerLink = removeTextFromString("[", headerLink, true);
