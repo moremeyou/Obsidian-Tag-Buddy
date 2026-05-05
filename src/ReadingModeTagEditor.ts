@@ -244,126 +244,120 @@ export class ReadingModeTagEditor {
     }
 
 
-		async add (
-			tag: string,
-			x: number,
-			y: number//,
-			//mobileObj: Object
-		): Promise<void> {
-			if (this.plugin.settings.debugMode) { console.log('Tag Buddy add ' + tag + ' at (' + x + ', ' + y + ')'); }
+	async add (
+		tag: string,
+		x: number,
+		y: number
+	): Promise<void> {
+		if (this.plugin.settings.debugMode) {
+			console.log('Tag Buddy add ' + tag + ' at (' + x + ', ' + y + ')');
+		}
 
-			let fileContent = '';
-			let file: TFile | null = null;
-			const clickedTextObj = Utils.getClickedTextObjFromDoc(x, y);
-			if (!clickedTextObj) {
-				new Notice ('⚠️ Can\'t find text position or area too busy.\nTry a another text area.');
-			    return;
+		let fileContent = '';
+		let file: TFile | null = null;
+		const clickedTextObj = Utils.getClickedTextObjFromDoc(x, y);
+		if (!clickedTextObj) {
+			new Notice(NOTICE_TEXT.cannotFindStableTextPosition);
+			return;
+		}
+
+		const clickedText = clickedTextObj.text;
+		const clickedTextIndex = clickedTextObj.index;
+		const clickedTextEl = clickedTextObj.el instanceof HTMLElement ? clickedTextObj.el : null;
+		let contentSourceType: string | null = null;
+		let summaryEl: HTMLElement | null = null;
+		let embedEl: HTMLElement | null = null;
+
+		if (!clickedTextEl) {
+			new Notice(NOTICE_TEXT.cannotFindStableTextPosition);
+			return;
+		}
+
+		summaryEl = clickedTextEl.closest('.tag-summary-paragraph') as HTMLElement | null;
+		embedEl = clickedTextEl.closest('.markdown-embed') as HTMLElement | null;
+
+		if (summaryEl) {
+			file = await this.plugin.tagSummary.getFile(summaryEl);
+			if (!file) {
+				new Notice(NOTICE_TEXT.cannotIdentifySummaryItemSource);
+				return;
 			}
-			const clickedText = clickedTextObj.text;
-			const clickedTextIndex = clickedTextObj.index; // this is the index in document, for narrowing down to the clicked word.
-			const clickedTextEl = clickedTextObj.el instanceof HTMLElement ? clickedTextObj.el : null;
-			let contentSourceType: string | null = null
-			let summaryEl: HTMLElement | null = null;
-			let embedEl: HTMLElement | null = null;
+			fileContent = await this.app.vault.read(file);
+			contentSourceType = 'plugin-summary';
 
-//console.log(clickedTextObj)
-			if (!clickedTextEl) {
-				new Notice ('⚠️ Can\'t find text position or area too busy.\nTry a another text area.');
-			    return;
+		} else if (embedEl) {
+			file = await Utils.getEmbedFile(embedEl);
+			if (!file) {
+				new Notice(NOTICE_TEXT.cannotIdentifyEmbedSource);
+				return;
 			}
+			fileContent = await this.app.vault.read(file);
+			contentSourceType = 'native-embed';
 
-			summaryEl = clickedTextEl.closest('.tag-summary-paragraph') as HTMLElement | null;
-			embedEl = clickedTextEl.closest('.markdown-embed') as HTMLElement | null;
-
-			if (summaryEl) {
-//console.log('is summary')
-				file = await this.plugin.tagSummary.getFile(summaryEl);
-				if (!file) {
-					new Notice ('⚠️ Can\'t identify source note for this summary item.');
-					return;
-				}
-				fileContent = await this.app.vault.read(file);
-				contentSourceType = 'plugin-summary';
-
-			} else if (embedEl) {
-//console.log('is embed')
-				file = await Utils.getEmbedFile(embedEl);
-				if (!file) {
-					new Notice ('⚠️ Can\'t identify source note for this embed.');
-					return;
-				}
-				fileContent = await this.app.vault.read(file);
-				contentSourceType = 'native-embed';
-
-			} else {
-//console.log('is active file')
-				file = this.app.workspace.getActiveFile();
-				if (!file) {
-					new Notice ('⚠️ Can\'t identify active note.');
-					return;
-				}
-				fileContent = await this.app.vault.read(file);
-				contentSourceType = 'active';
-			}
-
-
-		if (clickedText) {
-			//console.log (clickedText);
 		} else {
-			new Notice ('⚠️ Can\'t add tag.\nTry a different text area.')
+			file = this.app.workspace.getActiveFile();
+			if (!file) {
+				new Notice(NOTICE_TEXT.cannotIdentifyActiveNote);
+				return;
+			}
+			fileContent = await this.app.vault.read(file);
+			contentSourceType = 'active';
+		}
+
+		if (!clickedText) {
+			new Notice(NOTICE_TEXT.cannotAddTagNoText);
 			return;
 		}
 
 		const escapedClickedText = Utils.escapeRegExp(clickedText);
-		const regex = new RegExp(escapedClickedText, "g");
+		const regex = new RegExp(escapedClickedText, 'g');
 		const matches = fileContent.match(regex);
 
 		if (matches && matches.length > 1) {
-		    new Notice ('⚠️ Can\'t add tag: Clicked text repeated in note. Try a another text block.');
-		    return;
-
+			new Notice(NOTICE_TEXT.cannotAddTagRepeatedText);
+			return;
 		} else if ((matches && matches.length === 0) || !matches) {
-			new Notice ('⚠️ Can\'t find text position or area too busy.\nTry a another text area.');
-		    return;
+			new Notice(NOTICE_TEXT.cannotFindStableTextPosition);
+			return;
 		}
 
 		if (!this.plugin.settings.lockRecentTags) this.plugin.saveRecentTag(tag);
 
-			const firstMatch = regex.exec(fileContent);
-			if (!firstMatch) {
-				new Notice ('⚠️ Can\'t find text position or area too busy.\nTry a another text area.');
-			    return;
-			}
-			const startIndex = firstMatch.index; // this is the index in the md source
-		const endIndex = startIndex + clickedText.length; // use this to add tag at end of block
+		const firstMatch = regex.exec(fileContent);
+		if (!firstMatch) {
+			new Notice(NOTICE_TEXT.cannotFindStableTextPosition);
+			return;
+		}
+		const startIndex = firstMatch.index;
+		const endIndex = startIndex + clickedText.length;
 
 		const clickedWordObj = Utils.getWordObjFromString (clickedText, clickedTextIndex);
 		const clickedWord = clickedWordObj.text;
 		const clickedWordIndex = clickedWordObj.index;
-			let newContent = '';
+		let newContent = '';
 
-			if (clickedWord && clickedWordIndex != null) {
-			if (Utils.isWordNearEnd(clickedText, clickedWord))
+		if (clickedWord && clickedWordIndex != null) {
+			if (Utils.isWordNearEnd(clickedText, clickedWord)) {
 				newContent = Utils.insertTextInString(' ' + tag, fileContent, endIndex);
-			else
-				newContent = Utils.insertTextInString(tag, fileContent, startIndex+clickedWordIndex);
+			} else {
+				newContent = Utils.insertTextInString(tag, fileContent, startIndex + clickedWordIndex);
+			}
 		} else {
-			new Notice ('⚠️ Can\'t find clicked word.\nPlease try again.');
-		    return;
+			new Notice(NOTICE_TEXT.cannotFindClickedWord);
+			return;
 		}
 
 		await this.app.vault.modify(file, newContent);
 
-			if (contentSourceType == 'plugin-summary') {
-				const summaryContainer = summaryEl?.closest('.tag-summary-block') as HTMLElement | null;
-				if (summaryContainer) this.plugin.tagSummary.update(summaryContainer);
-			} else if (contentSourceType == 'native-embed') {
-				//console.log('added to native embed:', embedEl)
-				setTimeout(async () => {
-					if (embedEl) await this.plugin.tagProcessor.processNativeEmbed(embedEl, true);
-				}, 200);
-			}
+		if (contentSourceType == 'plugin-summary') {
+			const summaryContainer = summaryEl?.closest('.tag-summary-block') as HTMLElement | null;
+			if (summaryContainer) this.plugin.tagSummary.update(summaryContainer);
+		} else if (contentSourceType == 'native-embed') {
+			setTimeout(async () => {
+				if (embedEl) await this.plugin.tagProcessor.processNativeEmbed(embedEl, true);
+			}, 200);
 		}
+	}
 
 		async edit (
 			tagEl: HTMLElement,
@@ -543,23 +537,23 @@ export class ReadingModeTagEditor {
 
 			if (tagContainerType == 'plugin-summary') {
 				// Safety check 1
-					const summaryEl = tagEl.closest('.tag-summary-paragraph');
-					const mdSource = summaryEl?.getAttribute('md-source')?.trim();
-					if (!mdSource) {
-						new Notice ('⚠️ Can\'t identify source text for this summary item.');
-						return;
-					}
+				const summaryEl = tagEl.closest('.tag-summary-paragraph');
+				const mdSource = summaryEl?.getAttribute('md-source')?.trim();
+				if (!mdSource) {
+					new Notice(NOTICE_TEXT.cannotIdentifySummaryItemSourceText);
+					return;
+				}
 
 				const escapedText = Utils.escapeRegExp(mdSource);
 				const regex = new RegExp(escapedText, 'g');
 				const matches = fileContent.match(regex);
 
 				if (matches && matches.length > 1) {
-				    new Notice ('⚠️ Can\'t safely remove/edit tag:\nSurrounding text repeated in source note.');
+				    new Notice(NOTICE_TEXT.cannotSafelyEditRepeatedSummarySource);
 				    return;
 
 				} else if ((matches && matches.length === 0) || !matches) {
-					new Notice ('⚠️ Can\'t find tag in source note.\n');
+					new Notice(NOTICE_TEXT.cannotFindTagInSourceNote);
 				    return;
 				}
 

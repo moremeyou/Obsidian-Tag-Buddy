@@ -41,11 +41,21 @@ var EDIT_BLOCKED_WRONG_NOTE_SAFETY = "Edit blocked so Tag Buddy does not change 
 var NOTICE_TEXT = {
   cannotIdentifyTagLocationRefresh: "Tag Buddy: Can't identify tag location. Please refresh and try again.",
   cannotIdentifyTagLocationTryAgain: "Tag Buddy: Can't identify tag location. Please try again.",
+  cannotFindStableTextPosition: "Tag Buddy: Can't find a stable text position. Try a different text area.",
+  cannotFindClickedWord: "Tag Buddy: Can't find clicked word. Try again.",
+  cannotIdentifyActiveNote: "Tag Buddy: Can't identify the active note. Open a Markdown note in Reading Mode and try again.",
+  cannotIdentifyEmbedSource: "Tag Buddy: Can't identify source note for this embed. Open the embedded note in Reading Mode and try again.",
   cannotIdentifySummarySource: "Tag Buddy: Can't identify summary source note. Refresh this summary and try again.",
+  cannotIdentifySummaryItemSource: "Tag Buddy: Can't identify source note for this summary item. Refresh this summary and try again.",
+  cannotIdentifySummaryItemSourceText: "Tag Buddy: Can't identify source text for this summary item. Refresh this summary and try again.",
+  cannotAddTagNoText: "Tag Buddy: Can't add tag here. Try a different text area.",
+  cannotAddTagRepeatedText: "Tag Buddy: Can't safely add tag: clicked text repeats in the source note. Try a more specific text block.",
   cannotSafelyEditChangedSource: "Tag Buddy: Can't safely edit tag: source text changed. Edit blocked.",
   cannotSafelyEditCanvasContext: `Tag Buddy: Can't safely edit tags from Canvas yet. ${EDIT_BLOCKED_WRONG_NOTE_SAFETY} ${SOURCE_NOTE_READING_MODE}`,
   cannotSafelyEditUnsupportedView: `Tag Buddy: Can't safely edit this tag from this non-Markdown view. ${EDIT_BLOCKED_WRONG_NOTE_SAFETY} ${SOURCE_NOTE_READING_MODE}`,
   cannotSafelyEditUnsupportedContext: `Tag Buddy: Can't safely edit this tag here. ${EDIT_BLOCKED_WRONG_NOTE_SAFETY} ${SOURCE_NOTE_READING_MODE}`,
+  cannotSafelyEditRepeatedSummarySource: "Tag Buddy: Can't safely remove/edit tag: surrounding text repeats in the source note. Edit blocked.",
+  cannotFindTagInSourceNote: "Tag Buddy: Can't find tag in source note. Refresh and try again.",
   markdownRenderedTagsOutOfSync: "Tag Buddy: Markdown source and rendered tags are out of sync. Switch Reading Mode off and on, then check for tag syntax errors.",
   noFilePathForTagSource: "Tag Buddy: No file path found. Try again, or this tag might be in an unsupported embed type.",
   noFileForTagSource: "Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.",
@@ -2251,7 +2261,7 @@ var ReadingModeTagEditor = class {
     let file = null;
     const clickedTextObj = getClickedTextObjFromDoc(x, y);
     if (!clickedTextObj) {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't find text position or area too busy.\nTry a another text area.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotFindStableTextPosition);
       return;
     }
     const clickedText = clickedTextObj.text;
@@ -2261,7 +2271,7 @@ var ReadingModeTagEditor = class {
     let summaryEl = null;
     let embedEl = null;
     if (!clickedTextEl) {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't find text position or area too busy.\nTry a another text area.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotFindStableTextPosition);
       return;
     }
     summaryEl = clickedTextEl.closest(".tag-summary-paragraph");
@@ -2269,7 +2279,7 @@ var ReadingModeTagEditor = class {
     if (summaryEl) {
       file = await this.plugin.tagSummary.getFile(summaryEl);
       if (!file) {
-        new import_obsidian9.Notice("\u26A0\uFE0F Can't identify source note for this summary item.");
+        new import_obsidian9.Notice(NOTICE_TEXT.cannotIdentifySummaryItemSource);
         return;
       }
       fileContent = await this.app.vault.read(file);
@@ -2277,7 +2287,7 @@ var ReadingModeTagEditor = class {
     } else if (embedEl) {
       file = await getEmbedFile(embedEl);
       if (!file) {
-        new import_obsidian9.Notice("\u26A0\uFE0F Can't identify source note for this embed.");
+        new import_obsidian9.Notice(NOTICE_TEXT.cannotIdentifyEmbedSource);
         return;
       }
       fileContent = await this.app.vault.read(file);
@@ -2285,32 +2295,31 @@ var ReadingModeTagEditor = class {
     } else {
       file = this.app.workspace.getActiveFile();
       if (!file) {
-        new import_obsidian9.Notice("\u26A0\uFE0F Can't identify active note.");
+        new import_obsidian9.Notice(NOTICE_TEXT.cannotIdentifyActiveNote);
         return;
       }
       fileContent = await this.app.vault.read(file);
       contentSourceType = "active";
     }
-    if (clickedText) {
-    } else {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't add tag.\nTry a different text area.");
+    if (!clickedText) {
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotAddTagNoText);
       return;
     }
     const escapedClickedText = escapeRegExp(clickedText);
     const regex = new RegExp(escapedClickedText, "g");
     const matches = fileContent.match(regex);
     if (matches && matches.length > 1) {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't add tag: Clicked text repeated in note. Try a another text block.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotAddTagRepeatedText);
       return;
     } else if (matches && matches.length === 0 || !matches) {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't find text position or area too busy.\nTry a another text area.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotFindStableTextPosition);
       return;
     }
     if (!this.plugin.settings.lockRecentTags)
       this.plugin.saveRecentTag(tag);
     const firstMatch = regex.exec(fileContent);
     if (!firstMatch) {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't find text position or area too busy.\nTry a another text area.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotFindStableTextPosition);
       return;
     }
     const startIndex = firstMatch.index;
@@ -2320,12 +2329,13 @@ var ReadingModeTagEditor = class {
     const clickedWordIndex = clickedWordObj.index;
     let newContent = "";
     if (clickedWord && clickedWordIndex != null) {
-      if (isWordNearEnd(clickedText, clickedWord))
+      if (isWordNearEnd(clickedText, clickedWord)) {
         newContent = insertTextInString(" " + tag, fileContent, endIndex);
-      else
+      } else {
         newContent = insertTextInString(tag, fileContent, startIndex + clickedWordIndex);
+      }
     } else {
-      new import_obsidian9.Notice("\u26A0\uFE0F Can't find clicked word.\nPlease try again.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotFindClickedWord);
       return;
     }
     await this.app.vault.modify(file, newContent);
@@ -2438,17 +2448,17 @@ var ReadingModeTagEditor = class {
         const summaryEl = tagEl.closest(".tag-summary-paragraph");
         const mdSource = (_a = summaryEl == null ? void 0 : summaryEl.getAttribute("md-source")) == null ? void 0 : _a.trim();
         if (!mdSource) {
-          new import_obsidian9.Notice("\u26A0\uFE0F Can't identify source text for this summary item.");
+          new import_obsidian9.Notice(NOTICE_TEXT.cannotIdentifySummaryItemSourceText);
           return;
         }
         const escapedText = escapeRegExp(mdSource);
         const regex = new RegExp(escapedText, "g");
         const matches = fileContent.match(regex);
         if (matches && matches.length > 1) {
-          new import_obsidian9.Notice("\u26A0\uFE0F Can't safely remove/edit tag:\nSurrounding text repeated in source note.");
+          new import_obsidian9.Notice(NOTICE_TEXT.cannotSafelyEditRepeatedSummarySource);
           return;
         } else if (matches && matches.length === 0 || !matches) {
-          new import_obsidian9.Notice("\u26A0\uFE0F Can't find tag in source note.\n");
+          new import_obsidian9.Notice(NOTICE_TEXT.cannotFindTagInSourceNote);
           return;
         }
         if (newContent == "" && !safeToEmptyFile || contentChangedTooMuch(
