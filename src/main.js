@@ -1163,14 +1163,22 @@ var GUI = class {
 
 // TagSummary.ts
 var import_obsidian7 = require("obsidian");
-var TagSummary = class {
+var SUMMARY_CODEBLOCK_ATTRS = {
+  tags: "codeblock-tags",
+  include: "codeblock-tags-include",
+  exclude: "codeblock-tags-exclude",
+  sections: "codeblock-sections",
+  max: "codeblock-max",
+  code: "codeblock-code"
+};
+var TagSummary = class _TagSummary {
   constructor(app2, plugin) {
     this.app = app2;
     this.plugin = plugin;
   }
   async bakeSummaryBtnHandler(summaryMd, summaryEl, filePath) {
     const mdSource = summaryEl.getAttribute(
-      "codeblock-code"
+      SUMMARY_CODEBLOCK_ATTRS.code
     );
     if (mdSource) {
       const file = await this.app.vault.getAbstractFileByPath(filePath);
@@ -1428,30 +1436,14 @@ var TagSummary = class {
     const textDiv = createEl("blockquote");
     textDiv.innerHTML = "There are no notes with tagged paragraphs that match the tags:<br>" + (tags.length > 0 ? tags.join(", ") : "No tags specified.") + "<br>";
     container.appendChild(textDiv);
-    container.setAttribute(
-      "codeblock-tags",
-      tags.length > 0 ? tags.join(",") : ""
-    );
-    container.setAttribute(
-      "codeblock-tags-include",
-      include ? include.join(",") : ""
-    );
-    container.setAttribute(
-      "codeblock-tags-exclude",
-      exclude ? exclude.join(",") : ""
-    );
-    container.setAttribute(
-      "codeblock-sections",
-      sections ? sections.join(",") : ""
-    );
-    container.setAttribute(
-      "codeblock-max",
-      String(max)
-    );
-    container.setAttribute(
-      "codeblock-code",
+    _TagSummary.writeCodeBlockAttrs(container, {
+      tags,
+      include,
+      exclude,
+      sections,
+      max,
       mdSource
-    );
+    });
     container.appendChild(this.plugin.gui.makeSummaryRefreshButton(container));
     ;
     element.replaceWith(container);
@@ -1612,30 +1604,14 @@ var TagSummary = class {
           summaryContainer.appendChild(createEl("br"));
         }
       }, 0);
-      summaryContainer.setAttribute(
-        "codeblock-tags",
-        tags.join(",")
-      );
-      summaryContainer.setAttribute(
-        "codeblock-tags-include",
-        include.length > 0 ? include.join(",") : ""
-      );
-      summaryContainer.setAttribute(
-        "codeblock-tags-exclude",
-        exclude.length > 0 ? exclude.join(",") : ""
-      );
-      summaryContainer.setAttribute(
-        "codeblock-sections",
-        sections.length > 0 ? sections.join(",") : ""
-      );
-      summaryContainer.setAttribute(
-        "codeblock-max",
-        String(max)
-      );
-      summaryContainer.setAttribute(
-        "codeblock-code",
+      _TagSummary.writeCodeBlockAttrs(summaryContainer, {
+        tags,
+        include,
+        exclude,
+        sections,
+        max,
         mdSource
-      );
+      });
       element.replaceWith(summaryContainer);
     } else {
       this.createEmpty(
@@ -1651,37 +1627,16 @@ var TagSummary = class {
     }
   }
   update(summaryEl) {
-    const tagsStr = summaryEl.getAttribute(
-      "codeblock-tags"
-    );
-    const tags = tagsStr ? tagsStr.split(",") : [];
-    const tagsIncludeStr = summaryEl.getAttribute(
-      "codeblock-tags-include"
-    );
-    const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(",") : [];
-    const tagsExcludeStr = summaryEl.getAttribute(
-      "codeblock-tags-exclude"
-    );
-    const tagsExclude = tagsExcludeStr ? tagsExcludeStr.split(",") : [];
-    const sectionsStr = summaryEl.getAttribute(
-      "codeblock-sections"
-    );
-    const sections = sectionsStr ? sectionsStr.split(",") : [];
-    const max = Number(summaryEl.getAttribute(
-      "codeblock-max"
-    ));
-    const mdSource = summaryEl.getAttribute(
-      "codeblock-code"
-    );
+    const attrs = _TagSummary.readCodeBlockAttrs(summaryEl);
     this.create(
       summaryEl,
-      tags,
-      tagsInclude,
-      tagsExclude,
-      sections,
-      max,
+      attrs.tags,
+      attrs.include,
+      attrs.exclude,
+      attrs.sections,
+      attrs.max,
       "",
-      mdSource != null ? mdSource : ""
+      attrs.mdSource
     );
   }
   // Not factored yet
@@ -1747,11 +1702,8 @@ var TagSummary = class {
     return valid;
   }
   static getTagsToCheckFromEl(tagSummaryEl) {
-    const tagsStr = tagSummaryEl.getAttribute("codeblock-tags");
-    const tags = tagsStr ? tagsStr.split(",") : [];
-    const tagsIncludeStr = tagSummaryEl.getAttribute("codeblock-tags-include");
-    const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(",") : [];
-    return tags.concat(tagsInclude);
+    const attrs = _TagSummary.readCodeBlockAttrs(tagSummaryEl);
+    return attrs.tags.concat(attrs.include);
   }
   async getFile(el) {
     const filePath = el.getAttribute("file-source");
@@ -1771,6 +1723,28 @@ var TagSummary = class {
   }
   getSelectedMarkdownBlocks() {
     return [];
+  }
+  static writeCodeBlockAttrs(element, attrs) {
+    element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.tags, attrs.tags.join(","));
+    element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.include, attrs.include.join(","));
+    element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.exclude, attrs.exclude.join(","));
+    element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.sections, attrs.sections.join(","));
+    element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.max, String(attrs.max));
+    element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.code, attrs.mdSource);
+  }
+  static readCodeBlockAttrs(element) {
+    var _a;
+    return {
+      tags: _TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.tags)),
+      include: _TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.include)),
+      exclude: _TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.exclude)),
+      sections: _TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.sections)),
+      max: Number(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.max)),
+      mdSource: (_a = element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.code)) != null ? _a : ""
+    };
+  }
+  static splitCodeBlockAttrList(value) {
+    return value ? value.split(",") : [];
   }
 };
 var TempComponent = class extends import_obsidian7.Component {

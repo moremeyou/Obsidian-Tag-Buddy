@@ -16,6 +16,24 @@ import {
 	createTagSummaryTagListLinePattern,
 } from './tagPatterns';
 
+const SUMMARY_CODEBLOCK_ATTRS = {
+	tags: 'codeblock-tags',
+	include: 'codeblock-tags-include',
+	exclude: 'codeblock-tags-exclude',
+	sections: 'codeblock-sections',
+	max: 'codeblock-max',
+	code: 'codeblock-code',
+} as const;
+
+interface SummaryCodeBlockAttrs {
+	tags: string[];
+	include: string[];
+	exclude: string[];
+	sections: string[];
+	max: number;
+	mdSource: string;
+}
+
 export class TagSummary {
 	app: App;
 	plugin: TagBuddy;
@@ -35,7 +53,7 @@ export class TagSummary {
 		filePath:string
 	) {
 		const mdSource = summaryEl.getAttribute(
-			'codeblock-code'
+			SUMMARY_CODEBLOCK_ATTRS.code
 		);
 
 		if (mdSource) {
@@ -437,30 +455,14 @@ export class TagSummary {
 			+ (tags.length>0 ? tags.join(', ') : "No tags specified.") + "<br>";
 
 		container.appendChild(textDiv);
-		container.setAttribute(
-			'codeblock-tags',
-			((tags.length > 0) ? tags.join(',') : '')
-		);
-		container.setAttribute(
-			'codeblock-tags-include',
-			(include ? include.join(',') : '')
-		);
-		container.setAttribute(
-			'codeblock-tags-exclude',
-			(exclude ? exclude.join(',') : '')
-		);
-		container.setAttribute(
-			'codeblock-sections',
-			(sections ? sections.join(',') : '')
-		);
-			container.setAttribute(
-				'codeblock-max',
-				String(max)
-			);
-		container.setAttribute(
-			'codeblock-code',
+		TagSummary.writeCodeBlockAttrs(container, {
+			tags,
+			include,
+			exclude,
+			sections,
+			max,
 			mdSource
-		);
+		});
 
 		container.appendChild(this.plugin.gui.makeSummaryRefreshButton(container));;
 
@@ -704,6 +706,8 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 
 //console.log('markdown render summary')
 
+		// Keep this order: render markdown first, then replace the rendered strong
+		// link with the title wrapper and append the action buttons.
 		const titleEl = createEl('span');
 		titleEl.setAttribute('class', 'tagsummary-item-title');
 
@@ -762,30 +766,14 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 				}
 				//summaryContainer.appendChild(createEl('hr'));
 			}, 0);
-			summaryContainer.setAttribute(
-				'codeblock-tags',
-				tags.join(',')
-			);
-			summaryContainer.setAttribute(
-				'codeblock-tags-include',
-				((include.length > 0) ? include.join(',') : '')
-			);
-			summaryContainer.setAttribute(
-				'codeblock-tags-exclude',
-				((exclude.length > 0) ? exclude.join(',') : '')
-			);
-			summaryContainer.setAttribute(
-				'codeblock-sections',
-				((sections.length > 0) ? sections.join(',') : '')
-			);
-				summaryContainer.setAttribute(
-					'codeblock-max',
-					String(max)
-				);
-			summaryContainer.setAttribute(
-				'codeblock-code',
+			TagSummary.writeCodeBlockAttrs(summaryContainer, {
+				tags,
+				include,
+				exclude,
+				sections,
+				max,
 				mdSource
-			);
+			});
 
 			element.replaceWith(summaryContainer);
 		} else {
@@ -806,43 +794,17 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 		summaryEl:HTMLElement
 	): void {
 //console.log('>>>> Update')
-		const tagsStr = summaryEl.getAttribute(
-			'codeblock-tags'
-		);
-		const tags = tagsStr ? tagsStr.split(',') : [];
-
-		const tagsIncludeStr = summaryEl.getAttribute(
-			'codeblock-tags-include'
-		);
-		const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
-
-		const tagsExcludeStr = summaryEl.getAttribute(
-			'codeblock-tags-exclude'
-		);
-		const tagsExclude = tagsExcludeStr ? tagsExcludeStr.split(',') : [];
-
-		const sectionsStr = summaryEl.getAttribute(
-			'codeblock-sections'
-			);
-		const sections = sectionsStr ? sectionsStr.split(',') : [];
-
-		const max = Number(summaryEl.getAttribute(
-			'codeblock-max'
-		));
-
-		const mdSource = summaryEl.getAttribute(
-			'codeblock-code'
-		);
+		const attrs = TagSummary.readCodeBlockAttrs(summaryEl);
 
 			this.create(
 				summaryEl,
-				tags,
-				tagsInclude,
-				tagsExclude,
-				sections,
-				max,
+				attrs.tags,
+				attrs.include,
+				attrs.exclude,
+				attrs.sections,
+				attrs.max,
 				'',
-				mdSource ?? '');
+				attrs.mdSource);
 		}
 
 
@@ -944,11 +906,8 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 	static getTagsToCheckFromEl (
 		tagSummaryEl: HTMLElement
 	): string[] {
-		const tagsStr = tagSummaryEl.getAttribute('codeblock-tags');
-		const tags = tagsStr ? tagsStr.split(',') : [];
-		const tagsIncludeStr = tagSummaryEl.getAttribute('codeblock-tags-include');
-		const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
-		return tags.concat(tagsInclude);
+		const attrs = TagSummary.readCodeBlockAttrs(tagSummaryEl);
+		return attrs.tags.concat(attrs.include);
 	}
 
 	async getFile (
@@ -993,6 +952,33 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 		// copy to: easy, but need to add the bullet to each
 		// i guess link is the same easy
 		return [];
+	}
+
+	private static writeCodeBlockAttrs(
+		element: HTMLElement,
+		attrs: SummaryCodeBlockAttrs
+	): void {
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.tags, attrs.tags.join(','));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.include, attrs.include.join(','));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.exclude, attrs.exclude.join(','));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.sections, attrs.sections.join(','));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.max, String(attrs.max));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.code, attrs.mdSource);
+	}
+
+	private static readCodeBlockAttrs(element: HTMLElement): SummaryCodeBlockAttrs {
+		return {
+			tags: TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.tags)),
+			include: TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.include)),
+			exclude: TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.exclude)),
+			sections: TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.sections)),
+			max: Number(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.max)),
+			mdSource: element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.code) ?? '',
+		};
+	}
+
+	private static splitCodeBlockAttrList(value: string | null): string[] {
+		return value ? value.split(',') : [];
 	}
 
 }
