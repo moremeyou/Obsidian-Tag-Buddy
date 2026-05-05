@@ -41,13 +41,17 @@ var EDIT_BLOCKED_WRONG_NOTE_SAFETY = "Edit blocked so Tag Buddy does not change 
 var NOTICE_TEXT = {
   cannotIdentifyTagLocationRefresh: "Tag Buddy: Can't identify tag location. Please refresh and try again.",
   cannotIdentifyTagLocationTryAgain: "Tag Buddy: Can't identify tag location. Please try again.",
+  cannotIdentifyDestinationNote: "\u26A0\uFE0F Tag Buddy: Can't identify destination note.",
   cannotFindStableTextPosition: "Tag Buddy: Can't find a stable text position. Try a different text area.",
   cannotFindClickedWord: "Tag Buddy: Can't find clicked word. Try again.",
   cannotIdentifyActiveNote: "Tag Buddy: Can't identify the active note. Open a Markdown note in Reading Mode and try again.",
   cannotIdentifyEmbedSource: "Tag Buddy: Can't identify source note for this embed. Open the embedded note in Reading Mode and try again.",
   cannotIdentifySummarySource: "Tag Buddy: Can't identify summary source note. Refresh this summary and try again.",
+  cannotIdentifySourceNoteForSummary: "\u26A0\uFE0F Tag Buddy: Can't identify source note for this summary.",
   cannotIdentifySummaryItemSource: "Tag Buddy: Can't identify source note for this summary item. Refresh this summary and try again.",
+  cannotIdentifySummaryItemSourceShort: "\u26A0\uFE0F Tag Buddy: Can't identify source note for this summary item.",
   cannotIdentifySummaryItemSourceText: "Tag Buddy: Can't identify source text for this summary item. Refresh this summary and try again.",
+  cannotIdentifyTagSummaryItem: "\u26A0\uFE0F Can't identify tag summary item. Please refresh this summary and try again.",
   cannotAddTagNoText: "Tag Buddy: Can't add tag here. Try a different text area.",
   cannotAddTagRepeatedText: "Tag Buddy: Can't safely add tag: clicked text repeats in the source note. Try a more specific text block.",
   cannotSafelyEditChangedSource: "Tag Buddy: Can't safely edit tag: source text changed. Edit blocked.",
@@ -56,14 +60,161 @@ var NOTICE_TEXT = {
   cannotSafelyEditUnsupportedContext: `Tag Buddy: Can't safely edit this tag here. ${EDIT_BLOCKED_WRONG_NOTE_SAFETY} ${SOURCE_NOTE_READING_MODE}`,
   cannotSafelyEditRepeatedSummarySource: "Tag Buddy: Can't safely remove/edit tag: surrounding text repeats in the source note. Edit blocked.",
   cannotFindTagInSourceNote: "Tag Buddy: Can't find tag in source note. Refresh and try again.",
+  cannotFindSummaryCodeBlockSourceBug: "\u26A0\uFE0F Tag Buddy: Can't find code block source. This is a BUG.",
+  cannotIdentifyFileToRename: "Tag Buddy: Can't identify file to rename.",
+  fileChangeError: "Tag Buddy: File change error.",
+  invalidTag: "Invalid tag.",
+  invalidTagFormat: "Invalid tag format.",
   markdownRenderedTagsOutOfSync: "Tag Buddy: Markdown source and rendered tags are out of sync. Switch Reading Mode off and on, then check for tag syntax errors.",
   noFilePathForTagSource: "Tag Buddy: No file path found. Try again, or this tag might be in an unsupported embed type.",
   noFileForTagSource: "Tag Buddy: No file found. Try again, or this tag might be in an unsupported embed type.",
   multipleFilesForTagSource: "Tag Buddy: Multiple files found with the same name. Can't safely edit tag.",
+  noteAlreadyExistsOverwrite: "\u26A0\uFE0F Note already exists.\nClick here to overwrite.",
+  noteUpdatedOpen: "Note updated.\n\u{1F517} Open note.",
+  refreshSummaryToSeeChanges: "Refresh this summary to see changes.",
   refreshRenderedTagPositionsAttempt: "Tag Buddy: Tried refreshing rendered tag positions. Try again.",
   refreshRenderedTagPositionsSuccess: "Tag Buddy: Refreshed rendered tag positions. Try again.",
   refreshEmbeddedTagPositionsSuccess: "Tag Buddy: Refreshed embedded tag positions. Try again.",
-  refreshSummaryTagPositionsSuccess: "Tag Buddy: Refreshed summary tag positions. Try again."
+  refreshSummaryTagPositionsSuccess: "Tag Buddy: Refreshed summary tag positions. Try again.",
+  selectionCopiedToClipboard: "Selection copied to clipboard.",
+  summaryCopiedToClipboard: "Summary copied to clipboard.",
+  summaryNoteCreatedOpen: "Summary note created. \u{1F4DC}\n\u{1F517} Open note.",
+  taggedParagraphCopiedToClipboard: "Tagged paragraph copied to clipboard.",
+  tagSummaryFlattenedToActiveNote: "Tag summary flattened to active note.",
+  tagSummaryUpdated: "Tag Summary updated",
+  tagRemovedEmptyNote: "Tag Buddy: Tag removed. The note is empty."
+};
+var SETTINGS_TEXT = {
+  sections: {
+    general: "General",
+    desktop: "Desktop",
+    mobile: "Mobile",
+    tagSummaries: "Tag Summaries",
+    tagSummaryItems: "Tag Summaries Items",
+    support: "Support a buddy"
+  },
+  recentTags: {
+    name: "Recent tags",
+    desc: "The most recent tags added via Tag Buddy are stored here. These will show up first in the list when adding."
+  },
+  lockRecentTags: {
+    name: "Lock recent tags",
+    desc: "Toggle ON to lock the recent tags list. Recent tags will not be updated. Instead, the tags above will act like a favorites list."
+  },
+  desktopClickTag: {
+    name: "Action when clicking a tag:",
+    desc: "What should happen when you click a tag?"
+  },
+  desktopCmdClickTag: {
+    name: "Action when clicking a tag with CMD/CTRL modifier key:",
+    desc: "What should happen when you click a tag while holding the CMD or CTRL key?"
+  },
+  desktopOptClickTag: {
+    name: "Action when clicking a tag with OPT/ALT modifier key:",
+    desc: "What should happen when you click a tag while holding the OPT or ALT key?"
+  },
+  mobileNotices: {
+    name: "Show mobile notices",
+    desc: "Toggle OFF to hide notices."
+  },
+  mobileDoubleTapTag: {
+    name: "Action when DOUBLE-TAPPING a tag:",
+    desc: "What should happen when you DOUBLE-TAP a tag?"
+  },
+  mobileLongPressTag: {
+    name: "Action when LONG-PRESSING a tag:",
+    desc: "What should happen when you LONG-PRESS a tag?"
+  },
+  mobileTripleTapText: {
+    name: "TRIPLE-TAP non-tag, non-link text to add a tag:",
+    desc: "Toggle OFF to disable triple-tap."
+  },
+  showSummaryButtons: {
+    name: "Show tag summary buttons",
+    desc: "Toggle OFF to hide these buttons."
+  },
+  summaryButtons: {
+    removeTag: "Remove tag button:",
+    copyToClipboard: "Copy to clipboard button:",
+    moveToSection: "Move to section button:",
+    copyToSection: "Copy to section button:",
+    copyLinkToSection: "Copy link to section button:",
+    copyToNote: "Copy to note button:"
+  },
+  tagActionOptions: {
+    remove: "Remove tag",
+    hash: "Remove hash",
+    edit: "Edit tag",
+    native: "Search tag"
+  },
+  summaryButtonVisibility: {
+    always: "Desktop and mobile",
+    desktop: "Only desktop",
+    mobile: "Only mobile",
+    hide: "Hide"
+  },
+  donateAlt: "Buy Me A Coffee",
+  debugMode: {
+    name: "Debug mode",
+    desc: "Output to console."
+  }
+};
+var TAG_EDITOR_TEXT = {
+  title: "Tag Actions",
+  submit: "Submit",
+  actionOptions: {
+    rename: "Rename",
+    lower: "Convert to lower case",
+    toText: "Remove hash (#)",
+    summary: "Create summary"
+  },
+  summaryDestination: {
+    name: "Where do you want to add the tag summary?",
+    desc: "Add multiple tags above separated by a comma.",
+    top: "Top of this note",
+    end: "Bottom of this note",
+    note: "In a new note"
+  },
+  rename: {
+    newName: "New name",
+    newNameDesc: "Enter the tag with or without #. Tags can include letters, numbers, underscores (_), hyphens (-), and forward slashes (/) for nested tags."
+  },
+  scope: {
+    name: "Where to make this change?",
+    instance: "Just this instance",
+    note: "All in this note",
+    vault: "Across entire vault",
+    vaultDesc: "WARNING: There is NO UNDO for vault changes. Consider making a backup of your vault first.",
+    noteDesc: "Only tags in this note will be updated. Choose 'Across entire vault' to update this tag everywhere.",
+    instanceDesc: ""
+  }
+};
+var GUI_TEXT = {
+  titles: {
+    unselectParagraph: "Unselect this paragraph.",
+    selectParagraph: "Select this paragraph.",
+    refreshTagSummary: "Refresh tag summary",
+    flattenSummary: "Flatten summary (replaces code block).",
+    copyParagraphToClipboard: "Copy paragraph to clipboard.",
+    copySummary: "Copy summary",
+    createNoteFromSummary: "Create note from summary"
+  },
+  copyToButtonTitles: {
+    link: "Copy paragraph link.",
+    copy: "Copy paragraph.",
+    move: "Move paragraph.",
+    note: "Copy paragraph to section in note."
+  },
+  dropdown: {
+    noteTop: "Note top",
+    noteEnd: "Note end"
+  }
+};
+var TAG_SUMMARY_TEXT = {
+  emptyNoMatchesPrefix: "There are no notes with tagged paragraphs that match the tags:<br>",
+  generatedFileNamePrefix: "Tag Summary",
+  generatedTitleSuffix: "Tag Summary",
+  noTagsSpecified: "No tags specified."
 };
 function cannotSafelyEditUnsupportedTagContext(target) {
   if (target && isCanvasTagContext(target)) {
@@ -81,6 +232,48 @@ function markdownRenderedTagsOutOfSync(type) {
     message += " Refresh this note or embed, then check for tag syntax errors in the embedded note.";
   }
   return message + " Please report if this error persists.";
+}
+function copiedToSection(section, canLink) {
+  return "Copied to section: " + section + ". " + (canLink ? "\u{1F517}" : "");
+}
+function copiedToSectionCannotUpdateSource(section) {
+  return "Copied to section: " + section + ".\nCan't update source file.";
+}
+function copiedToSectionInNote(section, noteName) {
+  return "Copied to section: " + section + " in " + noteName + " \u{1F517}";
+}
+function copyToButtonTitle(mode) {
+  return GUI_TEXT.copyToButtonTitles[mode];
+}
+function fileReadError(errorMessage) {
+  return "Tag Buddy file read error:\n" + errorMessage;
+}
+function removedTagFromParagraphTitle(tag) {
+  return "Removed " + tag + " from paragraph.";
+}
+function sectionNotFoundPastingTop(section) {
+  return section + " not found. Pasting at top of note.";
+}
+function tagConvertedToText(tag) {
+  return "Tag Buddy: " + tag + " converted to text.";
+}
+function childTagRemovedFromParent(removedChild) {
+  return "Tag Buddy: '" + (removedChild != null ? removedChild : "") + "' removed from parent tag.";
+}
+function tagRemoved(tag) {
+  return "Tag Buddy: " + tag + " removed.";
+}
+function tagRemovedFromParagraph(tag) {
+  return tag + " removed from paragraph.\n\u{1F517} Open source note.";
+}
+function tagNoteEditingErrorBackup(errorMessage, backupFileName) {
+  return "\u26A0\uFE0F Tag/note editing error: " + errorMessage + "\n" + backupFileName + " saved to vault root.";
+}
+function tagNoteEditingErrorClipboard(errorMessage) {
+  return "\u26A0\uFE0F Tag/note editing error: " + errorMessage + "\nNote content copied to clipboard.";
+}
+function tagSummaryEmptyHtml(tags) {
+  return TAG_SUMMARY_TEXT.emptyNoMatchesPrefix + (tags.length > 0 ? tags.join(", ") : TAG_SUMMARY_TEXT.noTagsSpecified) + "<br>";
 }
 function isCanvasTagContext(target) {
   return Boolean(target.closest(".canvas, .canvas-wrapper, .canvas-node, .canvas-node-content"));
@@ -326,9 +519,9 @@ function fileObjFromTags(tags) {
     //currentDate.getMinutes().toString().padStart(2, '0') + '-' +
     currentDate.getSeconds().toString().padStart(2, "0")
   );
-  const fileName = `Tag Summary (${datePart} ${timePart}).md`;
+  const fileName = `${TAG_SUMMARY_TEXT.generatedFileNamePrefix} (${datePart} ${timePart}).md`;
   const titleTagsPart = tagsArray.map((tag) => tag.charAt(0).toUpperCase() + tag.slice(1)).join(" + ");
-  const title = `${titleTagsPart} Tag Summary`;
+  const title = `${titleTagsPart} ${TAG_SUMMARY_TEXT.generatedTitleSuffix}`;
   return {
     fileName,
     title
@@ -453,46 +646,46 @@ var TBSettingsTab = class extends import_obsidian2.PluginSettingTab {
       const validTags = tagsArray.map((tag) => normalizeTagInput(tag, true)).filter((tag) => tag != null);
       return validTags.join(", ");
     }
-    containerEl.createEl("h3", { text: "General" });
-    new import_obsidian2.Setting(containerEl).setName("Recent tags").setDesc("The most recent tags added via Tag Buddy are stored here. These will show up first in the list when adding.").addText((text) => {
+    containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.general });
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.recentTags.name).setDesc(SETTINGS_TEXT.recentTags.desc).addText((text) => {
       text.setPlaceholder(this.plugin.settings.recentlyAddedTags).setValue(this.plugin.settings.recentlyAddedTags).onChange(async (value) => {
         this.plugin.settings.recentlyAddedTags = filterAndJoinTags(value);
         await this.plugin.saveSettings();
       });
     });
-    new import_obsidian2.Setting(containerEl).setName("Lock recent tags").setDesc("Toggle ON to lock the recent tags list. Recent tags will not be updated. Instead, the tags above will act like a favorites list.").addToggle(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.lockRecentTags.name).setDesc(SETTINGS_TEXT.lockRecentTags.desc).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.lockRecentTags).onChange(async (value) => {
         this.plugin.settings.lockRecentTags = value;
         await this.plugin.saveSettings();
       })
     );
-    containerEl.createEl("h3", { text: "Desktop" });
-    new import_obsidian2.Setting(containerEl).setName("Action when clicking a tag:").setDesc("What should happen when you click a tag?").addDropdown(
-      (opt) => opt.addOption("remove", "Remove tag").addOption("hash", "Remove hash").addOption("edit", "Edit tag").addOption("native", "Search tag").setValue(this.plugin.settings.desktopClickTag).onChange(
+    containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.desktop });
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.desktopClickTag.name).setDesc(SETTINGS_TEXT.desktopClickTag.desc).addDropdown(
+      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).addOption("native", SETTINGS_TEXT.tagActionOptions.native).setValue(this.plugin.settings.desktopClickTag).onChange(
         async (value) => {
           this.plugin.settings.desktopClickTag = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Action when clicking a tag with CMD/CTRL modifier key:").setDesc("What should happen when you click a tag while holding the CMD or CTRL key?").addDropdown(
-      (opt) => opt.addOption("remove", "Remove tag").addOption("hash", "Remove hash").addOption("edit", "Edit tag").addOption("native", "Search tag").setValue(this.plugin.settings.desktopCMDClickTag).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.desktopCmdClickTag.name).setDesc(SETTINGS_TEXT.desktopCmdClickTag.desc).addDropdown(
+      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).addOption("native", SETTINGS_TEXT.tagActionOptions.native).setValue(this.plugin.settings.desktopCMDClickTag).onChange(
         async (value) => {
           this.plugin.settings.desktopCMDClickTag = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Action when clicking a tag with OPT/ALT modifier key:").setDesc("What should happen when you click a tag while holding the OPT or ALT key?").addDropdown(
-      (opt) => opt.addOption("remove", "Remove tag").addOption("hash", "Remove hash").addOption("edit", "Edit tag").addOption("native", "Search tag").setValue(this.plugin.settings.desktopOPTClickTag).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.desktopOptClickTag.name).setDesc(SETTINGS_TEXT.desktopOptClickTag.desc).addDropdown(
+      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).addOption("native", SETTINGS_TEXT.tagActionOptions.native).setValue(this.plugin.settings.desktopOPTClickTag).onChange(
         async (value) => {
           this.plugin.settings.desktopOPTClickTag = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    containerEl.createEl("h3", { text: "Mobile" });
-    new import_obsidian2.Setting(containerEl).setName("Show mobile notices").setDesc("Toggle OFF to hide notices.").addToggle(
+    containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.mobile });
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileNotices.name).setDesc(SETTINGS_TEXT.mobileNotices.desc).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.mobileNotices).onChange(
         async (value) => {
           this.plugin.settings.mobileNotices = value;
@@ -500,23 +693,23 @@ var TBSettingsTab = class extends import_obsidian2.PluginSettingTab {
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Action when DOUBLE-TAPPING a tag:").setDesc("What should happen when you DOUBLE-TAP a tag?").addDropdown(
-      (opt) => opt.addOption("remove", "Remove tag").addOption("hash", "Remove hash").addOption("edit", "Edit tag").addOption("native", "Search tag").setValue(this.plugin.settings.mobileDoubleTapTag).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileDoubleTapTag.name).setDesc(SETTINGS_TEXT.mobileDoubleTapTag.desc).addDropdown(
+      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).addOption("native", SETTINGS_TEXT.tagActionOptions.native).setValue(this.plugin.settings.mobileDoubleTapTag).onChange(
         async (value) => {
           this.plugin.settings.mobileDoubleTapTag = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Action when LONG-PRESSING a tag:").setDesc("What should happen when you LONG-PRESS a tag?").addDropdown(
-      (opt) => opt.addOption("remove", "Remove tag").addOption("hash", "Remove hash").addOption("edit", "Edit tag").setValue(this.plugin.settings.mobileLongPressTag).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileLongPressTag.name).setDesc(SETTINGS_TEXT.mobileLongPressTag.desc).addDropdown(
+      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).setValue(this.plugin.settings.mobileLongPressTag).onChange(
         async (value) => {
           this.plugin.settings.mobileLongPressTag = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("TRIPLE-TAP non-tag, non-link text to add a tag:").setDesc("Toggle OFF to disable triple-tap.").addToggle(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileTripleTapText.name).setDesc(SETTINGS_TEXT.mobileTripleTapText.desc).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.mobileTripleTapText).onChange(
         async (value) => {
           this.plugin.settings.mobileTripleTapText = value;
@@ -524,8 +717,8 @@ var TBSettingsTab = class extends import_obsidian2.PluginSettingTab {
         }
       )
     );
-    containerEl.createEl("h3", { text: "Tag Summaries" });
-    new import_obsidian2.Setting(containerEl).setName("Show tag summary buttons").setDesc("Toggle OFF to hide these buttons.").addToggle(
+    containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.tagSummaries });
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.showSummaryButtons.name).setDesc(SETTINGS_TEXT.showSummaryButtons.desc).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.showSummaryButtons).onChange(
         async (value) => {
           this.plugin.settings.showSummaryButtons = value;
@@ -533,49 +726,49 @@ var TBSettingsTab = class extends import_obsidian2.PluginSettingTab {
         }
       )
     );
-    containerEl.createEl("h5", { text: "Tag Summaries Items" });
-    new import_obsidian2.Setting(containerEl).setName("Remove tag button:").addDropdown(
-      (opt) => opt.addOption("always", "Desktop and mobile").addOption("desktop", "Only desktop").addOption("mobile", "Only mobile").addOption("hide", "Hide").setValue(this.plugin.settings.removeTagBtn).onChange(
+    containerEl.createEl("h5", { text: SETTINGS_TEXT.sections.tagSummaryItems });
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryButtons.removeTag).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.removeTagBtn).onChange(
         async (value) => {
           this.plugin.settings.removeTagBtn = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Copy to clipboard button:").addDropdown(
-      (opt) => opt.addOption("always", "Desktop and mobile").addOption("desktop", "Only desktop").addOption("mobile", "Only mobile").addOption("hide", "Hide").setValue(this.plugin.settings.copyToCBBtn).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryButtons.copyToClipboard).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.copyToCBBtn).onChange(
         async (value) => {
           this.plugin.settings.copyToCBBtn = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Move to section button:").addDropdown(
-      (opt) => opt.addOption("always", "Desktop and mobile").addOption("desktop", "Only desktop").addOption("mobile", "Only mobile").addOption("hide", "Hide").setValue(this.plugin.settings.moveToSectionBtn).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryButtons.moveToSection).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.moveToSectionBtn).onChange(
         async (value) => {
           this.plugin.settings.moveToSectionBtn = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Copy to section button:").addDropdown(
-      (opt) => opt.addOption("always", "Desktop and mobile").addOption("desktop", "Only desktop").addOption("mobile", "Only mobile").addOption("hide", "Hide").setValue(this.plugin.settings.copyToSectionBtn).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryButtons.copyToSection).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.copyToSectionBtn).onChange(
         async (value) => {
           this.plugin.settings.copyToSectionBtn = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Copy link to section button:").addDropdown(
-      (opt) => opt.addOption("always", "Desktop and mobile").addOption("desktop", "Only desktop").addOption("mobile", "Only mobile").addOption("hide", "Hide").setValue(this.plugin.settings.copyLinkToSectionBtn).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryButtons.copyLinkToSection).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.copyLinkToSectionBtn).onChange(
         async (value) => {
           this.plugin.settings.copyLinkToSectionBtn = value;
           await this.plugin.saveSettings();
         }
       )
     );
-    new import_obsidian2.Setting(containerEl).setName("Copy to note button:").addDropdown(
-      (opt) => opt.addOption("always", "Desktop and mobile").addOption("desktop", "Only desktop").addOption("mobile", "Only mobile").addOption("hide", "Hide").setValue(this.plugin.settings.copyToNoteBtn).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryButtons.copyToNote).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.copyToNoteBtn).onChange(
         async (value) => {
           this.plugin.settings.copyToNoteBtn = value;
           await this.plugin.saveSettings();
@@ -583,18 +776,18 @@ var TBSettingsTab = class extends import_obsidian2.PluginSettingTab {
       )
     );
     containerEl.createEl("hr");
-    containerEl.createEl("h1", { text: "Support a buddy" });
+    containerEl.createEl("h1", { text: SETTINGS_TEXT.sections.support });
     const donateLink = containerEl.createEl("a");
     donateLink.setAttribute("href", "https://www.buymeacoffee.com/moremeyou");
     const donateButton = createEl("img");
     donateButton.setAttribute("src", "https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png");
-    donateButton.setAttribute("alt", "Buy Me A Coffee");
+    donateButton.setAttribute("alt", SETTINGS_TEXT.donateAlt);
     donateButton.style.cssText = "height: 40px !important;width: 150px !important;";
     donateLink.appendChild(donateButton);
     containerEl.createEl("br");
     containerEl.createEl("br");
     containerEl.createEl("br");
-    new import_obsidian2.Setting(containerEl).setName("Debug mode").setDesc("Output to console.").addToggle(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.debugMode.name).setDesc(SETTINGS_TEXT.debugMode.desc).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.debugMode).onChange(async (value) => {
         this.plugin.settings.debugMode = value;
         await this.plugin.saveSettings();
@@ -660,7 +853,7 @@ var TagSelector = class extends import_obsidian3.FuzzySuggestModal {
         this.close();
         this.onChooseItem(normalizedTag);
       } else {
-        new import_obsidian3.Notice("Invalid tag.");
+        new import_obsidian3.Notice(NOTICE_TEXT.invalidTag);
       }
     }
   }
@@ -705,7 +898,6 @@ var TagSelector = class extends import_obsidian3.FuzzySuggestModal {
 // TagEditorModal.ts
 var import_obsidian4 = require("obsidian");
 var TBTagEditorModal = class extends import_obsidian4.Modal {
-  //constructor(app: App, tag: String, onSubmit: (result: string) => void) {
   constructor(app2, plugin, tag, index, filePath = null, tagEl = null) {
     super(app2);
     this.settings = {
@@ -726,14 +918,14 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
   }
   onOpen() {
     const { contentEl, titleEl } = this;
-    titleEl.setText("Tag Actions");
+    titleEl.setText(TAG_EDITOR_TEXT.title);
     this.editDiv = createEl("div");
     this.editDiv.classList.add("tag-editor-edit-div");
     this.optionsDiv = createEl("div");
     this.optionsDiv.classList.add("tag-editor-options");
     this.input = new import_obsidian4.TextComponent(this.editDiv);
     this.input.inputEl.classList.add("tag-editor-input");
-    this.tagActionDropdown = new import_obsidian4.DropdownComponent(this.editDiv).addOption("rename", "Rename").addOption("lower", "Convert to lower case").addOption("totext", "Remove hash (#)").addOption("summary", "Create summary");
+    this.tagActionDropdown = new import_obsidian4.DropdownComponent(this.editDiv).addOption("rename", TAG_EDITOR_TEXT.actionOptions.rename).addOption("lower", TAG_EDITOR_TEXT.actionOptions.lower).addOption("totext", TAG_EDITOR_TEXT.actionOptions.toText).addOption("summary", TAG_EDITOR_TEXT.actionOptions.summary);
     this.tagActionDropdown.selectEl.classList.add("tag-editor-dropdown");
     contentEl.appendChild(this.editDiv);
     contentEl.appendChild(this.optionsDiv);
@@ -749,7 +941,7 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
         this.showEditTagOptions(value);
       }
     });
-    new import_obsidian4.ButtonComponent(contentEl).setClass("tag-editor-submit").setButtonText("Submit").onClick(
+    new import_obsidian4.ButtonComponent(contentEl).setClass("tag-editor-submit").setButtonText(TAG_EDITOR_TEXT.submit).onClick(
       async () => {
         await this.submitTagEdit();
       }
@@ -763,13 +955,13 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
     if (action == "summary") {
       const summaryTags = extractValidTags(this.input.getValue());
       if (summaryTags.length < 1) {
-        new import_obsidian4.Notice("Invalid tag format.");
+        new import_obsidian4.Notice(NOTICE_TEXT.invalidTagFormat);
       } else {
         await this.plugin.tagSummary.createCodeBlock(summaryTags, this.settings.summaryPos);
         this.close();
       }
     } else if (action == "rename" && !isValidTag) {
-      new import_obsidian4.Notice("Invalid tag format.");
+      new import_obsidian4.Notice(NOTICE_TEXT.invalidTagFormat);
     } else {
       if (action == "rename" && normalizedNewName)
         newName = normalizedNewName;
@@ -784,8 +976,6 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
         batchAction,
         this.settings.filePath,
         this.settings.tagEl
-        //parseInt(this.settings.originalIndex),
-        //((this.settings.batchAction == 'instance') ? parseInt(this.settings.originalIndex) : this.settings.batchAction)
       );
       this.close();
       const summaryEl = this.settings.tagEl ? this.settings.tagEl.closest(".tag-summary-block") : null;
@@ -799,8 +989,8 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
   showSummaryOptions() {
     this.optionsDiv.empty();
     this.input.setDisabled(false);
-    new import_obsidian4.Setting(this.optionsDiv).setName("Where do you want to add the tag summary?").setDesc("Add multiple tags above separated by a comma.").addDropdown(
-      (opt) => opt.addOption("top", "Top of this note").addOption("end", "Bottom of this note").addOption("note", "In a new note").onChange(
+    new import_obsidian4.Setting(this.optionsDiv).setName(TAG_EDITOR_TEXT.summaryDestination.name).setDesc(TAG_EDITOR_TEXT.summaryDestination.desc).addDropdown(
+      (opt) => opt.addOption("top", TAG_EDITOR_TEXT.summaryDestination.top).addOption("end", TAG_EDITOR_TEXT.summaryDestination.end).addOption("note", TAG_EDITOR_TEXT.summaryDestination.note).onChange(
         (value) => {
           this.settings.summaryPos = value;
         }
@@ -812,7 +1002,7 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
     this.input.setValue(this.settings.originalTag);
     this.input.setDisabled(true);
     if (editType == "rename") {
-      new import_obsidian4.Setting(this.optionsDiv).setName("New name").setDesc("Enter the tag with or without #. Tags can include letters, numbers, underscores (_), hyphens (-), and forward slashes (/) for nested tags.").addText(
+      new import_obsidian4.Setting(this.optionsDiv).setName(TAG_EDITOR_TEXT.rename.newName).setDesc(TAG_EDITOR_TEXT.rename.newNameDesc).addText(
         (opt) => opt.setValue("").onChange(
           (value) => {
             this.settings.newName = value;
@@ -820,16 +1010,16 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
         )
       );
     }
-    const whereEditOpt = new import_obsidian4.Setting(this.optionsDiv).setName("Where to make this change?").addDropdown(
-      (opt) => opt.addOption("instance", "Just this instance").addOption("note", "All in this note").addOption("vault", "Across entire vault").onChange((value) => {
+    const whereEditOpt = new import_obsidian4.Setting(this.optionsDiv).setName(TAG_EDITOR_TEXT.scope.name).addDropdown(
+      (opt) => opt.addOption("instance", TAG_EDITOR_TEXT.scope.instance).addOption("note", TAG_EDITOR_TEXT.scope.note).addOption("vault", TAG_EDITOR_TEXT.scope.vault).onChange((value) => {
         if (value == "vault") {
-          whereEditOpt.setDesc("WARNING: There is NO UNDO for vault changes. Consider making a backup of your vault first.");
+          whereEditOpt.setDesc(TAG_EDITOR_TEXT.scope.vaultDesc);
           this.settings.batchAction = "vault";
         } else if (value == "note") {
-          whereEditOpt.setDesc("Only tags in this note will be updated. Choose 'Across entire vault' to update this tag everywhere.");
+          whereEditOpt.setDesc(TAG_EDITOR_TEXT.scope.noteDesc);
           this.settings.batchAction = "note";
         } else if (value == "instance") {
-          whereEditOpt.setDesc("");
+          whereEditOpt.setDesc(TAG_EDITOR_TEXT.scope.instanceDesc);
           this.settings.batchAction = "instance";
         }
       })
@@ -880,13 +1070,9 @@ var GUI = class {
     var _a;
     const view = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
     const mode = view == null ? void 0 : view.getMode();
-    if (this.app.isMobile) {
-    } else {
-    }
     const index = parseInt((_a = tagEl.getAttribute("md-index")) != null ? _a : "0");
     const tag = tagEl.innerText;
     const filePath = tagEl.getAttribute("file-source");
-    const tagContainerType = tagEl.getAttribute("type");
     if (mode == "preview") {
       new TBTagEditorModal(
         this.app,
@@ -895,18 +1081,9 @@ var GUI = class {
         index,
         filePath != null ? filePath : void 0,
         tagEl
-        //tag,
-        //index
-        //(tag)=>{
-        //	console.log(tag)
-        //}
       ).open();
     }
   }
-  /*isTagValid (tag:string):boolean { // including the #
-  	const tagPattern = /^#[\w]+$/;
-  	return tagPattern.test(tag);
-  }*/
   makeButton(lable, clickFn, classId = "tagsummary-button") {
     const button = createEl("button");
     (0, import_obsidian6.setIcon)(button, lable);
@@ -938,12 +1115,12 @@ var GUI = class {
       e.stopPropagation();
       checkBox(false);
     }, "tagsummary-button tagsummary-checkbox checked");
-    checkedBtn.title = "Unselect this paragraph.";
+    checkedBtn.title = GUI_TEXT.titles.unselectParagraph;
     uncheckedBtn = this.makeButton("square", (e) => {
       e.stopPropagation();
       checkBox(true);
     }, "tagsummary-button tagsummary-checkbox");
-    uncheckedBtn.title = "Select this paragraph.";
+    uncheckedBtn.title = GUI_TEXT.titles.selectParagraph;
     checkBox(false);
     return checkboxEl;
   }
@@ -952,7 +1129,7 @@ var GUI = class {
       e.stopPropagation();
       clickFn(e, paragraphEl, tag);
     });
-    button.title = "Removed " + tag + " from paragraph.";
+    button.title = removedTagFromParagraphTitle(tag);
     return button;
   }
   makeSummaryRefreshButton(summaryEl) {
@@ -961,12 +1138,10 @@ var GUI = class {
       (e) => {
         e.stopPropagation();
         this.plugin.tagSummary.update(summaryEl);
-        new import_obsidian6.Notice("Tag Summary updated");
-        setTimeout(async () => {
-        }, 10);
+        new import_obsidian6.Notice(NOTICE_TEXT.tagSummaryUpdated);
       }
     );
-    button.title = "Refresh tag summary";
+    button.title = GUI_TEXT.titles.refreshTagSummary;
     return button;
   }
   makeCopyToSection(clickFn, content, sections, tags, filePath, paragraphEl, summaryEl) {
@@ -976,8 +1151,8 @@ var GUI = class {
     sections.forEach((sec) => {
       dropdown.addOption(sec, truncateStringAtWord(sec, 16));
     });
-    dropdown.addOption("top", "Note top");
-    dropdown.addOption("end", "Note end");
+    dropdown.addOption("top", GUI_TEXT.dropdown.noteTop);
+    dropdown.addOption("end", GUI_TEXT.dropdown.noteEnd);
     dropdown.selectEl.className = "tagsummary-dropdown";
     if (platformSettingCheck(this.app, this.plugin.settings.copyToNoteBtn)) {
       copyToEl.appendChild(
@@ -1065,16 +1240,7 @@ var GUI = class {
         clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath);
       }
     });
-    let buttonHoverText = "";
-    if (mode == "link")
-      buttonHoverText = "Copy paragraph link.";
-    else if (mode == "copy")
-      buttonHoverText = "Copy paragraph.";
-    else if (mode == "move")
-      buttonHoverText = "Move paragraph.";
-    else if (mode == "note")
-      buttonHoverText = "Copy paragraph to section in note.";
-    button.title = buttonHoverText;
+    button.title = copyToButtonTitle(mode);
     return button;
   }
   makeBakeButton(clickFn, summaryMd, summaryEl, filePath) {
@@ -1085,7 +1251,7 @@ var GUI = class {
         clickFn(summaryMd, summaryEl, filePath);
       }
     );
-    button.title = "Flatten summary (replaces code block).";
+    button.title = GUI_TEXT.titles.flattenSummary;
     return button;
   }
   makeCopyButton(clickFn, content) {
@@ -1093,7 +1259,7 @@ var GUI = class {
       e.stopPropagation();
       clickFn(e, content);
     });
-    button.title = "Copy paragraph to clipboard.";
+    button.title = GUI_TEXT.titles.copyParagraphToClipboard;
     return button;
   }
   makeCopySummaryButton(summaryMd) {
@@ -1102,10 +1268,10 @@ var GUI = class {
       (e) => {
         e.stopPropagation();
         navigator.clipboard.writeText(summaryMd);
-        new import_obsidian6.Notice("Summary copied to clipboard.");
+        new import_obsidian6.Notice(NOTICE_TEXT.summaryCopiedToClipboard);
       }
     );
-    button.title = "Copy summary";
+    button.title = GUI_TEXT.titles.copySummary;
     return button;
   }
   makeSummaryNoteButton(clickFn, summaryMd, tags) {
@@ -1116,7 +1282,7 @@ var GUI = class {
         await clickFn(summaryMd, tags);
       }
     );
-    button.title = "Create note from summary";
+    button.title = GUI_TEXT.titles.createNoteFromSummary;
     return button;
   }
   showTagSelector(event) {
@@ -1155,8 +1321,6 @@ var GUI = class {
               "#" + tag,
               pageX,
               pageY
-              //,
-              //{range: range, el: deepestNode}
             );
           }
         ).open();
@@ -1202,7 +1366,7 @@ var TagSummary = class _TagSummary {
     if (mdSource) {
       const file = await this.app.vault.getAbstractFileByPath(filePath);
       if (!(file instanceof import_obsidian7.TFile)) {
-        new import_obsidian7.Notice("\u26A0\uFE0F Tag Buddy: Can't identify source note for this summary.");
+        new import_obsidian7.Notice(NOTICE_TEXT.cannotIdentifySourceNoteForSummary);
         return;
       }
       const fileContent = await this.app.vault.read(file);
@@ -1212,9 +1376,9 @@ var TagSummary = class _TagSummary {
         summaryMd
       );
       await this.app.vault.modify(file, newFileContent);
-      new import_obsidian7.Notice("Tag summary flattened to active note.");
+      new import_obsidian7.Notice(NOTICE_TEXT.tagSummaryFlattenedToActiveNote);
     } else {
-      new import_obsidian7.Notice("\u26A0\uFE0F Tag Buddy: Can't find code block source. This is a BUG.");
+      new import_obsidian7.Notice(NOTICE_TEXT.cannotFindSummaryCodeBlockSourceBug);
     }
   }
   copyBtnHandler(e, content) {
@@ -1222,21 +1386,21 @@ var TagSummary = class _TagSummary {
     const selection = (_b = (_a = window.getSelection()) == null ? void 0 : _a.toString()) != null ? _b : "";
     if (selection != "") {
       navigator.clipboard.writeText(selection);
-      new import_obsidian7.Notice("Selection copied to clipboard.");
+      new import_obsidian7.Notice(NOTICE_TEXT.selectionCopiedToClipboard);
     } else {
       navigator.clipboard.writeText(content);
-      new import_obsidian7.Notice("Tagged paragraph copied to clipboard.");
+      new import_obsidian7.Notice(NOTICE_TEXT.taggedParagraphCopiedToClipboard);
     }
   }
   async removeTagBtnHandler(e, paragraphEl, tag) {
     if (!tag) {
-      new import_obsidian7.Notice("\u26A0\uFE0F Can't identify tag summary item. Please refresh this summary and try again.");
+      new import_obsidian7.Notice(NOTICE_TEXT.cannotIdentifyTagSummaryItem);
       return;
     }
     const tagEl = getTagElement(paragraphEl, tag);
     const summaryEl = paragraphEl.closest(".tag-summary-block");
     if (!tagEl || !summaryEl) {
-      new import_obsidian7.Notice("\u26A0\uFE0F Can't identify tag summary item. Please refresh this summary and try again.");
+      new import_obsidian7.Notice(NOTICE_TEXT.cannotIdentifyTagSummaryItem);
       return;
     }
     await this.plugin.tagEditor.edit(tagEl, e, paragraphEl, "remove", "");
@@ -1260,18 +1424,18 @@ var TagSummary = class _TagSummary {
     if (copySuccess) {
       if (mode == "note") {
         if (!selectedFile) {
-          new import_obsidian7.Notice("\u26A0\uFE0F Tag Buddy: Can't identify destination note.");
+          new import_obsidian7.Notice(NOTICE_TEXT.cannotIdentifyDestinationNote);
           return;
         }
         notice = new import_obsidian7.Notice(
-          "Copied to section: " + section + " in " + selectedFile.name + " \u{1F517}",
+          copiedToSectionInNote(section, selectedFile.name),
           5e3
         );
         this.registerNoticeLinkToSection(notice, selectedFile.path, section);
       } else if (mode == "move" && !selection) {
         const file = await this.app.vault.getAbstractFileByPath(filePath.split("#")[0]);
         if (!(file instanceof import_obsidian7.TFile)) {
-          new import_obsidian7.Notice("\u26A0\uFE0F Tag Buddy: Can't identify source note for this summary item.");
+          new import_obsidian7.Notice(NOTICE_TEXT.cannotIdentifySummaryItemSourceShort);
           return;
         }
         let fileContent = await this.app.vault.read(file);
@@ -1292,7 +1456,7 @@ var TagSummary = class _TagSummary {
           }, 300);
           this.registerNoticeLinkToActiveSection(notice, section);
         } else {
-          new import_obsidian7.Notice("Copied to section: " + section + ".\nCan't update source file.");
+          new import_obsidian7.Notice(copiedToSectionCannotUpdateSource(section));
         }
       } else if (mode == "copy" || mode == "link") {
         notice = new import_obsidian7.Notice(this.getCopiedToSectionNoticeText(section));
@@ -1314,17 +1478,17 @@ var TagSummary = class _TagSummary {
       });
     }
     if (file instanceof import_obsidian7.TFile && !incrementFile) {
-      notice = new import_obsidian7.Notice("\u26A0\uFE0F Note already exists.\nClick here to overwrite.", 8e3);
+      notice = new import_obsidian7.Notice(NOTICE_TEXT.noteAlreadyExistsOverwrite, 8e3);
       this.plugin.registerDomEvent(notice.noticeEl, "click", async (e) => {
         await this.app.vault.modify(file, fileContent);
-        notice = new import_obsidian7.Notice("Note updated.\n\u{1F517} Open note.", 5e3);
+        notice = new import_obsidian7.Notice(NOTICE_TEXT.noteUpdatedOpen, 5e3);
         this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
           this.app.workspace.openLinkText(fileName, "");
         });
       });
     } else if (!file) {
       await this.app.vault.create(fileName, fileContent);
-      const notice2 = new import_obsidian7.Notice("Summary note created. \u{1F4DC}\n\u{1F517} Open note.");
+      const notice2 = new import_obsidian7.Notice(NOTICE_TEXT.summaryNoteCreatedOpen);
       this.plugin.registerDomEvent(notice2.noticeEl, "click", () => {
         this.app.workspace.openLinkText(newNoteObj.fileName, "");
       });
@@ -1392,7 +1556,7 @@ var TagSummary = class _TagSummary {
   createEmpty(element, tags, include, exclude, sections, max, fileCtx, mdSource) {
     const container = createEl("div");
     const textDiv = createEl("blockquote");
-    textDiv.innerHTML = "There are no notes with tagged paragraphs that match the tags:<br>" + (tags.length > 0 ? tags.join(", ") : "No tags specified.") + "<br>";
+    textDiv.innerHTML = tagSummaryEmptyHtml(tags);
     container.appendChild(textDiv);
     _TagSummary.writeCodeBlockAttrs(container, {
       tags,
@@ -1566,7 +1730,7 @@ var TagSummary = class _TagSummary {
   async copyTextToSection(text, section, filePath, addLink = true, selectedFile = null, detectPrefix = true) {
     const file = selectedFile ? selectedFile : await this.app.workspace.getActiveFile();
     if (!file) {
-      new import_obsidian7.Notice("\u26A0\uFE0F Tag Buddy: Can't identify destination note.");
+      new import_obsidian7.Notice(NOTICE_TEXT.cannotIdentifyDestinationNote);
       return false;
     }
     let fileContent = await this.app.vault.read(file);
@@ -1586,7 +1750,7 @@ var TagSummary = class _TagSummary {
       if (headingObj) {
         targetLine = headingObj.line;
       } else {
-        new import_obsidian7.Notice(`${section} not found. Pasting at top of note.`);
+        new import_obsidian7.Notice(sectionNotFoundPastingTop(section));
         targetLine = findFirstLineAfterFrontMatter(fileContent);
         if (targetLine == 0)
           fileContent = "\n" + fileContent;
@@ -1615,7 +1779,7 @@ var TagSummary = class _TagSummary {
     return newContent;
   }
   getCopiedToSectionNoticeText(section) {
-    return "Copied to section: " + section + ". " + (this.canLinkToSection(section) ? "\u{1F517}" : "");
+    return copiedToSection(section, this.canLinkToSection(section));
   }
   registerNoticeLinkToActiveSection(notice, section) {
     if (!this.canLinkToSection(section))
@@ -2199,7 +2363,7 @@ var ReadingModeTagEditor = class {
       );
     }
     if (activeFile != file && tagEl) {
-      new import_obsidian9.Notice("Refresh this summary to see changes.", 5e3);
+      new import_obsidian9.Notice(NOTICE_TEXT.refreshSummaryToSeeChanges, 5e3);
     }
   }
   async renameTagsInVaultByIndex(tag, newName) {
@@ -2224,7 +2388,7 @@ var ReadingModeTagEditor = class {
   }
   async renameTagsInFileByIndex(tag, newName, file) {
     if (!file) {
-      new import_obsidian9.Notice("Tag Buddy: Can't identify file to rename.");
+      new import_obsidian9.Notice(NOTICE_TEXT.cannotIdentifyFileToRename);
       return;
     }
     const fileContent = await this.app.vault.read(file);
@@ -2388,7 +2552,7 @@ var ReadingModeTagEditor = class {
         fileContent = await this.app.vault.read(file);
         fileContentBackup = fileContent;
       } catch (error) {
-        new import_obsidian9.Notice("Tag Buddy file read error:\n" + error.message);
+        new import_obsidian9.Notice(fileReadError(error.message));
         return;
       }
       let safeToEmptyFile = false;
@@ -2416,7 +2580,7 @@ var ReadingModeTagEditor = class {
         const noHash = tag.substring(1);
         newContent = beforeTag + noHash + afterTagChr + afterTag;
         if (this.app.isMobile && this.plugin.settings.mobileNotices) {
-          new import_obsidian9.Notice("Tag Buddy: " + tag + " converted to text.");
+          new import_obsidian9.Notice(tagConvertedToText(tag));
         }
       } else if (event.type == "touchend" || this.plugin.settings.mobileTagSearch || editType == "remove") {
         let parentTag = "";
@@ -2426,7 +2590,7 @@ var ReadingModeTagEditor = class {
           parentTag = parts.join("/");
           newContent = beforeTag + parentTag + afterTagChr + afterTag;
           if (this.app.isMobile && this.plugin.settings.mobileNotices) {
-            new import_obsidian9.Notice("Tag Buddy: '" + removedChild + "' removed from parent tag.");
+            new import_obsidian9.Notice(childTagRemovedFromParent(removedChild));
           }
         } else {
           const startsWithPunctuation = /^[.,!:?;]/.test(afterTag.trimStart()[0]);
@@ -2438,7 +2602,7 @@ var ReadingModeTagEditor = class {
             newContent = beforeTag + afterTag;
           }
           if (this.app.isMobile && this.plugin.settings.mobileNotices) {
-            new import_obsidian9.Notice("Tag Buddy: " + tag + " removed.");
+            new import_obsidian9.Notice(tagRemoved(tag));
           }
         }
       }
@@ -2467,10 +2631,10 @@ var ReadingModeTagEditor = class {
           tag,
           2
         )) {
-          new import_obsidian9.Notice("Tag Buddy: File change error.");
+          new import_obsidian9.Notice(NOTICE_TEXT.fileChangeError);
           newContent = fileContentBackup;
         } else if (newContent == "" && safeToEmptyFile) {
-          new import_obsidian9.Notice("Tag Buddy: Tag removed. The note is empty.");
+          new import_obsidian9.Notice(NOTICE_TEXT.tagRemovedEmptyNote);
         }
         refreshAfterModify = () => setTimeout(async () => {
           const tagParagraphEl = tagEl.closest(".tag-summary-paragraph");
@@ -2484,7 +2648,7 @@ var ReadingModeTagEditor = class {
             if (tagCount >= 2) {
               this.plugin.tagSummary.update(tagSummaryBlock);
             } else {
-              const notice = new import_obsidian9.Notice(tag + " removed from paragraph.\n\u{1F517} Open source note.", 5e3);
+              const notice = new import_obsidian9.Notice(tagRemovedFromParagraph(tag), 5e3);
               this.plugin.gui.removeElementWithAnimation(
                 tagParagraphEl,
                 () => {
@@ -2519,10 +2683,10 @@ var ReadingModeTagEditor = class {
         try {
           const backupFileName = String(file.name.substring(0, file.name.indexOf(".md")) + " BACKUP.md");
           await this.app.vault.create(backupFileName, fileContentBackup);
-          new import_obsidian9.Notice("\u26A0\uFE0F Tag/note editing error: " + error.message + "\n" + backupFileName + " saved to vault root.", 1e4);
+          new import_obsidian9.Notice(tagNoteEditingErrorBackup(error.message, backupFileName), 1e4);
         } catch (error2) {
           navigator.clipboard.writeText(fileContentBackup);
-          new import_obsidian9.Notice("\u26A0\uFE0F Tag/note editing error: " + error2.message + "\nNote content copied to clipboard.", 1e4);
+          new import_obsidian9.Notice(tagNoteEditingErrorClipboard(error2.message), 1e4);
         }
       }
       this.plugin.tagProcessor.debouncedProcessActiveFileTagEls();

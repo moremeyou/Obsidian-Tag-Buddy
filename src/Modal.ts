@@ -1,6 +1,7 @@
 import { App, FuzzySuggestModal, Notice } from "obsidian";
 import TagBuddy from "main";
 import * as Utils from './utils';
+import { NOTICE_TEXT } from './userText';
 
 interface ModalLocation {
     x: number;
@@ -75,7 +76,7 @@ export class TagSelector extends FuzzySuggestModal<string> {
                 this.close();
                 this.onChooseItem(normalizedTag);
             } else {
-                new Notice('Invalid tag.');
+                new Notice(NOTICE_TEXT.invalidTag);
             }
         }
     }

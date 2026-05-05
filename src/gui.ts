@@ -4,6 +4,12 @@ import * as Utils from './utils';
 import { TagSelector } from './Modal'
 import { TBTagEditorModal } from './TagEditorModal'
 import { SelectFileModal } from './FindFileModal'
+import {
+	GUI_TEXT,
+	NOTICE_TEXT,
+	copyToButtonTitle,
+	removedTagFromParagraphTitle,
+} from './userText';
 
 type CopyToMode = 'link' | 'copy' | 'move' | 'note';
 type CopyToCallback = (...args: any[]) => unknown;
@@ -25,16 +31,9 @@ export class GUI {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		const mode = view?.getMode();
 
-		if (this.app.isMobile) {
-
-		} else {
-
-		}
-
 		const index = parseInt(tagEl.getAttribute('md-index') ?? '0');
 		const tag = tagEl.innerText;
 		const filePath = tagEl.getAttribute('file-source')
-		const tagContainerType = tagEl.getAttribute('type');
 
 	if (mode == 'preview') {
 
@@ -45,22 +44,12 @@ export class GUI {
 				index,
 				filePath ?? undefined,
 				tagEl,
-				//tag,
-				//index
-				//(tag)=>{
-				//	console.log(tag)
-				//}
 			).open();
 
 		}
 
 
 	}
-
-	/*isTagValid (tag:string):boolean { // including the #
-		const tagPattern = /^#[\w]+$/;
-		return tagPattern.test(tag);
-	}*/
 
 	makeButton (
 		lable: string,
@@ -69,7 +58,6 @@ export class GUI {
 	): HTMLButtonElement {
 
 		const button = createEl('button');
-	    //button.innerText = lable;
 	setIcon(button, lable);
 	    button.className = classId;
 
@@ -88,15 +76,12 @@ export class GUI {
 	): HTMLElement {
 
 		const checkboxEl = createEl ('div');
-		//checkboxEl.setAttribute('class', 'tagsummary-checkbox')
 		checkboxEl.setAttribute('index', index.toString())
 
 		let checkedBtn: HTMLElement;
 		let uncheckedBtn: HTMLElement;
 
 		const checkBox = (bool: boolean) => {
-			//console.log(checkboxEl.getAttribute('index'))
-
 			this.plugin.tagSummary.updateSelection(parseInt(checkboxEl.getAttribute('index') ?? '0'), bool);
 			if (bool) {
 				uncheckedBtn.remove();
@@ -112,14 +97,14 @@ export class GUI {
 			checkBox(false)
 
 		}, 'tagsummary-button tagsummary-checkbox checked');
-		checkedBtn.title = 'Unselect this paragraph.';
+		checkedBtn.title = GUI_TEXT.titles.unselectParagraph;
 
 		uncheckedBtn = this.makeButton ('square', (e) => {
 			e.stopPropagation();
 			checkBox(true)
 
 		}, 'tagsummary-button tagsummary-checkbox');
-		uncheckedBtn.title = 'Select this paragraph.';
+		uncheckedBtn.title = GUI_TEXT.titles.selectParagraph;
 
 		checkBox (false)
 
@@ -130,18 +115,14 @@ export class GUI {
 	makeRemoveTagButton (
 		clickFn: (e: Event, paragraphEl: Element, tag: string) => unknown,
 		paragraphEl: Element,
-		tag: string//,
-		//filePath: string
+		tag: string
 	):HTMLButtonElement {
 		const button = this.makeButton ('list-x', (e) => {
 			e.stopPropagation();
 
 			clickFn(e, paragraphEl, tag)
-
-			//const tagEl = Utils.getTagElement(paragraphEl, tag);
-			//this.plugin.tagEditor.edit(tagEl);
 		});
-		button.title = 'Removed ' + tag + ' from paragraph.';
+		button.title = removedTagFromParagraphTitle(tag);
 		return button;
 	}
 
@@ -155,15 +136,11 @@ export class GUI {
 				e.stopPropagation();
 
 				this.plugin.tagSummary.update(summaryEl);
-				//this.updateSummary(summaryEl);
-				new Notice ('Tag Summary updated');
-				setTimeout(async () => {
-					//this.plugin.tagProcessor.run();
-				}, 10);
+				new Notice(NOTICE_TEXT.tagSummaryUpdated);
 			}
 		);
 
-		button.title = 'Refresh tag summary';
+		button.title = GUI_TEXT.titles.refreshTagSummary;
 
 		return button;
 	}
@@ -184,10 +161,8 @@ export class GUI {
 		sections.forEach((sec) => {
 			dropdown.addOption(sec, Utils.truncateStringAtWord(sec, 16));
 		});
-		dropdown.addOption('top', 'Note top');
-		dropdown.addOption('end', 'Note end');
-		//dropdown.addOption('note', 'Note');
-		//dropdown.addOption('newNote', 'New note');
+		dropdown.addOption('top', GUI_TEXT.dropdown.noteTop);
+		dropdown.addOption('end', GUI_TEXT.dropdown.noteEnd);
 
 		dropdown.selectEl.className = 'tagsummary-dropdown';
 
@@ -276,40 +251,23 @@ export class GUI {
 		let buttonLabel = 'copy';
 		if (mode == 'link') buttonLabel = 'link';
 		else if (mode == 'copy') buttonLabel = 'copy-plus';
-		else if (mode == 'move') buttonLabel = 'replace'; //'copy-check';
+		else if (mode == 'move') buttonLabel = 'replace';
 		else if (mode == 'note') buttonLabel = 'file-plus-2';
 
 		const button = this.makeButton (buttonLabel, async (e) => {
 			e.stopPropagation();
 
 			if (mode == 'note') {
-			//if (dropdown.getValue() == 'note') {
-
 				new SelectFileModal(this.app, (file) => {
-
-					//new Notice(`File: ${result.name}`);
-
 					clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath, file);
-
 				}).open();
 
-			/*} else if (dropdown.getValue() == 'newNote') {
-
-//console.log(view, fileName)
-				clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath);
-*/
 			} else {
 
 				clickFn(e, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath);
 			}
 		});
-		let buttonHoverText = '';
-		if (mode == 'link') buttonHoverText = 'Copy paragraph link.' ;
-		else if (mode == 'copy') buttonHoverText = 'Copy paragraph.';
-		else if (mode == 'move') buttonHoverText = 'Move paragraph.';
-		else if (mode == 'note') buttonHoverText = 'Copy paragraph to section in note.';
-
-		button.title = buttonHoverText;
+		button.title = copyToButtonTitle(mode);
 
 		return button;
 
@@ -332,7 +290,7 @@ export class GUI {
 			}
 		);
 
-		button.title = 'Flatten summary (replaces code block).';
+		button.title = GUI_TEXT.titles.flattenSummary;
 
 		return button;
 	}
@@ -345,7 +303,7 @@ export class GUI {
 			e.stopPropagation();
 			clickFn(e, content);
 		});
-		button.title = 'Copy paragraph to clipboard.';
+		button.title = GUI_TEXT.titles.copyParagraphToClipboard;
 
 		return button;
 	}
@@ -360,11 +318,11 @@ export class GUI {
 				e.stopPropagation();
 
 				navigator.clipboard.writeText(summaryMd);
-				new Notice ('Summary copied to clipboard.');
+				new Notice(NOTICE_TEXT.summaryCopiedToClipboard);
 			}
 		);
 
-		button.title = 'Copy summary';
+		button.title = GUI_TEXT.titles.copySummary;
 
 		return button;
 	}
@@ -379,12 +337,11 @@ export class GUI {
 			'file-plus-2',
 			async (e) => {
 				e.stopPropagation();
-//new Notice ('makeSummaryNoteButton', 10000)
 				await clickFn (summaryMd, tags);
 			}
 		);
 
-		button.title = 'Create note from summary';
+		button.title = GUI_TEXT.titles.createNoteFromSummary;
 
 		return button;
 	}
@@ -401,12 +358,9 @@ export class GUI {
 			const touch = touchEvent.touches[0] || touchEvent.changedTouches[0];
 			pageX = Math.round(touch.pageX);
 			pageY = Math.round(touch.pageY);
-			//const el = Utils.getDeepestTextNode(document.elementFromPoint(pageX, pageY))
-			//const el = document.elementFromPoint(pageX, pageY);
-			//deepestNode = Utils.getDeepestNode(el);
 			range = document.caretRangeFromPoint(pageX, pageY)
 			if (!range) return;
-			nodeType = range.startContainer.nodeType //deepestNode.nodeType;
+			nodeType = range.startContainer.nodeType;
 		} else {
 			const mouseEvent = event as MouseEvent;
 			pageX = mouseEvent.pageX;
@@ -416,20 +370,16 @@ export class GUI {
 			nodeType = range.startContainer.nodeType;
 		}
 
-		//const targetClasses = ['tag'];
-        //if (mode == 'preview' && !targetClasses.some(cls => event.target.classList.contains(cls))) {
 	if (mode == 'preview') {
 			if (nodeType === Node.TEXT_NODE) {
 				new TagSelector(
 					this.app,
 					this.plugin,
 					event, (tag)=>{
-						//console.log(tag)
 						this.plugin.tagEditor.add(
 					'#' + tag,
 					pageX,
-					pageY//,
-					//{range: range, el: deepestNode}
+					pageY
 				)
 					}
 				).open();
@@ -448,8 +398,6 @@ export class GUI {
 	  // Set height to the current value for CSS transition
 	  el.style.height = `${height}px`;
 
-	  // Allow the browser to update, then set to 0 to trigger the transition
-	  //setTimeout(() => { el.style.height = '0px'; }, 0);
 	  setTimeout(() => {
         el.style.height = '0px';
         el.style.opacity = '0';
@@ -461,7 +409,6 @@ export class GUI {
 		'transitionend', function onEnd() {
 		el.removeEventListener('transitionend', onEnd);
 		callback();
-		//setTimeout(() => { el.remove(); }, 10); // remove in the callback
 	  });
 	}
 

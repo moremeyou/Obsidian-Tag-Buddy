@@ -1,6 +1,7 @@
 import { App, Modal, Notice, Setting, DropdownComponent, ButtonComponent, TextComponent } from "obsidian";
 import TagBuddy from "main";
 import * as Utils from './utils';
+import { NOTICE_TEXT, TAG_EDITOR_TEXT } from './userText';
 
 type BatchAction = 'instance' | 'note' | 'vault';
 type SummaryPosition = 'top' | 'end' | 'note';
@@ -18,11 +19,9 @@ interface TagEditorSettings {
 }
 
 export class TBTagEditorModal extends Modal {
-    //originalTag: Strings
     optionsDiv: HTMLElement;
     editDiv: HTMLElement;
     input: TextComponent;
-    //submitBtn: ButtonComponent;
     tagActionDropdown: DropdownComponent;
     plugin: TagBuddy;
 
@@ -37,28 +36,19 @@ export class TBTagEditorModal extends Modal {
         action: 'rename'
     };
 
-    //constructor(app: App, tag: String, onSubmit: (result: string) => void) {
     constructor(app: App, plugin: TagBuddy, tag: string, index: number, filePath: string | null = null, tagEl: HTMLElement | null = null) {
-    //constructor(app: App, plugin: TagBuddy, tagEl: HTMLElement) {
         super(app);
         this.plugin = plugin;
-//console.log(tagEl)
         this.settings.tagEl = tagEl;
-        //this.settings.originalIndex = parseInt (tagEl.getAttribute('md-index'));
-        //this.settings.originalTag = tagEl.innerText;
-        //this.settings.batchActioon = tagEl.getAttribute('md-index');
-
         this.settings.filePath = filePath
         this.settings.originalTag = tag;
         this.settings.originalIndex = index;
-        //this.originalTag = tag;
-        //this.onSubmit = onSubmit;
     }
 
     onOpen () {
         const { contentEl, titleEl } = this;
 
-        titleEl.setText("Tag Actions")
+        titleEl.setText(TAG_EDITOR_TEXT.title)
 
         this.editDiv = createEl('div')
         this.editDiv.classList.add ('tag-editor-edit-div')
@@ -70,10 +60,10 @@ export class TBTagEditorModal extends Modal {
         this.input.inputEl.classList.add ('tag-editor-input');
 
         this.tagActionDropdown = new DropdownComponent(this.editDiv)
-        .addOption('rename', "Rename")
-        .addOption('lower', "Convert to lower case")
-        .addOption('totext', "Remove hash (#)")
-        .addOption('summary', "Create summary");
+        .addOption('rename', TAG_EDITOR_TEXT.actionOptions.rename)
+        .addOption('lower', TAG_EDITOR_TEXT.actionOptions.lower)
+        .addOption('totext', TAG_EDITOR_TEXT.actionOptions.toText)
+        .addOption('summary', TAG_EDITOR_TEXT.actionOptions.summary);
         this.tagActionDropdown.selectEl.classList.add ('tag-editor-dropdown');
 
         contentEl.appendChild (this.editDiv)
@@ -90,14 +80,13 @@ export class TBTagEditorModal extends Modal {
             if (value == "summary") {
                 this.showSummaryOptions ();
             } else {
-                //if (editDiv.contains(summaryOptSelectEl)) editDiv.removeChild(summaryOptSelectEl)
                 this.showEditTagOptions (value)
             }
         });
 
         new ButtonComponent(contentEl)
             .setClass ('tag-editor-submit')
-            .setButtonText('Submit')
+            .setButtonText(TAG_EDITOR_TEXT.submit)
             .onClick (async () => {
                 await this.submitTagEdit();
             }
@@ -105,8 +94,6 @@ export class TBTagEditorModal extends Modal {
     }
 
     async submitTagEdit () {
-
-        //console.log(this.settings)
 
         const normalizedNewName = Utils.normalizeTagInput(this.settings.newName, true);
         const isValidTag = normalizedNewName != null;
@@ -116,61 +103,37 @@ export class TBTagEditorModal extends Modal {
         if (action == 'summary') {
             const summaryTags = Utils.extractValidTags (this.input.getValue());
             if (summaryTags.length < 1) {
-                new Notice ('Invalid tag format.')
+                new Notice(NOTICE_TEXT.invalidTagFormat)
             } else {
                 await this.plugin.tagSummary.createCodeBlock(summaryTags, this.settings.summaryPos);
                 this.close();
             }
         } else if (action == 'rename' && !isValidTag) {
-            new Notice ('Invalid tag format.')
-            // https://help.obsidian.md/Editing+and+formatting/Tags#Tag+format
+            new Notice(NOTICE_TEXT.invalidTagFormat)
         } else {
 
             if (action == 'rename' && normalizedNewName) newName = normalizedNewName;
             else if (action == 'lower') newName = this.settings.originalTag.toLowerCase();
             else if (action == 'totext') newName = this.settings.originalTag.substring(1);
 
-            //if (this.settings.batchAction == 'instance') {
-// this isn't working. soemthing about how I'm looping around with edit and rename. might not work.
-                // and if not we can't make embded or summary edits edits
-                //this.plugin.tagEditor.edit (this.settings.tagEl, null, null, 'rename', newName)
-                const batchAction = this.settings.batchAction == 'instance'
-                    ? this.settings.originalIndex
-                    : this.settings.batchAction;
-                await this.plugin.tagEditor.renameTag (
-                    this.settings.originalTag,
-                    newName,
-                    batchAction,
-                    this.settings.filePath,
-                    this.settings.tagEl
-                    //parseInt(this.settings.originalIndex),
-
-                    //((this.settings.batchAction == 'instance') ? parseInt(this.settings.originalIndex) : this.settings.batchAction)
-                )
-                this.close();
-                const summaryEl = this.settings.tagEl ? this.settings.tagEl.closest('.tag-summary-block') as HTMLElement | null : null;
-                if (summaryEl) {
-                    setTimeout(async () => {
-                        this.plugin.tagSummary.update(summaryEl);
-                    }, 500);
-                }
+            const batchAction = this.settings.batchAction == 'instance'
+                ? this.settings.originalIndex
+                : this.settings.batchAction;
+            await this.plugin.tagEditor.renameTag (
+                this.settings.originalTag,
+                newName,
+                batchAction,
+                this.settings.filePath,
+                this.settings.tagEl
+            )
+            this.close();
+            const summaryEl = this.settings.tagEl ? this.settings.tagEl.closest('.tag-summary-block') as HTMLElement | null : null;
+            if (summaryEl) {
+                setTimeout(async () => {
+                    this.plugin.tagSummary.update(summaryEl);
+                }, 500);
             }
-           /* else {
-
-                this.plugin.tagEditor.renameTag (
-                    this.settings.originalTag,
-                    //this.settings.tagEl,
-                    newName,
-                    this.settings.batchAction
-                    //parseInt(this.settings.originalIndex),
-
-                    //((this.settings.batchAction == 'instance') ? parseInt(this.settings.originalIndex) : this.settings.batchAction)
-                )
-
-            }*/
-
-
-        //}
+        }
 
     }
 
@@ -180,17 +143,15 @@ export class TBTagEditorModal extends Modal {
         this.input.setDisabled(false)
 
         new Setting (this.optionsDiv)
-            .setName("Where do you want to add the tag summary?")
-            .setDesc("Add multiple tags above separated by a comma.")
+            .setName(TAG_EDITOR_TEXT.summaryDestination.name)
+            .setDesc(TAG_EDITOR_TEXT.summaryDestination.desc)
             .addDropdown((opt) =>
                 opt
-                .addOption('top', "Top of this note")
-                .addOption('end', "Bottom of this note")
-                //.addOption('here', "In place of this tag")
-                .addOption('note', "In a new note")
+                .addOption('top', TAG_EDITOR_TEXT.summaryDestination.top)
+                .addOption('end', TAG_EDITOR_TEXT.summaryDestination.end)
+                .addOption('note', TAG_EDITOR_TEXT.summaryDestination.note)
                 .onChange((value) => {
                    this.settings.summaryPos = value as SummaryPosition;
-                   //console.log(this.settings.summaryPos)
                 }
             )
         );
@@ -206,13 +167,12 @@ export class TBTagEditorModal extends Modal {
 
         if (editType == 'rename') {
             new Setting(this.optionsDiv)
-                .setName("New name")
-                .setDesc("Enter the tag with or without #. Tags can include letters, numbers, underscores (_), hyphens (-), and forward slashes (/) for nested tags.")
+                .setName(TAG_EDITOR_TEXT.rename.newName)
+                .setDesc(TAG_EDITOR_TEXT.rename.newNameDesc)
                 .addText((opt) =>
                     opt
                     .setValue('')
                     .onChange((value) => {
-                       //this.inputChangeHandler (value, editType);
                        this.settings.newName = value;
                     }
                 )
@@ -220,26 +180,23 @@ export class TBTagEditorModal extends Modal {
         }
 
         const whereEditOpt = new Setting (this.optionsDiv)
-            .setName("Where to make this change?")
-            //.setDesc("WARNING: There is NO UNDO for this this action.")
+            .setName(TAG_EDITOR_TEXT.scope.name)
             .addDropdown((opt) =>
             opt
-            .addOption('instance', "Just this instance")
-            .addOption('note', "All in this note")
-            .addOption('vault', "Across entire vault")
+            .addOption('instance', TAG_EDITOR_TEXT.scope.instance)
+            .addOption('note', TAG_EDITOR_TEXT.scope.note)
+            .addOption('vault', TAG_EDITOR_TEXT.scope.vault)
             .onChange((value) => {
                 if (value == 'vault') {
-                    whereEditOpt.setDesc("WARNING: There is NO UNDO for vault changes. Consider making a backup of your vault first.")
+                    whereEditOpt.setDesc(TAG_EDITOR_TEXT.scope.vaultDesc)
                     this.settings.batchAction = 'vault';
                 } else if (value == 'note') {
-                    whereEditOpt.setDesc("Only tags in this note will be updated. Choose \'Across entire vault\' to update this tag everywhere.")
+                    whereEditOpt.setDesc(TAG_EDITOR_TEXT.scope.noteDesc)
                     this.settings.batchAction = 'note';
                 } else if (value == 'instance') {
-                    whereEditOpt.setDesc("")
+                    whereEditOpt.setDesc(TAG_EDITOR_TEXT.scope.instanceDesc)
                     this.settings.batchAction = 'instance';
-                    //this.settings.batchActioon = this.settings.originalIndex
                 }
-                //console.log(this.settings.batchAction)
             })
         );
     }

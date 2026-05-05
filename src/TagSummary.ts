@@ -16,6 +16,14 @@ import {
 	createTagSummaryTagListLinePattern,
 } from './tagPatterns';
 import type { TagSummaryTagListField } from './tagPatterns';
+import {
+	NOTICE_TEXT,
+	copiedToSection,
+	copiedToSectionCannotUpdateSource,
+	copiedToSectionInNote,
+	sectionNotFoundPastingTop,
+	tagSummaryEmptyHtml,
+} from './userText';
 
 const SUMMARY_CODEBLOCK_ATTRS = {
 	tags: 'codeblock-tags',
@@ -65,7 +73,7 @@ export class TagSummary {
 		if (mdSource) {
 			const file = await this.app.vault.getAbstractFileByPath(filePath);
 			if (!(file instanceof TFile)) {
-				new Notice ('⚠️ Tag Buddy: Can\'t identify source note for this summary.');
+				new Notice(NOTICE_TEXT.cannotIdentifySourceNoteForSummary);
 				return;
 			}
 			const fileContent = await this.app.vault.read(file);
@@ -76,9 +84,9 @@ export class TagSummary {
 			);
 			await this.app.vault.modify(file, newFileContent);
 
-			new Notice ('Tag summary flattened to active note.');
+			new Notice(NOTICE_TEXT.tagSummaryFlattenedToActiveNote);
 		} else {
-			new Notice ('⚠️ Tag Buddy: Can\'t find code block source. This is a BUG.');
+			new Notice(NOTICE_TEXT.cannotFindSummaryCodeBlockSourceBug);
 		}
 	}
 
@@ -87,22 +95,22 @@ export class TagSummary {
 
 		if (selection != '') {
 			navigator.clipboard.writeText(selection);
-			new Notice ('Selection copied to clipboard.');
+			new Notice(NOTICE_TEXT.selectionCopiedToClipboard);
 		} else {
 			navigator.clipboard.writeText(content);
-			new Notice ('Tagged paragraph copied to clipboard.');
+			new Notice(NOTICE_TEXT.taggedParagraphCopiedToClipboard);
 		}
 	}
 
 	async removeTagBtnHandler (e: Event, paragraphEl: HTMLElement, tag: string): Promise<void> {
 		if (!tag) {
-			new Notice ('⚠️ Can\'t identify tag summary item. Please refresh this summary and try again.');
+			new Notice(NOTICE_TEXT.cannotIdentifyTagSummaryItem);
 			return;
 		}
 		const tagEl = Utils.getTagElement(paragraphEl, tag);
 		const summaryEl = paragraphEl.closest('.tag-summary-block') as HTMLElement | null;
 		if (!tagEl || !summaryEl) {
-			new Notice ('⚠️ Can\'t identify tag summary item. Please refresh this summary and try again.');
+			new Notice(NOTICE_TEXT.cannotIdentifyTagSummaryItem);
 			return;
 		}
 		await this.plugin.tagEditor.edit(tagEl, e, paragraphEl, 'remove', '');
@@ -138,12 +146,12 @@ export class TagSummary {
 		if (copySuccess) {
 			if (mode == 'note') {
 				if (!selectedFile) {
-					new Notice ('⚠️ Tag Buddy: Can\'t identify destination note.');
+					new Notice(NOTICE_TEXT.cannotIdentifyDestinationNote);
 					return;
 				}
 
 				notice = new Notice(
-					'Copied to section: ' + section + ' in ' + selectedFile.name + ' 🔗',
+					copiedToSectionInNote(section, selectedFile.name),
 					5000
 				);
 				this.registerNoticeLinkToSection(notice, selectedFile.path, section);
@@ -151,7 +159,7 @@ export class TagSummary {
 			} else if (mode == 'move' && !selection) {
 				const file = await this.app.vault.getAbstractFileByPath(filePath.split('#')[0]);
 				if (!(file instanceof TFile)) {
-					new Notice ('⚠️ Tag Buddy: Can\'t identify source note for this summary item.');
+					new Notice(NOTICE_TEXT.cannotIdentifySummaryItemSourceShort);
 					return;
 				}
 
@@ -177,8 +185,7 @@ export class TagSummary {
 					this.registerNoticeLinkToActiveSection(notice, section);
 
 				} else {
-					new Notice ('Copied to section: ' + section
-						+ '.\nCan\'t update source file.');
+					new Notice(copiedToSectionCannotUpdateSource(section));
 				}
 
 			} else if (mode == 'copy' || mode == 'link') {
@@ -209,10 +216,10 @@ export class TagSummary {
 
 		if (file instanceof TFile && !incrementFile) {
 
-			notice = new Notice ('⚠️ Note already exists.\nClick here to overwrite.', 8000);
+			notice = new Notice(NOTICE_TEXT.noteAlreadyExistsOverwrite, 8000);
 			this.plugin.registerDomEvent(notice.noticeEl, 'click', async (e) => {
 				await this.app.vault.modify(file, fileContent);
-				notice = new Notice ('Note updated.\n🔗 Open note.', 5000);
+				notice = new Notice(NOTICE_TEXT.noteUpdatedOpen, 5000);
 				this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
 					this.app.workspace.openLinkText(fileName, '');
 				});
@@ -220,7 +227,7 @@ export class TagSummary {
 
 		} else if (!file) {
 			await this.app.vault.create(fileName, fileContent);
-			const notice = new Notice ('Summary note created. 📜\n🔗 Open note.');
+			const notice = new Notice(NOTICE_TEXT.summaryNoteCreatedOpen);
 			this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
 				this.app.workspace.openLinkText(newNoteObj.fileName, '');
 			});
@@ -312,8 +319,7 @@ export class TagSummary {
 	): void {
 		const container = createEl('div');
 		const textDiv = createEl('blockquote');
-		textDiv.innerHTML = 'There are no notes with tagged paragraphs that match the tags:<br>'
-			+ (tags.length > 0 ? tags.join(', ') : 'No tags specified.') + '<br>';
+		textDiv.innerHTML = tagSummaryEmptyHtml(tags);
 
 		container.appendChild(textDiv);
 		TagSummary.writeCodeBlockAttrs(container, {
@@ -534,7 +540,7 @@ export class TagSummary {
 	): Promise<boolean> {
 		const file = selectedFile ? selectedFile : (await this.app.workspace.getActiveFile());
 		if (!file) {
-			new Notice ('⚠️ Tag Buddy: Can\'t identify destination note.');
+			new Notice(NOTICE_TEXT.cannotIdentifyDestinationNote);
 			return false;
 		}
 
@@ -555,7 +561,7 @@ export class TagSummary {
 			if (headingObj) {
 				targetLine = headingObj.line;
 			} else {
-				new Notice (`${section} not found. Pasting at top of note.`);
+				new Notice(sectionNotFoundPastingTop(section));
 				targetLine = Utils.findFirstLineAfterFrontMatter(fileContent);
 				if (targetLine == 0) fileContent = '\n' + fileContent;
 			}
@@ -592,7 +598,7 @@ export class TagSummary {
 	}
 
 	private getCopiedToSectionNoticeText(section: string): string {
-		return 'Copied to section: ' + section + '. ' + (this.canLinkToSection(section) ? '🔗' : '');
+		return copiedToSection(section, this.canLinkToSection(section));
 	}
 
 	private registerNoticeLinkToActiveSection(notice: Notice, section: string): void {

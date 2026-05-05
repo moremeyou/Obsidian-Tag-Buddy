@@ -1,5 +1,5 @@
 import { App, Notice, TFile, Platform } from 'obsidian';
-import { NOTICE_TEXT } from './userText';
+import { NOTICE_TEXT, TAG_SUMMARY_TEXT } from './userText';
 import { BARE_TAG_INPUT_PATTERN, FULL_TAG_INPUT_PATTERN } from './tagPatterns';
 
 declare const app: App;
@@ -428,11 +428,11 @@ export function fileObjFromTags(
                      currentDate.getSeconds().toString().padStart(2, '0');
     //const fileName = `Tag Summary (${tagsPart}) (${datePart}).md`;
                     // console.log(timePart)
-    const fileName = `Tag Summary (${datePart} ${timePart}).md`;
+    const fileName = `${TAG_SUMMARY_TEXT.generatedFileNamePrefix} (${datePart} ${timePart}).md`;
 
     // Construct the title
     const titleTagsPart = tagsArray.map(tag => tag.charAt(0).toUpperCase() + tag.slice(1)).join(' + ');
-    const title = `${titleTagsPart} Tag Summary`;
+    const title = `${titleTagsPart} ${TAG_SUMMARY_TEXT.generatedTitleSuffix}`;
 
     // Return the object with fileName and title properties
     return {

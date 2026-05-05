@@ -2,7 +2,16 @@ import { App, TFile, getAllTags, MarkdownView, Notice } from 'obsidian';
 import TagBuddy from "main";
 import { TagSummary } from './TagSummary';
 import * as Utils from './utils';
-import { NOTICE_TEXT } from './userText';
+import {
+	NOTICE_TEXT,
+	childTagRemovedFromParent,
+	fileReadError,
+	tagConvertedToText,
+	tagNoteEditingErrorBackup,
+	tagNoteEditingErrorClipboard,
+	tagRemoved,
+	tagRemovedFromParagraph,
+} from './userText';
 
 interface MarkdownTagPosition {
 	tag: string;
@@ -145,9 +154,9 @@ export class ReadingModeTagEditor {
 
         }
 
-        if (activeFile != file && tagEl) {
-		//this.app.workspace.activeLeaf.rebuildView()
-		new Notice ('Refresh this summary to see changes.', 5000)
+		if (activeFile != file && tagEl) {
+			//this.app.workspace.activeLeaf.rebuildView()
+			new Notice(NOTICE_TEXT.refreshSummaryToSeeChanges, 5000)
 	//console.log(tagEl.closest('.tag-summary-block'))
 	//this.plugin.tagSummary.update(tagEl.closest('.tag-summary-block'));
 	}
@@ -192,7 +201,7 @@ export class ReadingModeTagEditor {
 	): Promise<void> {
 
 		if (!file) {
-			new Notice('Tag Buddy: Can\'t identify file to rename.');
+			new Notice(NOTICE_TEXT.cannotIdentifyFileToRename);
 			return;
 		}
 
@@ -409,9 +418,8 @@ export class ReadingModeTagEditor {
 				fileContentBackup = fileContent;
 
 			} catch (error) {
-				new Notice('Tag Buddy file read error:\n' + error.message);
+				new Notice(fileReadError(error.message));
 				return;
-
 			}
 
 			// check if the file has only one tag left (and that's all thats left in the file)
@@ -463,8 +471,9 @@ export class ReadingModeTagEditor {
 				//newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + noHash + afterTag;
 				newContent = beforeTag + noHash + afterTagChr + afterTag;
 
-				if (this.app.isMobile && this.plugin.settings.mobileNotices)
-					{ new Notice ('Tag Buddy: ' + tag + ' converted to text.'); }
+				if (this.app.isMobile && this.plugin.settings.mobileNotices) {
+					new Notice(tagConvertedToText(tag));
+				}
 
 			/*} else if (((event.type == 'touchend')
 				|| this.plugin.settings.mobileTagSearch)
@@ -500,9 +509,7 @@ export class ReadingModeTagEditor {
 					if (this.app.isMobile
 						&& this.plugin.settings.mobileNotices)
 					{
-						new Notice ('Tag Buddy: \''
-							+ removedChild
-							+ '\' removed from parent tag.');
+						new Notice(childTagRemovedFromParent(removedChild));
 					}
 
 				} else {
@@ -528,7 +535,7 @@ export class ReadingModeTagEditor {
 
 					if (this.app.isMobile
 						&& this.plugin.settings.mobileNotices) {
-						new Notice ('Tag Buddy: ' + tag + ' removed.');
+						new Notice(tagRemoved(tag));
 					}
 				}
 			}
@@ -564,13 +571,12 @@ export class ReadingModeTagEditor {
 						newContent,
 						tag,
 						2)
-					)
-				{
-					new Notice('Tag Buddy: File change error.');
+					) {
+					new Notice(NOTICE_TEXT.fileChangeError);
 					newContent = fileContentBackup;
 
 				} else if (newContent == '' && safeToEmptyFile) {
-					new Notice('Tag Buddy: Tag removed. The note is empty.');
+					new Notice(NOTICE_TEXT.tagRemovedEmptyNote);
 				}
 
 					refreshAfterModify = () => setTimeout(async () => {
@@ -581,17 +587,17 @@ export class ReadingModeTagEditor {
 						const tagsToCheck = TagSummary.getTagsToCheckFromEl(tagSummaryBlock);
 						const tagsInContent = Utils.tagsInString(tagParagraphEl.innerText);
 
-					if (tagsToCheck.includes(tag)) {
-						const tagCount = Utils.countOccurrences(tagsToCheck, tagsInContent)
+						if (tagsToCheck.includes(tag)) {
+							const tagCount = Utils.countOccurrences(tagsToCheck, tagsInContent)
 
-						if (tagCount >= 2) {
-							this.plugin.tagSummary.update(tagSummaryBlock);
-						} else {
-							//console.log('last one, will remove paragraph')
-							const notice = new Notice (tag + ' removed from paragraph.\n🔗 Open source note.', 5000);
+							if (tagCount >= 2) {
+								this.plugin.tagSummary.update(tagSummaryBlock);
+							} else {
+								//console.log('last one, will remove paragraph')
+								const notice = new Notice(tagRemovedFromParagraph(tag), 5000);
 
-							this.plugin.gui.removeElementWithAnimation(
-								tagParagraphEl,
+								this.plugin.gui.removeElementWithAnimation(
+									tagParagraphEl,
 								() => {
 								setTimeout(async () => {
 									this.plugin.tagSummary.update(tagSummaryBlock);
@@ -633,12 +639,12 @@ export class ReadingModeTagEditor {
 					const backupFileName = String(file.name.substring(0, file.name.indexOf('.md')) + ' BACKUP.md');
 					await this.app.vault.create(backupFileName, fileContentBackup);
 
-					new Notice('⚠️ Tag/note editing error: ' + error.message + '\n' + backupFileName + ' saved to vault root.', 10000);
+					new Notice(tagNoteEditingErrorBackup(error.message, backupFileName), 10000);
 
 				} catch (error) {
 
 					navigator.clipboard.writeText(fileContentBackup);
-					new Notice('⚠️ Tag/note editing error: ' + error.message + '\nNote content copied to clipboard.', 10000);
+					new Notice(tagNoteEditingErrorClipboard(error.message), 10000);
 
 				}
 			}
