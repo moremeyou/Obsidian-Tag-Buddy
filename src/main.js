@@ -1177,9 +1177,7 @@ var TagSummary = class _TagSummary {
     this.plugin = plugin;
   }
   async bakeSummaryBtnHandler(summaryMd, summaryEl, filePath) {
-    const mdSource = summaryEl.getAttribute(
-      SUMMARY_CODEBLOCK_ATTRS.code
-    );
+    const mdSource = summaryEl.getAttribute(SUMMARY_CODEBLOCK_ATTRS.code);
     if (mdSource) {
       const file = await this.app.vault.getAbstractFileByPath(filePath);
       if (!(file instanceof import_obsidian7.TFile)) {
@@ -1235,12 +1233,11 @@ var TagSummary = class _TagSummary {
       newContent = "[[" + filePath + "|" + fileName + "]]";
     }
     if (mode != "link" && !selection) {
-      tags.forEach((tag, i) => {
+      for (const tag of tags) {
         newContent = removeTagFromString(newContent, tag).trim();
-      });
+      }
     }
     const copySuccess = await this.copyTextToSection(
-      //this.plugin.settings.taggedParagraphCopyPrefix +
       newContent,
       dropdown.getValue(),
       filePath,
@@ -1257,7 +1254,7 @@ var TagSummary = class _TagSummary {
           "Copied to section: " + dropdown.getValue() + " in " + selectedFile.name + " \u{1F517}",
           5e3
         );
-        this.plugin.registerDomEvent(notice.noticeEl, "click", (e2) => {
+        this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
           this.app.workspace.openLinkText(selectedFile.path + "#" + dropdown.getValue(), "");
         });
       } else if (mode == "move" && !selection) {
@@ -1276,18 +1273,14 @@ var TagSummary = class _TagSummary {
         if (fileContent != newFileContent) {
           await this.app.vault.modify(file, newFileContent);
           notice = new import_obsidian7.Notice(
-            //'Moved to section: ' + dropdown.getValue() +
-            //'.\n🔗 Open source note.',
             "Copied to section: " + dropdown.getValue() + ". " + (dropdown.getValue() == "top" || dropdown.getValue() == "end" ? "" : "\u{1F517}"),
             5e3
           );
           setTimeout(async () => {
-          }, 100);
-          setTimeout(async () => {
             this.update(summaryEl);
           }, 300);
           if (dropdown.getValue() != "top" && dropdown.getValue() != "end") {
-            this.plugin.registerDomEvent(notice.noticeEl, "click", (e2) => {
+            this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
               const activeFile = this.app.workspace.getActiveFile();
               if (activeFile)
                 this.app.workspace.openLinkText(activeFile.path + "#" + dropdown.getValue(), "");
@@ -1299,7 +1292,7 @@ var TagSummary = class _TagSummary {
       } else if (mode == "copy" || mode == "link") {
         notice = new import_obsidian7.Notice("Copied to section: " + dropdown.getValue() + ". " + (dropdown.getValue() == "top" || dropdown.getValue() == "end" ? "" : "\u{1F517}"));
         if (dropdown.getValue() != "top" && dropdown.getValue() != "end") {
-          this.plugin.registerDomEvent(notice.noticeEl, "click", (e2) => {
+          this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
             const activeFile = this.app.workspace.getActiveFile();
             if (activeFile)
               this.app.workspace.openLinkText(activeFile.path + "#" + dropdown.getValue(), "");
@@ -1326,14 +1319,14 @@ var TagSummary = class _TagSummary {
       this.plugin.registerDomEvent(notice.noticeEl, "click", async (e) => {
         await this.app.vault.modify(file, fileContent);
         notice = new import_obsidian7.Notice("Note updated.\n\u{1F517} Open note.", 5e3);
-        this.plugin.registerDomEvent(notice.noticeEl, "click", (e2) => {
+        this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
           this.app.workspace.openLinkText(fileName, "");
         });
       });
     } else if (!file) {
       await this.app.vault.create(fileName, fileContent);
       const notice2 = new import_obsidian7.Notice("Summary note created. \u{1F4DC}\n\u{1F517} Open note.");
-      this.plugin.registerDomEvent(notice2.noticeEl, "click", (e) => {
+      this.plugin.registerDomEvent(notice2.noticeEl, "click", () => {
         this.app.workspace.openLinkText(newNoteObj.fileName, "");
       });
     }
@@ -1352,56 +1345,22 @@ var TagSummary = class _TagSummary {
     }
   }
   async codeBlockProcessor(source, el, ctx) {
-    let tags = Array();
-    let include = Array();
-    let exclude = Array();
-    let sections = Array();
+    let tags = [];
+    let include = [];
+    let exclude = [];
+    let sections = [];
     let max = 50;
-    let match;
     const rows = source.split("\n").filter((row) => row.length > 0);
     rows.forEach((line) => {
-      if (line.match(createTagSummaryTagListLinePattern("tags"))) {
-        const content = line.replace(TAG_SUMMARY_TAGS_PREFIX_PATTERN, "").trim();
-        let list = content.split(/\s+/).map((tag) => tag.trim());
-        list = list.filter((tag) => {
-          if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
-            return true;
-          } else {
-            return false;
-          }
-        });
-        tags = list;
-      }
-      if (line.match(createTagSummaryTagListLinePattern("include"))) {
-        const content = line.replace(TAG_SUMMARY_INCLUDE_PREFIX_PATTERN, "").trim();
-        let list = content.split(/\s+/).map((tag) => tag.trim());
-        list = list.filter((tag) => {
-          if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
-            return true;
-          } else {
-            return false;
-          }
-        });
-        include = list;
-      }
-      if (line.match(createTagSummaryTagListLinePattern("exclude"))) {
-        const content = line.replace(TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN, "").trim();
-        let list = content.split(/\s+/).map((tag) => tag.trim());
-        list = list.filter((tag) => {
-          if (tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN)) {
-            return true;
-          } else {
-            return false;
-          }
-        });
-        exclude = list;
-      }
+      var _a, _b, _c;
+      tags = (_a = this.parseTagSummaryTagListLine(line, "tags")) != null ? _a : tags;
+      include = (_b = this.parseTagSummaryTagListLine(line, "include")) != null ? _b : include;
+      exclude = (_c = this.parseTagSummaryTagListLine(line, "exclude")) != null ? _c : exclude;
       if (line.match(createTagSummarySectionsLinePattern())) {
         const content = line.replace(TAG_SUMMARY_SECTIONS_PREFIX_PATTERN, "").trim();
-        let list = content.split(",").map((sec) => sec.trim());
-        sections = list;
+        sections = content.split(",").map((sec) => sec.trim());
       }
-      match = line.match(TAG_SUMMARY_MAX_LINE_PATTERN);
+      const match = line.match(TAG_SUMMARY_MAX_LINE_PATTERN);
       if (match) {
         max = Math.min(50, Number(match[1]));
       }
@@ -1445,7 +1404,6 @@ var TagSummary = class _TagSummary {
       mdSource
     });
     container.appendChild(this.plugin.gui.makeSummaryRefreshButton(container));
-    ;
     element.replaceWith(container);
   }
   async create(element, tags, include, exclude, sections, max, fileCtx, mdSource) {
@@ -1464,10 +1422,8 @@ var TagSummary = class _TagSummary {
       const tagsInFile = cache ? (0, import_obsidian7.getAllTags)(cache) : null;
       if (file.path.includes("_exclude"))
         return false;
-      if (activeFile) {
-        if (activeFile.path == file.path)
-          return false;
-      }
+      if (activeFile && activeFile.path == file.path)
+        return false;
       if (validTags.some((value) => tagsInFile == null ? void 0 : tagsInFile.includes(value))) {
         return true;
       }
@@ -1476,62 +1432,41 @@ var TagSummary = class _TagSummary {
     listFiles = listFiles.sort((file1, file2) => {
       return file2.stat.ctime - file1.stat.ctime;
     });
-    let listContents = await this.readFiles(listFiles);
+    const listContents = await this.readFiles(listFiles);
     let count = 0;
     let summary = "";
     for (const item of listContents) {
       const fileName = item[0].name.replace(/.md$/g, "");
       const filePath = item[0].path;
-      let listParagraphs = Array();
       const blocks = item[1].split(TAG_SUMMARY_BLOCK_SPLIT_PATTERN).filter((row) => row.trim().length > 0);
-      blocks.forEach((paragraph) => {
-        let valid = false;
-        let listTags = paragraph.match(createTagSummaryParagraphTagPattern());
-        if (listTags != null && listTags.length > 0) {
-          if (!paragraph.includes("```") && !paragraph.includes("---")) {
-            valid = this.isValidText(listTags, tags, include, exclude);
-          }
-        }
-        if (valid)
-          listParagraphs.push(paragraph);
+      const listParagraphs = blocks.filter((paragraph) => {
+        const listTags = paragraph.match(createTagSummaryParagraphTagPattern());
+        if (!listTags || listTags.length <= 0)
+          return false;
+        if (paragraph.includes("```") || paragraph.includes("---"))
+          return false;
+        return this.isValidText(listTags, tags, include, exclude);
       });
       for (let paragraph of listParagraphs) {
         if (count >= max)
           break;
         count++;
         paragraph += "\n";
-        let tagSection = null;
-        tags.forEach((tag) => {
-          const regex = createTagSummaryMatchedTagPattern(tag);
-          if (paragraph.match(regex) != null) {
-            tagSection = tag;
-          }
-        });
+        const tagSection = this.getMatchedSummaryTag(paragraph, tags);
+        const linkInfo = this.getSummaryItemLinkInfo(paragraph, filePath, fileName);
         const buttonContainer = createEl("div");
         buttonContainer.setAttribute("class", "tagsummary-buttons");
         const paragraphEl = createEl("blockquote");
         paragraphEl.setAttribute("file-source", filePath);
         paragraphEl.setAttribute("index", String(count - 1));
         paragraphEl.setAttribute("class", "tag-summary-paragraph");
-        const blockLink = paragraph.match(createTagSummaryBlockLinkPattern());
-        const header = findClosestHeaderWithLink(paragraph);
-        let headerLink = removeTextFromString("#", header.link, true);
-        headerLink = removeTextFromString("[", headerLink, true);
-        headerLink = removeTextFromString("]", headerLink, true);
-        let link;
-        if (blockLink)
-          link = "[[" + filePath + "#" + blockLink[0] + "|" + fileName + "]]";
-        else if (header.text != "")
-          link = "[[" + filePath + "#" + headerLink + "]]";
-        else
-          link = "[[" + filePath + "|" + fileName + "]]";
         buttonContainer.appendChild(
           this.plugin.gui.makeCopyToSection(
             this.copyToBtnHandler.bind(this),
             paragraph,
             sections,
             tags,
-            blockLink ? filePath + "#" + blockLink[0] : filePath,
+            linkInfo.sourcePath,
             paragraphEl,
             summaryContainer
           )
@@ -1550,25 +1485,15 @@ var TagSummary = class _TagSummary {
               this.removeTagBtnHandler.bind(this),
               paragraphEl,
               tagSection != null ? tagSection : ""
-              //,
-              //(blockLink ? (filePath + '#' + blockLink[0]) : filePath)
             )
           );
         }
         const mdParagraph = paragraph;
-        paragraph = "**" + link + "**\n" + paragraph;
+        paragraph = this.buildSummaryDisplayMarkdown(linkInfo.summaryLink, paragraph);
         summary += paragraph + "\n";
         paragraphEl.setAttribute("md-source", mdParagraph);
-        blocks.push(mdParagraph);
         await import_obsidian7.MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponent);
-        const titleEl = createEl("span");
-        titleEl.setAttribute("class", "tagsummary-item-title");
-        const strongEl = paragraphEl.querySelector("strong");
-        if (strongEl)
-          titleEl.appendChild(strongEl.cloneNode(true));
-        paragraphEl.appendChild(buttonContainer);
-        if (strongEl)
-          strongEl.replaceWith(titleEl);
+        this.decorateRenderedSummaryParagraph(paragraphEl, buttonContainer);
         summaryContainer.appendChild(paragraphEl);
       }
     }
@@ -1639,7 +1564,6 @@ var TagSummary = class _TagSummary {
       attrs.mdSource
     );
   }
-  // Not factored yet
   async copyTextToSection(text, section, filePath, addLink = true, selectedFile = null, detectPrefix = true) {
     const file = selectedFile ? selectedFile : await this.app.workspace.getActiveFile();
     if (!file) {
@@ -1670,20 +1594,18 @@ var TagSummary = class _TagSummary {
       }
     }
     const linePrefix = detectPrefix ? getListTypeFromLineNumber(fileContent, targetLine + 1) : "";
-    let finalText;
+    let finalText = linePrefix + text;
     if (addLink)
-      finalText = linePrefix + text + ` [[${filePath}|\u{1F517}]]`;
-    else
-      finalText = linePrefix + text;
-    let newContent = insertTextAfterLine(finalText, fileContent, targetLine);
+      finalText += ` [[${filePath}|\u{1F517}]]`;
+    const newContent = insertTextAfterLine(finalText, fileContent, targetLine);
     await this.app.vault.modify(file, newContent);
     return true;
   }
   async readFiles(listFiles) {
-    let list = [];
+    const list = [];
     for (let t = 0; t < listFiles.length; t += 1) {
       const file = listFiles[t];
-      let content = await this.app.vault.cachedRead(file);
+      const content = await this.app.vault.cachedRead(file);
       list.push([file, content]);
     }
     return list;
@@ -1700,6 +1622,59 @@ var TagSummary = class _TagSummary {
       valid = !exclude.some((value) => listTags.includes(value));
     }
     return valid;
+  }
+  parseTagSummaryTagListLine(line, field) {
+    if (!line.match(createTagSummaryTagListLinePattern(field))) {
+      return null;
+    }
+    const prefixPattern = field == "tags" ? TAG_SUMMARY_TAGS_PREFIX_PATTERN : field == "include" ? TAG_SUMMARY_INCLUDE_PREFIX_PATTERN : TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN;
+    const content = line.replace(prefixPattern, "").trim();
+    return content.split(/\s+/).map((tag) => tag.trim()).filter((tag) => tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN) != null);
+  }
+  getMatchedSummaryTag(paragraph, tags) {
+    let matchedTag = null;
+    for (const tag of tags) {
+      if (paragraph.match(createTagSummaryMatchedTagPattern(tag)) != null) {
+        matchedTag = tag;
+      }
+    }
+    return matchedTag;
+  }
+  getSummaryItemLinkInfo(paragraph, filePath, fileName) {
+    const blockLink = paragraph.match(createTagSummaryBlockLinkPattern());
+    if (blockLink) {
+      return {
+        summaryLink: "[[" + filePath + "#" + blockLink[0] + "|" + fileName + "]]",
+        sourcePath: filePath + "#" + blockLink[0]
+      };
+    }
+    const header = findClosestHeaderWithLink(paragraph);
+    let headerLink = removeTextFromString("#", header.link, true);
+    headerLink = removeTextFromString("[", headerLink, true);
+    headerLink = removeTextFromString("]", headerLink, true);
+    if (header.text != "") {
+      return {
+        summaryLink: "[[" + filePath + "#" + headerLink + "]]",
+        sourcePath: filePath
+      };
+    }
+    return {
+      summaryLink: "[[" + filePath + "|" + fileName + "]]",
+      sourcePath: filePath
+    };
+  }
+  buildSummaryDisplayMarkdown(link, sourceParagraph) {
+    return "**" + link + "**\n" + sourceParagraph;
+  }
+  decorateRenderedSummaryParagraph(paragraphEl, buttonContainer) {
+    const titleEl = createEl("span");
+    titleEl.setAttribute("class", "tagsummary-item-title");
+    const strongEl = paragraphEl.querySelector("strong");
+    if (strongEl)
+      titleEl.appendChild(strongEl.cloneNode(true));
+    paragraphEl.appendChild(buttonContainer);
+    if (strongEl)
+      strongEl.replaceWith(titleEl);
   }
   static getTagsToCheckFromEl(tagSummaryEl) {
     const attrs = _TagSummary.readCodeBlockAttrs(tagSummaryEl);
