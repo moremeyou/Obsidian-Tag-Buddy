@@ -489,7 +489,8 @@ export default class TagBuddy extends Plugin {
 		tag:string
 	):void {
 //console.log('save recent tag:', tag)
-		if (Utils.isTagValid(tag, true)) {
+		const normalizedTag = Utils.normalizeTagInput(tag, true);
+		if (normalizedTag) {
 			//console.log('accepted:', tag)
 //console.log("asdfasdfasdfsdf")
 			const recentTagsString = this.settings.recentlyAddedTags;
@@ -502,11 +503,11 @@ export default class TagBuddy extends Plugin {
 				recentTags = [this.settings.recentlyAddedTags]
 			}
 
-			if (recentTags.includes(tag)) {
-				recentTags.splice(recentTags.indexOf(tag), 1);
+			if (recentTags.includes(normalizedTag)) {
+				recentTags.splice(recentTags.indexOf(normalizedTag), 1);
 			}
 
-			recentTags.unshift(tag.trim());
+			recentTags.unshift(normalizedTag);
 			recentTags = recentTags.slice(0, 3);
 			this.settings.recentlyAddedTags = recentTags.join(', ');
 			this.saveSettings();

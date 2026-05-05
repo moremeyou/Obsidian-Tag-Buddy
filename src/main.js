@@ -65,6 +65,15 @@ function markdownRenderedTagsOutOfSync(type) {
   return message + " Please report if this error persists.";
 }
 
+// tagPatterns.ts
+var CODE_FENCE_MARKER = "```";
+var NUMBERED_LIST_LINE_PATTERN = /^\d+\./;
+var BARE_TAG_INPUT_PATTERN = /^[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
+var FULL_TAG_INPUT_PATTERN = /^#[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
+function createMarkdownTagOrCodeFencePattern() {
+  return /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g;
+}
+
 // utils.ts
 function getTagElement(paragraphEl, tagText) {
   const els = Array.from(paragraphEl.querySelectorAll(".tag"));
@@ -368,11 +377,7 @@ async function getEmbedFile(el) {
   return file;
 }
 function isTagValid(tag, fullTag = false) {
-  let tagPattern;
-  if (fullTag)
-    tagPattern = /^#[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
-  else
-    tagPattern = /^[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
+  const tagPattern = fullTag ? FULL_TAG_INPUT_PATTERN : BARE_TAG_INPUT_PATTERN;
   return tagPattern.test(tag);
 }
 function normalizeTagInput(tag, includeHash = true) {
@@ -386,7 +391,7 @@ function normalizeTagInput(tag, includeHash = true) {
 }
 function extractValidTags(tagsString) {
   const potentialTags = tagsString.split(",");
-  const validTags = potentialTags.map((tag) => tag.trim()).filter((tag) => isTagValid(tag, true));
+  const validTags = potentialTags.map((tag) => normalizeTagInput(tag, true)).filter((tag) => tag != null);
   return validTags;
 }
 
@@ -606,10 +611,10 @@ var TagSelector = class extends import_obsidian3.FuzzySuggestModal {
     }
     if (keyboardEvent.key == "Enter" && !this.noSelection) {
       const text = this.inputEl.value.trim();
-      const pattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g;
-      if (pattern.test(text)) {
+      const normalizedTag = normalizeTagInput(text, false);
+      if (normalizedTag) {
         this.close();
-        this.onChooseItem(this.inputEl.value);
+        this.onChooseItem(normalizedTag);
       } else {
         new import_obsidian3.Notice("Invalid tag.");
       }
@@ -1762,15 +1767,6 @@ var TempComponent = class extends import_obsidian7.Component {
 
 // TagProcessor.ts
 var import_obsidian8 = require("obsidian");
-
-// tagPatterns.ts
-var CODE_FENCE_MARKER = "```";
-var NUMBERED_LIST_LINE_PATTERN = /^\d+\./;
-function createMarkdownTagOrCodeFencePattern() {
-  return /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g;
-}
-
-// TagProcessor.ts
 var TagProcessor = class {
   constructor(app2, plugin) {
     this.outOfSync = false;
@@ -2933,7 +2929,8 @@ var TagBuddy = class extends import_obsidian10.Plugin {
     }
   }
   saveRecentTag(tag) {
-    if (isTagValid(tag, true)) {
+    const normalizedTag = normalizeTagInput(tag, true);
+    if (normalizedTag) {
       const recentTagsString = this.settings.recentlyAddedTags;
       let recentTags;
       if (recentTagsString == "") {
@@ -2943,10 +2940,10 @@ var TagBuddy = class extends import_obsidian10.Plugin {
       } else {
         recentTags = [this.settings.recentlyAddedTags];
       }
-      if (recentTags.includes(tag)) {
-        recentTags.splice(recentTags.indexOf(tag), 1);
+      if (recentTags.includes(normalizedTag)) {
+        recentTags.splice(recentTags.indexOf(normalizedTag), 1);
       }
-      recentTags.unshift(tag.trim());
+      recentTags.unshift(normalizedTag);
       recentTags = recentTags.slice(0, 3);
       this.settings.recentlyAddedTags = recentTags.join(", ");
       this.saveSettings();

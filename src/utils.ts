@@ -1,5 +1,6 @@
 import { App, Notice, TFile, Platform } from 'obsidian';
 import { NOTICE_TEXT } from './userText';
+import { BARE_TAG_INPUT_PATTERN, FULL_TAG_INPUT_PATTERN } from './tagPatterns';
 
 declare const app: App;
 
@@ -612,10 +613,7 @@ export function isTagValid (
     tag: string,
     fullTag: boolean = false
 ):boolean {
-    let tagPattern
-    if (fullTag) tagPattern = /^#[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
-    //else tagPattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g
-    else tagPattern = /^[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
+    const tagPattern = fullTag ? FULL_TAG_INPUT_PATTERN : BARE_TAG_INPUT_PATTERN;
     return tagPattern.test(tag);
 }
 
@@ -644,8 +642,8 @@ export function extractValidTags(tagsString: string): string[] {
 
     // Filter out valid tags
     const validTags = potentialTags
-        .map(tag => tag.trim()) // Trim each tag
-        .filter(tag => isTagValid(tag, true)); // Use the isTagValid function to check validity
+        .map(tag => normalizeTagInput(tag, true))
+        .filter((tag: string | null): tag is string => tag != null);
 
     return validTags;
 }

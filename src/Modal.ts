@@ -70,10 +70,10 @@ export class TagSelector extends FuzzySuggestModal<string> {
 
         if (keyboardEvent.key == "Enter" && !this.noSelection) {
             const text = this.inputEl.value.trim();
-            const pattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g
-            if (pattern.test(text)) {
+            const normalizedTag = Utils.normalizeTagInput(text, false);
+            if (normalizedTag) {
                 this.close();
-                this.onChooseItem(this.inputEl.value);
+                this.onChooseItem(normalizedTag);
             } else {
                 new Notice('Invalid tag.');
             }

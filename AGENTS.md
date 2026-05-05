@@ -49,6 +49,10 @@ Only one Tag Buddy variant should be enabled at a time. The original and fork bo
 
 For plugin identity, settings tab, or suspicious runtime behavior, restart Obsidian fully. Do not rely on hot reload for those cases.
 
+When creating or updating Obsidian test notes, put instructional tag-looking examples such as `#example` inside fenced code blocks, not inline code or normal prose. Tag Buddy's source scanner intentionally ignores fenced code blocks, but inline code/prose can still be scanned as source tags while Obsidian may not render matching `.tag` elements. That mismatch can trigger a false rendered-tag/source out-of-sync warning and waste debugging time. Keep normal test target tags as real markdown tags, and keep example input strings fenced.
+
+Test notes should have direct inline instructions for the specific behavior under test. Prefer headings like `Testing add-tag validation`, `Do this`, `Expected`, and `Watch for errors`. Do not repeat general setup boilerplate such as enabling the fork plugin in every note; assume the fork testing setup from this file. Include edge cases in the note itself, but keep them isolated from normal pass cases when they are expected to trigger fail-safe warnings.
+
 Use a safe smoke test before broader changes:
 
 - Open Obsidian after deployment.

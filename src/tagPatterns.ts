@@ -2,6 +2,20 @@ export const CODE_FENCE_MARKER = '```';
 export const NUMBERED_LIST_LINE_PATTERN = /^\d+\./;
 
 /*
+ * User-entered tag validation. These patterns preserve the existing Tag Buddy
+ * behavior: ASCII letters, numbers, underscores, hyphens, and forward slashes
+ * are accepted, and at least one non-digit character is required. The non-digit
+ * slot intentionally includes "_", "-", and "/" because that is what the prior
+ * validator allowed.
+ *
+ * Do not use these to scan rendered markdown source. Existing notes can contain
+ * broader Obsidian-rendered tag shapes, and source scanning has different
+ * boundary requirements.
+ */
+export const BARE_TAG_INPUT_PATTERN = /^[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
+export const FULL_TAG_INPUT_PATTERN = /^#[a-zA-Z0-9_\-\/]*[a-zA-Z_\-\/][a-zA-Z0-9_\-\/]*$/;
+
+/*
  * TagProcessor needs source positions to line up with Obsidian's rendered tag
  * elements. This scanner intentionally matches both tags and fenced code markers
  * in one ordered pass so code-block state changes at the right source offset.
