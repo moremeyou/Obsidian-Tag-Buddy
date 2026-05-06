@@ -85,7 +85,6 @@ export class ReadingModeTagEditor {
 		}
 	}
 
-	//async renameTag (tag, newName, batchAction: string | number, specificFile:TFile = null) {
 	async renameTag (
 		tag: string,
 		newName: string,
@@ -93,80 +92,46 @@ export class ReadingModeTagEditor {
 		filePath: string | null = null,
 		tagEl?: HTMLElement | null
 	): Promise<void> {
-
-		//console.log (newName, batchAction, filePath)
-
-		//const tagContainerType = tagEl.getAttribute(
-		//	'type'
-		//);
-		//const index = tagEl.getAttribute(
-		//	'md-index'
-		//);
-		//const filePath = tagEl.getAttribute(
-		//	'file-source'
-		//);
-
 		const activeFile = this.app.workspace.getActiveFile();
 		const file = filePath == null ? activeFile : await Utils.validateFilePath(filePath);
 
 		if (!file) return;
 
-		//const file: TFile = await Utils.validateFilePath(filePath);
-
 		if (typeof batchAction === 'number') {
+			const fileContent = await this.app.vault.read(file);
+			const newFileContent = this.renameTagInStringByIndex (
+				tag,
+				newName,
+				batchAction,
+				fileContent
+			)
+			if (!newFileContent) {
+				await this.refreshStaleTagSource(tagEl);
+				return;
+			}
+			await this.app.vault.modify(file, newFileContent);
 
-	//const file: TFile = await this.app.workspace.getActiveFile()
-	const fileContent = await this.app.vault.read(file);
-	const newFileContent = this.renameTagInStringByIndex (
-		tag,
-		newName,
-		batchAction,
-		fileContent
-		)
-		if (!newFileContent) {
-			await this.refreshStaleTagSource(tagEl);
-			return;
-		}
-		await this.app.vault.modify(file, newFileContent);
-
-        } else if (batchAction == 'note') {
-
-	//const file: TFile = await this.app.workspace.getActiveFile();
-	await this.renameTagsInFileByIndex (
-		tag,
-		newName,
-		file
-		)
-
-
-
-        } else if (batchAction == 'vault') {
-
-		await this.renameTagsInVaultByIndex (
-			tag,
-			newName
+		} else if (batchAction == 'note') {
+			await this.renameTagsInFileByIndex (
+				tag,
+				newName,
+				file
 			)
 
-			//if (activeFile != file) {
-		//this.app.workspace.activeLeaf.rebuildView()
-		//new Notice ('Tags have been updated in external notes. Please refresh this summary or reload this note.')
-	//}
-
-        }
+		} else if (batchAction == 'vault') {
+			await this.renameTagsInVaultByIndex (
+				tag,
+				newName
+			)
+		}
 
 		if (activeFile != file && tagEl) {
-			//this.app.workspace.activeLeaf.rebuildView()
 			new Notice(NOTICE_TEXT.refreshSummaryToSeeChanges, 5000)
-	//console.log(tagEl.closest('.tag-summary-block'))
-	//this.plugin.tagSummary.update(tagEl.closest('.tag-summary-block'));
-	}
-
-
+		}
     }
 
-    async renameTagsInVaultByIndex (tag: string, newName: string): Promise<void> {
-
-	const validTags = [tag]
+	async renameTagsInVaultByIndex (tag: string, newName: string): Promise<void> {
+		const validTags = [tag]
 		let listFiles = this.app.vault.getMarkdownFiles();
 
 		listFiles = listFiles.filter((file) => {
@@ -178,26 +143,23 @@ export class ReadingModeTagEditor {
 				return true;
 			}
 			return false;
-        });
+		});
 
-        let listContents: [TFile, string][] = await this.plugin.tagSummary.readFiles(listFiles);
-        // listContents[n][0] is the file, listContents[n][[1] is the file content
+		let listContents: [TFile, string][] = await this.plugin.tagSummary.readFiles(listFiles);
 
-        for (const note of listContents) {
-	//this.renameTagInFile (tag, newName, note[0]);
-	await this.renameTagsInFileByIndex (
-		tag,
-		newName,
-		note[0]
+		for (const note of listContents) {
+			await this.renameTagsInFileByIndex (
+				tag,
+				newName,
+				note[0]
 			)
-        }
+		}
+	}
 
-    }
-
-    async renameTagsInFileByIndex (
-	tag: string,
-	newName: string,
-	file: TFile
+	async renameTagsInFileByIndex (
+		tag: string,
+		newName: string,
+		file: TFile
 	): Promise<void> {
 
 		if (!file) {
@@ -205,52 +167,40 @@ export class ReadingModeTagEditor {
 			return;
 		}
 
-	const fileContent = await this.app.vault.read(file);
-        let newFileContent = fileContent;
-	const tagPositions = this.plugin.tagProcessor.getMarkdownTags (file, fileContent) as MarkdownTagPosition[];
-	// {tag:tag, index:match.index, source:file.path}
+		const fileContent = await this.app.vault.read(file);
+		let newFileContent = fileContent;
+		const tagPositions = this.plugin.tagProcessor.getMarkdownTags (file, fileContent) as MarkdownTagPosition[];
+		let filteredTagObjs = tagPositions.filter(tagObj => tagObj.tag === tag);
 
-	let filteredTagObjs = tagPositions.filter(tagObj => tagObj.tag === tag);
+		if (filteredTagObjs.length > 0) {
+			filteredTagObjs.sort((a, b) => a.index - b.index);
+			let offset = 0;
+			for (const tagObj of filteredTagObjs) {
+				// Calculate the new index considering the offset
+				const newIndex = tagObj.index + offset;
+				// Replace the tag at the correct position
+				const updatedContent = this.renameTagInStringByIndex(tagObj.tag, newName, newIndex, newFileContent);
+				if (!updatedContent) return;
+				newFileContent = updatedContent;
+				// Update the offset for the next iteration
+				offset += newName.length - tagObj.tag.length;
+			}
 
-	if (filteredTagObjs.length > 0) {
-
-		filteredTagObjs.sort((a, b) => a.index - b.index);
-		let offset = 0;
-		    for (const tagObj of filteredTagObjs) {
-		        // Calculate the new index considering the offset
-	        const newIndex = tagObj.index + offset;
-		        // Replace the tag at the correct position
-		        const updatedContent = this.renameTagInStringByIndex(tagObj.tag, newName, newIndex, newFileContent);
-		        if (!updatedContent) return;
-		        newFileContent = updatedContent;
-		        //newFileContent = this.renameTagInStringByIndex (tag, newName, newIndex, fileContent)
-		        // Update the offset for the next iteration
-		        offset += newName.length - tagObj.tag.length;
-		    }
-
-		await this.app.vault.modify(file, newFileContent);
-
-	} else {
-		//new Notice ('No tags to rename.')
+			await this.app.vault.modify(file, newFileContent);
+		}
 	}
-    }
 
-    renameTagInStringByIndex (
-	tag: string,
-	newName: string,
-	index: number,
-	fileContent: string
+	renameTagInStringByIndex (
+		tag: string,
+		newName: string,
+		index: number,
+		fileContent: string
 	): string | null {
-	//console.log(fileContent)
-	const tagIndex = this.getValidatedTagIndex(tag, index, fileContent);
-	if (tagIndex == null) return null;
-	const newContent = fileContent.substring (0, tagIndex) + newName + fileContent.substring((tagIndex + tag.length))
-	//console.log(newContent)
-	//console.log(index + tag.length)
-	return (newContent);
-	//this.app.vault.modify(file, newFileContent);
-
-    }
+		const tagIndex = this.getValidatedTagIndex(tag, index, fileContent);
+		if (tagIndex == null) return null;
+		const newContent = fileContent.substring (0, tagIndex) + newName + fileContent.substring((tagIndex + tag.length))
+		return (newContent);
+	}
 
 
 	async add (
@@ -368,20 +318,204 @@ export class ReadingModeTagEditor {
 		}
 	}
 
-		async edit (
-			tagEl: HTMLElement,
-			event: Event | null,
-			_paragraphEl: HTMLElement | null,
-			editType: string,
-			newName: string = ''
-		): Promise<void> {
-//console.log(tagEl)
+	private getTagSourceContainer(
+		tagEl: HTMLElement,
+		tagContainerType: string | null
+	): HTMLElement | null {
+		if (tagContainerType == 'native-embed') {
+			return tagEl.closest('.markdown-embed') as HTMLElement | null;
+		}
+		if (tagContainerType == 'plugin-summary') {
+			return tagEl.closest('.tag-summary-paragraph') as HTMLElement | null;
+		}
+
+		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		return activeView?.containerEl.querySelector('.markdown-reading-view') as HTMLElement | null;
+	}
+
+	private showMobileEditNotice(message: string): void {
+		if (this.app.isMobile && this.plugin.settings.mobileNotices) {
+			new Notice(message);
+		}
+	}
+
+	private buildTagEditContent(
+		tag: string,
+		beforeTag: string,
+		afterTag: string,
+		event: Event | null,
+		editType: string
+	): string {
+		if (editType == 'rename') return '';
+		if (!event) return beforeTag + afterTag;
+
+		if (editType == 'hash') {
+			this.showMobileEditNotice(tagConvertedToText(tag));
+			return beforeTag + tag.substring(1) + afterTag;
+		}
+
+		if (event.type == 'touchend'
+			|| this.plugin.settings.mobileTagSearch
+			|| editType == 'remove'
+		) {
+			return this.buildTagRemoveContent(tag, beforeTag, afterTag);
+		}
+
+		return '';
+	}
+
+	private buildTagRemoveContent(
+		tag: string,
+		beforeTag: string,
+		afterTag: string
+	): string {
+		if (tag.includes('/')) {
+			const parts = tag.split('/');
+			const removedChild = parts.pop();
+			this.showMobileEditNotice(childTagRemovedFromParent(removedChild));
+			return beforeTag + parts.join('/') + afterTag;
+		}
+
+		this.showMobileEditNotice(tagRemoved(tag));
+		return this.removeFullTagFromSourceParts(beforeTag, afterTag);
+	}
+
+	private removeFullTagFromSourceParts(
+		beforeTag: string,
+		afterTag: string
+	): string {
+		const startsWithPunctuation = /^[.,!:?;]/.test(afterTag.trimStart()[0]);
+		if (beforeTag.endsWith(' ') && afterTag.startsWith(' ')) {
+			return beforeTag + afterTag.substring(1);
+		}
+		if (startsWithPunctuation) {
+			return beforeTag.trimEnd() + afterTag.trimStart();
+		}
+		return beforeTag + afterTag;
+	}
+
+	private summarySourceMappingIsStable(
+		tagEl: HTMLElement,
+		fileContent: string
+	): boolean {
+		const summaryEl = tagEl.closest('.tag-summary-paragraph');
+		const mdSource = summaryEl?.getAttribute('md-source')?.trim();
+		if (!mdSource) {
+			new Notice(NOTICE_TEXT.cannotIdentifySummaryItemSourceText);
+			return false;
+		}
+
+		const escapedText = Utils.escapeRegExp(mdSource);
+		const regex = new RegExp(escapedText, 'g');
+		const matches = fileContent.match(regex);
+
+		if (matches && matches.length > 1) {
+			new Notice(NOTICE_TEXT.cannotSafelyEditRepeatedSummarySource);
+			return false;
+		}
+		if ((matches && matches.length === 0) || !matches) {
+			new Notice(NOTICE_TEXT.cannotFindTagInSourceNote);
+			return false;
+		}
+
+		return true;
+	}
+
+	private applySummaryEditSafety(
+		newContent: string,
+		fileContentBackup: string,
+		tag: string,
+		safeToEmptyFile: boolean
+	): string {
+		if ((newContent == '' && !safeToEmptyFile)
+			|| Utils.contentChangedTooMuch(
+				fileContentBackup,
+				newContent,
+				tag,
+				2)
+		) {
+			new Notice(NOTICE_TEXT.fileChangeError);
+			return fileContentBackup;
+		}
+
+		if (newContent == '' && safeToEmptyFile) {
+			new Notice(NOTICE_TEXT.tagRemovedEmptyNote);
+		}
+
+		return newContent;
+	}
+
+	private makeSummaryRefreshAfterModify(
+		tagEl: HTMLElement,
+		tag: string,
+		filePath: string
+	): () => void {
+		return () => setTimeout(() => {
+			void this.refreshSummaryAfterTagEdit(tagEl, tag, filePath);
+		}, 200);
+	}
+
+	private async refreshSummaryAfterTagEdit(
+		tagEl: HTMLElement,
+		tag: string,
+		filePath: string
+	): Promise<void> {
+		const tagParagraphEl = tagEl.closest('.tag-summary-paragraph') as HTMLElement | null;
+		const tagSummaryBlock = tagEl.closest('.tag-summary-block') as HTMLElement | null;
+		if (!tagParagraphEl || !tagSummaryBlock) return;
+
+		const tagsToCheck = TagSummary.getTagsToCheckFromEl(tagSummaryBlock);
+		const tagsInContent = Utils.tagsInString(tagParagraphEl.innerText);
+
+		if (!tagsToCheck.includes(tag)) {
+			this.plugin.tagSummary.update(tagSummaryBlock);
+			return;
+		}
+
+		const tagCount = Utils.countOccurrences(tagsToCheck, tagsInContent)
+		if (tagCount >= 2) {
+			this.plugin.tagSummary.update(tagSummaryBlock);
+			return;
+		}
+
+		const notice = new Notice(tagRemovedFromParagraph(tag), 5000);
+		this.plugin.gui.removeElementWithAnimation(
+			tagParagraphEl,
+			() => {
+				setTimeout(async () => {
+					this.plugin.tagSummary.update(tagSummaryBlock);
+					tagParagraphEl.remove();
+				}, 500);
+			}
+		);
+
+		this.plugin.registerDomEvent(
+			notice.noticeEl,
+			'click',
+			() => {
+				this.app.workspace.openLinkText(filePath, '');
+			}
+		);
+	}
+
+	private makeNativeEmbedRefreshAfterModify(tagContainer: HTMLElement | null): () => void {
+		return () => setTimeout(async () => {
+			if (tagContainer) await this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);
+		}, 200)
+	}
+
+	async edit (
+		tagEl: HTMLElement,
+		event: Event | null,
+		_paragraphEl: HTMLElement | null,
+		editType: string,
+		newName: string = ''
+	): Promise<void> {
 		if (!tagEl) {
 			new Notice(NOTICE_TEXT.cannotIdentifyTagLocationTryAgain);
 			return;
 		}
 
-			let tagContainer: HTMLElement | null = null;
 		const tagContainerType = tagEl.getAttribute(
 			'type'
 		);
@@ -397,20 +531,15 @@ export class ReadingModeTagEditor {
 				+ '\nIn file: ' + filePath);
 		}
 
-			if (tagContainerType == 'native-embed') tagContainer = tagEl.closest('.markdown-embed') as HTMLElement | null;
-			else if (tagContainerType == 'plugin-summary') tagContainer = tagEl.closest('.tag-summary-paragraph') as HTMLElement | null;
-			else {
-				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				tagContainer = activeView?.containerEl.querySelector('.markdown-reading-view') as HTMLElement | null;
-			}
+		const tagContainer = this.getTagSourceContainer(tagEl, tagContainerType);
 
 		if (filePath) {
 
-				const file = await Utils.validateFilePath(filePath);
-				if (!file) return;
+			const file = await Utils.validateFilePath(filePath);
+			if (!file) return;
 
-				let fileContent: string;
-				let fileContentBackup: string;
+			let fileContent: string;
+			let fileContentBackup: string;
 			const tag: string = tagEl.innerText.trim();
 
 			try {
@@ -422,12 +551,7 @@ export class ReadingModeTagEditor {
 				return;
 			}
 
-			// check if the file has only one tag left (and that's all thats left in the file)
-			let safeToEmptyFile = false;
-			const tagRegex = /^\s*#(\w+)\s*$/;
-			if (tagRegex.test(fileContent.trim())) {
-			safeToEmptyFile = true;
-			}
+			const safeToEmptyFile = /^\s*#(\w+)\s*$/.test(fileContent.trim());
 
 			const tagIndex = this.getValidatedTagIndex(tag, index, fileContent);
 			if (tagIndex == null) {
@@ -435,196 +559,21 @@ export class ReadingModeTagEditor {
 				return;
 			}
 
-			let beforeTag = fileContent.substring(0, tagIndex);
-			//let afterTag = fileContent.substring((Number(index)+Number(tag.length)+1));
-			let afterTag = fileContent.substring(
+			const beforeTag = fileContent.substring(0, tagIndex);
+			const afterTag = fileContent.substring(
 				tagIndex + Number(tag.length)
 			);
-
-			//console.log (JSON.stringify(beforeTag));
-			//console.log (JSON.stringify(tag));
-			//console.log (JSON.stringify(afterTag));
-
-			let afterTagChr = '';
-
-
-			// Can't remember why I have this...
-			// need to refactor all this line break space stuff
-			if (fileContent[tagIndex] === '\n') beforeTag += '\n';
-			let newContent = '';
-
-			////////////////////////////////////////////////////////////////
-			// TO-DO: REFACTOR
-			////////////////////////////////////////////////////////////////
-
-			if (editType == 'rename') { // this only happens from edit modal
-
-				//newContent = this.renameTagInStringByIndex ('#'+tag, newName, index, fileContent);
-
-			} else if (!event) { // then we're calling this method from a button. need to rethink how this is organized.
-
-				newContent = beforeTag + afterTagChr + afterTag;
-
-			} else if (editType == 'hash') {
-				// Remove the hash only
-				const noHash = tag.substring(1);
-				//newContent = beforeTag + (!beforeTag.endsWith(' ')?' ':'') + noHash + afterTag;
-				newContent = beforeTag + noHash + afterTagChr + afterTag;
-
-				if (this.app.isMobile && this.plugin.settings.mobileNotices) {
-					new Notice(tagConvertedToText(tag));
-				}
-
-			/*} else if (((event.type == 'touchend')
-				|| this.plugin.settings.mobileTagSearch)
-					|| (Utils.ctrlCmdKey(event) && !this.plugin.settings.removeOnClick)
-					|| (!Utils.ctrlCmdKey(event) && this.plugin.settings.removeOnClick)
-				)
-			{*/
-			} else if (((event.type == 'touchend')
-					|| this.plugin.settings.mobileTagSearch) // don't need this check any more.
-					|| (editType == 'remove')
-				)
-			{
-
-				// Remove tag (or child first, if exists)
-				let parentTag = '';
-
-				if (tag.includes('/')
-
-					//&& (this.plugin.settings.removeChildTagsFirst
-					//|| (event.shiftKey
-						//&& !this.plugin.settings.removeChildTagsFirst)
-					)
-
-				{
-					let parts = tag.split('/');
-					const removedChild = parts.pop();
-					parentTag = parts.join('/');
-					newContent = beforeTag
-						+ parentTag
-						+ afterTagChr
-						+ afterTag;
-
-					if (this.app.isMobile
-						&& this.plugin.settings.mobileNotices)
-					{
-						new Notice(childTagRemovedFromParent(removedChild));
-					}
-
-				} else {
-					// remove extra space
-
-//console.log ('>' + beforeTag.substring(beforeTag.length-1) + afterTag.substring(0,1) + '<')
-					/*if (beforeTag.substring(beforeTag.length-1) == ' ' && afterTag.substring(0,1) == ' ') {
-						newContent = beforeTag + afterTag.substring(1);
-					} else {
-						newContent = beforeTag + afterTag;
-					}*/
-
-					const startsWithPunctuation = /^[.,!:?;]/.test(afterTag.trimStart()[0]);
-//console.log('>'+afterTag.trimStart()[0]+'<')
-					if (beforeTag.endsWith(' ') && afterTag.startsWith(' ')) {
-				        newContent = beforeTag + afterTag.substring(1);
-				    } else if (startsWithPunctuation) {
-					newContent = beforeTag.trimEnd() + afterTag.trimStart();
-				    } else {
-				        // If there's no leading space in afterTag or special handling for punctuation isn't needed, concatenate directly
-				        newContent = beforeTag + afterTag;
-				    }
-
-					if (this.app.isMobile
-						&& this.plugin.settings.mobileNotices) {
-						new Notice(tagRemoved(tag));
-					}
-				}
-			}
+			let newContent = this.buildTagEditContent(tag, beforeTag, afterTag, event, editType);
 
 			let refreshAfterModify = () => {};
 
 			if (tagContainerType == 'plugin-summary') {
-				// Safety check 1
-				const summaryEl = tagEl.closest('.tag-summary-paragraph');
-				const mdSource = summaryEl?.getAttribute('md-source')?.trim();
-				if (!mdSource) {
-					new Notice(NOTICE_TEXT.cannotIdentifySummaryItemSourceText);
-					return;
-				}
+				if (!this.summarySourceMappingIsStable(tagEl, fileContent)) return;
+				newContent = this.applySummaryEditSafety(newContent, fileContentBackup, tag, safeToEmptyFile);
+				refreshAfterModify = this.makeSummaryRefreshAfterModify(tagEl, tag, filePath);
 
-				const escapedText = Utils.escapeRegExp(mdSource);
-				const regex = new RegExp(escapedText, 'g');
-				const matches = fileContent.match(regex);
-
-				if (matches && matches.length > 1) {
-				    new Notice(NOTICE_TEXT.cannotSafelyEditRepeatedSummarySource);
-				    return;
-
-				} else if ((matches && matches.length === 0) || !matches) {
-					new Notice(NOTICE_TEXT.cannotFindTagInSourceNote);
-				    return;
-				}
-
-				// Safety check 2
-				if ((newContent == '' && !safeToEmptyFile)
-					|| Utils.contentChangedTooMuch(
-						fileContentBackup,
-						newContent,
-						tag,
-						2)
-					) {
-					new Notice(NOTICE_TEXT.fileChangeError);
-					newContent = fileContentBackup;
-
-				} else if (newContent == '' && safeToEmptyFile) {
-					new Notice(NOTICE_TEXT.tagRemovedEmptyNote);
-				}
-
-					refreshAfterModify = () => setTimeout(async () => {
-
-						const tagParagraphEl = tagEl.closest('.tag-summary-paragraph') as HTMLElement | null;
-						const tagSummaryBlock = tagEl.closest('.tag-summary-block') as HTMLElement | null;
-						if (!tagParagraphEl || !tagSummaryBlock) return;
-						const tagsToCheck = TagSummary.getTagsToCheckFromEl(tagSummaryBlock);
-						const tagsInContent = Utils.tagsInString(tagParagraphEl.innerText);
-
-						if (tagsToCheck.includes(tag)) {
-							const tagCount = Utils.countOccurrences(tagsToCheck, tagsInContent)
-
-							if (tagCount >= 2) {
-								this.plugin.tagSummary.update(tagSummaryBlock);
-							} else {
-								//console.log('last one, will remove paragraph')
-								const notice = new Notice(tagRemovedFromParagraph(tag), 5000);
-
-								this.plugin.gui.removeElementWithAnimation(
-									tagParagraphEl,
-								() => {
-								setTimeout(async () => {
-									this.plugin.tagSummary.update(tagSummaryBlock);
-									tagParagraphEl.remove();
-								}, 500);
-							});
-
-							this.plugin.registerDomEvent(
-								notice.noticeEl,
-								'click',
-								(e: Event) => {
-									this.app.workspace.openLinkText(filePath, '');
-								}
-							);
-						}
-
-					} else {
-						this.plugin.tagSummary.update(tagSummaryBlock);
-					}
-				}, 200);
-
-				} else if (tagContainerType == 'native-embed') {
-
-					refreshAfterModify = () => setTimeout(async () => {
-						if (tagContainer) await this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);
-					}, 200)
-
+			} else if (tagContainerType == 'native-embed') {
+				refreshAfterModify = this.makeNativeEmbedRefreshAfterModify(tagContainer);
 			}
 
 			try {

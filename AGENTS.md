@@ -106,3 +106,13 @@ Prefer small, verified changes:
 - Fix one behavior or structural issue at a time.
 - Rebuild and verify the fork after each meaningful change.
 - Document any recurring operational lesson here.
+
+## Current Cleanup Checkpoint
+
+Latest verified fork state after the Reading Mode editor cleanup and tag-sync safety pass:
+
+- Reading Mode edit/remove/hash behavior is split into smaller helper flows in `src/ReadingModeTagEditor.ts`.
+- Active-file rendered tag mapping in `src/TagProcessor.ts` must preserve Obsidian's internal `view.currentMode.renderer.sections` path. Do not replace it with a plain visible-container `.querySelectorAll('.tag')` query; long notes can have off-screen or not-yet-rendered DOM, which can produce false source/render out-of-sync warnings.
+- When comparing rendered `.tag` elements to markdown source positions, skip source tags in contexts Obsidian does not expose as editable body tags for that rendered view, such as frontmatter/properties. Full source scans used for note/vault-wide edits can still include those tags when appropriate.
+- For out-of-sync warnings that happen only on app startup or only with a specific long note, first check whether active-file processing is using `renderer.sections`, whether a scoped container path bypasses it, and whether a `tag-summary` block at the top is still rendering.
+- Test notes added for this checkpoint live in `/Users/davidfasullo/Desktop/dBrain/Tag Buddy/Testing 2026/`: `TB Test 13 - Reading Mode Editor Full Pass.md`, `TB Test 14 - Frontmatter Tag Sync.md`, and `TB Test 15 - Startup Summary Sync.md`.

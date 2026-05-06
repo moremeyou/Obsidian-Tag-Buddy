@@ -12,6 +12,11 @@ interface MarkdownTagPosition {
 	line?: number;
 }
 
+interface SourceRange {
+	start: number;
+	end: number;
+}
+
 interface RenderSection {
 	el: HTMLElement;
 }
@@ -20,6 +25,7 @@ export class TagProcessor {
 	app: App;
 	plugin: TagBuddy;
 	private outOfSync: boolean = false;
+	private activeFileMismatchRetry: number | null = null;
 	debouncedProcessActiveFileTagEls: Debouncer<[], Promise<void>>;
 
 	constructor(
@@ -134,6 +140,11 @@ export class TagProcessor {
 			container: HTMLElement,
 			sourcePath: string
 		): Promise<HTMLElement[] | null> {
+			if (sourcePath == this.app.workspace.getActiveFile()?.path) {
+				await this.processActiveFileTags();
+				return null;
+			}
+
 			const file = this.app.vault.getAbstractFileByPath(sourcePath);
 			if (!(file instanceof TFile)) return null;
 
@@ -143,12 +154,13 @@ export class TagProcessor {
 			);
 			if (tagElements.length == 0) return [];
 
-			const markdownTags = this.getMarkdownTags(file, fileContent);
+			const markdownTags = this.getMarkdownTags(file, fileContent, false);
 			return this.assignMarkdownTags(markdownTags, tagElements, 0, 'active');
 		}
 
 	async processActiveFileTags (
 		//tags: HTMLElement[],
+		allowMismatchRetry: boolean = true
 	): Promise<void> {
 		if (this.plugin.settings.debugMode) console.log('Tag Buddy: processing active file tags')
 
@@ -163,13 +175,15 @@ export class TagProcessor {
 				return;
 			}
 			const fileContent = await this.app.vault.read(activeFile);
+			// Use Obsidian's internal rendered sections so long notes include off-screen rendered tag elements.
 			const previewMode = view.currentMode as unknown as { renderer?: { sections?: RenderSection[] } };
 			const sections = previewMode.renderer?.sections ?? [];
 			const activeFileTagEls: HTMLElement[] = [];
 
 			const activeFileTags = this.getMarkdownTags(
 				activeFile,
-				fileContent
+				fileContent,
+				false
 			);
 
 			sections.forEach((section) => {
@@ -182,6 +196,11 @@ export class TagProcessor {
 			const filteredTagElements = this.filterActiveFileTagEls(activeFileTagEls);
 
 			if (filteredTagElements.length > 0) {
+				if (allowMismatchRetry && activeFileTags.length != filteredTagElements.length) {
+					this.retryActiveFileTagProcessing();
+					return;
+				}
+
 				const assignedTags = this.assignMarkdownTags(
 					activeFileTags,
 					filteredTagElements,
@@ -193,6 +212,17 @@ export class TagProcessor {
 				this.outOfSync = false;
 			}
 		}
+	}
+
+	private retryActiveFileTagProcessing(): void {
+		if (this.activeFileMismatchRetry != null) {
+			window.clearTimeout(this.activeFileMismatchRetry);
+		}
+
+		this.activeFileMismatchRetry = window.setTimeout(() => {
+			this.activeFileMismatchRetry = null;
+			void this.processActiveFileTags(false);
+		}, 500);
 	}
 
 	async processTagSummaryParagraph (
@@ -212,7 +242,8 @@ export class TagProcessor {
 		const startIndex = fileContent.indexOf(markdownBlock);
 		const mdTags = this.getMarkdownTags(
 			file,
-			fileContent
+			fileContent,
+			false
 		);
 		this.assignMarkdownTags(
 			mdTags,
@@ -224,12 +255,14 @@ export class TagProcessor {
 
 	getMarkdownTags(
 	    file: TFile,
-	    fileContent: string
+	    fileContent: string,
+	    includeFrontmatter: boolean = true
 	): MarkdownTagPosition[] {
 	    const tagPositions: MarkdownTagPosition[] = [];
 	    const processedPositions = new Set<number>(); // Track positions to prevent duplicate processing
 	    let match: RegExpExecArray | null;
     const regex = createMarkdownTagOrCodeFencePattern();
+    const frontmatterRange = this.getFrontmatterRange(fileContent);
 
     // Context tracking
     let currentContext = "normal";
@@ -264,6 +297,11 @@ export class TagProcessor {
         const lineStart = fileContent.lastIndexOf("\n", matchIndex) + 1; // Get start of the line
         const lineEnd = fileContent.indexOf("\n", matchIndex); // Get end of the line
         const line = fileContent.slice(lineStart, lineEnd !== -1 ? lineEnd : undefined);
+
+        if (!includeFrontmatter && this.isIndexInsideRange(matchIndex, frontmatterRange)) {
+            if (this.plugin.settings.debugMode) console.log(`Skipping frontmatter tag ${matchedString}.`);
+            continue;
+        }
 
         if (line.trim().startsWith(">")) {
             currentContext = "blockquote";
@@ -316,6 +354,28 @@ export class TagProcessor {
 
     return tagPositions;
 }
+
+	private getFrontmatterRange(fileContent: string): SourceRange | null {
+		const lines = fileContent.split('\n');
+		if (lines[0]?.trim() != '---') return null;
+
+		let offset = lines[0].length + 1;
+		for (let lineIndex = 1; lineIndex < lines.length; lineIndex += 1) {
+			if (lines[lineIndex].trim() == '---') {
+				return {
+					start: 0,
+					end: offset + lines[lineIndex].length,
+				};
+			}
+			offset += lines[lineIndex].length + 1;
+		}
+
+		return null;
+	}
+
+	private isIndexInsideRange(index: number, range: SourceRange | null): boolean {
+		return !!range && index >= range.start && index <= range.end;
+	}
 
 
 
@@ -404,7 +464,7 @@ export class TagProcessor {
 			const file = await Utils.validateFilePath(filePath)
 			if (file) {
 				const fileContent = await this.app.vault.read(file);
-				const embededTagFile = this.getMarkdownTags(file, fileContent);
+				const embededTagFile = this.getMarkdownTags(file, fileContent, false);
 
 				if (hasAnchorLink && anchorLinkType != '') {
 					if (
