@@ -156,6 +156,7 @@ export class GUI {
 	): HTMLElement {
 
 		const copyToEl: HTMLElement = createEl('span');
+		copyToEl.setAttribute('class', 'tagsummary-copy-to-controls');
 		const selectEl: HTMLElement = createEl('span');
 		let dropdown = new DropdownComponent(selectEl);
 		sections.forEach((sec) => {

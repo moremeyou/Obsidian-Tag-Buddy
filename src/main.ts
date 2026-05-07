@@ -35,7 +35,11 @@ interface TBSettings {
 	mobileNotices: boolean;
 	recentlyAddedTags: string;
 	lockRecentTags: boolean;
-	showSummaryButtons:boolean;
+	showSummaryTags: string;
+	summaryRefreshBtn: string;
+	copySummaryBtn: string;
+	summaryNoteBtn: string;
+	bakeSummaryBtn: string;
 	debugMode: boolean;
 
 }
@@ -67,7 +71,11 @@ const DEFAULT_SETTINGS: Partial<TBSettings> = {
 	mobileNotices: true,
 	recentlyAddedTags: '',
 	lockRecentTags: false,
-	showSummaryButtons:false,
+	showSummaryTags: 'always',
+	summaryRefreshBtn: 'always',
+	copySummaryBtn: 'hide',
+	summaryNoteBtn: 'hide',
+	bakeSummaryBtn: 'hide',
 	debugMode: false
 };
 
@@ -448,7 +456,17 @@ export default class TagBuddy extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const loadedSettings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as TBSettings & {
+			showSummaryTags?: string | boolean;
+			showSummaryButtons?: boolean;
+		};
+
+		if (typeof loadedSettings.showSummaryTags === 'boolean') {
+			loadedSettings.showSummaryTags = loadedSettings.showSummaryTags ? 'always' : 'hide';
+		}
+		delete loadedSettings.showSummaryButtons;
+
+		this.settings = loadedSettings as TBSettings;
 	}
 
 	async saveSettings() {

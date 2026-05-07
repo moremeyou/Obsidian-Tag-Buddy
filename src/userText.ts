@@ -54,7 +54,8 @@ export const SETTINGS_TEXT = {
 		desktop: 'Desktop',
 		mobile: 'Mobile',
 		tagSummaries: 'Tag Summaries',
-		tagSummaryItems: 'Tag Summaries Items',
+		tagSummaryControls: 'Tag Summary Buttons',
+		tagSummaryItems: 'Tag Summary Item Buttons',
 		support: 'Support a buddy',
 	},
 	recentTags: {
@@ -93,9 +94,15 @@ export const SETTINGS_TEXT = {
 		name: 'TRIPLE-TAP non-tag, non-link text to add a tag:',
 		desc: 'Toggle OFF to disable triple-tap.',
 	},
-	showSummaryButtons: {
-		name: 'Show tag summary buttons',
-		desc: 'Toggle OFF to hide these buttons.',
+	showSummaryTags: {
+		name: 'Summary tags:',
+		desc: 'Show or hide the query tags above summaries.',
+	},
+	summaryActionButtons: {
+		refresh: 'Refresh summary button:',
+		copySummary: 'Copy summary button:',
+		createNote: 'Create summary note button:',
+		flatten: 'Flatten summary button:',
 	},
 	summaryButtons: {
 		removeTag: 'Remove tag button:',

@@ -208,12 +208,6 @@ export class TagSummary {
 		const file = this.app.vault.getAbstractFileByPath(fileName);
 		let notice;
 
-		if (!code) {
-			tags.forEach ((tag) => {
-				fileContent = Utils.replaceTextInString (tag, fileContent, tag.substring(1), true);
-			});
-		}
-
 		if (file instanceof TFile && !incrementFile) {
 
 			notice = new Notice(NOTICE_TEXT.noteAlreadyExistsOverwrite, 8000);
@@ -444,13 +438,13 @@ export class TagSummary {
 				}
 
 				const mdParagraph = paragraph;
-				paragraph = this.buildSummaryDisplayMarkdown(linkInfo.summaryLink, paragraph);
-				summary += paragraph + '\n';
+				const displayParagraph = this.buildSummaryDisplayMarkdown(linkInfo.summaryLink, mdParagraph);
+				summary += displayParagraph + '\n';
 
 				paragraphEl.setAttribute('md-source', mdParagraph);
 
 				// Obsidian renders markdown/tags/links first; Tag Buddy decorates the DOM after.
-				await MarkdownRenderer.render(this.app, paragraph, paragraphEl, '', tempComponent);
+				await MarkdownRenderer.render(this.app, displayParagraph, paragraphEl, '', tempComponent);
 				this.decorateRenderedSummaryParagraph(paragraphEl, buttonContainer);
 
 				summaryContainer.appendChild(paragraphEl);
@@ -458,37 +452,6 @@ export class TagSummary {
 		}
 
 		if (summary != '') {
-			setTimeout(async () => {
-				if (this.plugin.settings.showSummaryButtons) {
-					summaryContainer.appendChild(
-						this.plugin.gui.makeSummaryRefreshButton(
-							summaryContainer
-						)
-					);
-					summaryContainer.appendChild(
-						this.plugin.gui.makeCopySummaryButton(
-							summary
-						)
-					);
-					summaryContainer.appendChild(
-						this.plugin.gui.makeSummaryNoteButton(
-							this.makeSummaryBtnHandler.bind(this),
-							summary,
-							tags
-						)
-					);
-					summaryContainer.appendChild(
-						this.plugin.gui.makeBakeButton(
-							this.bakeSummaryBtnHandler.bind(this),
-							summary,
-							summaryContainer,
-							activeFile?.path ?? fileCtx
-						)
-					);
-
-					summaryContainer.appendChild(createEl('br'));
-				}
-			}, 0);
 			TagSummary.writeCodeBlockAttrs(summaryContainer, {
 				tags,
 				include,
@@ -497,6 +460,18 @@ export class TagSummary {
 				max,
 				mdSource
 			});
+
+			const summaryHeader = this.createSummaryHeader(
+				tags,
+				include,
+				exclude,
+				summary,
+				summaryContainer,
+				activeFile?.path ?? fileCtx
+			);
+			if (summaryHeader) {
+				summaryContainer.insertBefore(summaryHeader, summaryContainer.firstChild);
+			}
 
 			element.replaceWith(summaryContainer);
 		} else {
@@ -719,23 +694,222 @@ export class TagSummary {
 	}
 
 	private buildSummaryDisplayMarkdown(link: string, sourceParagraph: string): string {
-		return '**' + link + '**\n' + sourceParagraph;
+		return '**' + link + '**\n' + this.compactLeadingTagLines(sourceParagraph);
+	}
+
+	private compactLeadingTagLines(sourceParagraph: string): string {
+		const lines = sourceParagraph.split('\n');
+		const tagLines: string[] = [];
+		let bodyLineIndex = 0;
+
+		while (
+			bodyLineIndex < lines.length
+			&& this.isTagOnlySummaryLine(lines[bodyLineIndex])
+		) {
+			tagLines.push(lines[bodyLineIndex].trim());
+			bodyLineIndex++;
+		}
+
+		if (
+			tagLines.length <= 0
+			|| bodyLineIndex >= lines.length
+			|| lines[bodyLineIndex].trim() == ''
+			|| lines[bodyLineIndex].match(/^#{1,6}\s/)
+		) {
+			return sourceParagraph;
+		}
+
+		const compactedLine = tagLines.join(' ') + ' ' + lines[bodyLineIndex].trimStart();
+		return [compactedLine, ...lines.slice(bodyLineIndex + 1)].join('\n');
+	}
+
+	private isTagOnlySummaryLine(line: string): boolean {
+		const tokens = line.trim().split(/\s+/).filter((token) => token.length > 0);
+		return tokens.length > 0 && tokens.every((token) => token.match(/^#[^\s#.,;!?:]+$/) != null);
+	}
+
+	private createSummaryHeader(
+		tags: string[],
+		include: string[],
+		exclude: string[],
+		summaryMd: string,
+		summaryContainer: HTMLElement,
+		sourcePath: string
+	): HTMLElement | null {
+		const outputSummaryMd = this.buildSummaryOutputMarkdown(summaryMd, tags.concat(include));
+		const tagListEl = Utils.platformSettingCheck(this.app, this.plugin.settings.showSummaryTags)
+			? this.createSummaryTagList(tags, include, exclude)
+			: null;
+		const buttonListEl = this.createSummaryActionButtons(outputSummaryMd, summaryContainer, sourcePath, tags);
+
+		if (!tagListEl && !buttonListEl) return null;
+
+		const headerEl = createEl('div');
+		headerEl.setAttribute('class', 'tagsummary-header');
+		if (tagListEl) headerEl.appendChild(tagListEl);
+		if (buttonListEl) headerEl.appendChild(buttonListEl);
+		return headerEl;
+	}
+
+	private createSummaryTagList(
+		tags: string[],
+		include: string[],
+		exclude: string[]
+	): HTMLElement | null {
+		const queryTags = this.getSummaryHeaderTags(tags, include, exclude);
+		if (queryTags.length <= 0) return null;
+
+		const tagListEl = createEl('span');
+		tagListEl.setAttribute('class', 'tagsummary-query-tags');
+
+		queryTags.forEach((queryTag) => {
+			const tagEl = createEl('span');
+			tagEl.setAttribute('class', 'tagsummary-query-tag tagsummary-query-tag-' + queryTag.kind);
+			tagEl.setAttribute('title', queryTag.tag);
+			tagEl.setText(queryTag.tag);
+			tagListEl.appendChild(tagEl);
+		});
+
+		return tagListEl;
+	}
+
+	private getSummaryHeaderTags(
+		tags: string[],
+		include: string[],
+		exclude: string[]
+	): { tag: string; kind: string }[] {
+		const uniqueTags = new Map<string, { tag: string; kind: string }>();
+		const addTags = (values: string[], kind: string) => {
+			values.forEach((tag) => {
+				if (!uniqueTags.has(tag)) uniqueTags.set(tag, { tag, kind });
+			});
+		};
+
+		addTags(tags, 'tag');
+		addTags(include, 'include');
+		addTags(exclude, 'exclude');
+		return Array.from(uniqueTags.values());
+	}
+
+	private buildSummaryOutputMarkdown(summaryMd: string, tagsToRemove: string[]): string {
+		let outputMd = summaryMd;
+		tagsToRemove.forEach((tag) => {
+			outputMd = this.removeTagFromSummaryOutput(outputMd, tag);
+		});
+		return this.normalizeSummaryOutputSpacing(outputMd.replace(/[^\S\r\n]+(?=\r?\n|$)/g, ''));
+	}
+
+	private removeTagFromSummaryOutput(summaryMd: string, tag: string): string {
+		const tagText = Utils.escapeRegExp(tag);
+		return summaryMd
+			.replace(new RegExp(`(^|\\r?\\n)([^\\S\\r\\n]*)${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, 'gi'), '$1$2')
+			.replace(new RegExp(`([^\\S\\r\\n])${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, 'gi'), '$1')
+			.replace(new RegExp(`^${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, 'i'), '');
+	}
+
+	private normalizeSummaryOutputSpacing(summaryMd: string): string {
+		return summaryMd.replace(/(\*\*\[\[[^\n]+\]\]\*\*)[^\S\r\n]*(?:\r?\n){2,}([^\r\n])/g, '$1\n$2');
+	}
+
+	private createSummaryActionButtons(
+		summaryMd: string,
+		summaryContainer: HTMLElement,
+		sourcePath: string,
+		tags: string[]
+	): HTMLElement | null {
+		const buttonListEl = createEl('span');
+		buttonListEl.setAttribute('class', 'tagsummary-summary-buttons');
+
+		if (Utils.platformSettingCheck(this.app, this.plugin.settings.copySummaryBtn)) {
+			buttonListEl.appendChild(this.plugin.gui.makeCopySummaryButton(summaryMd));
+		}
+		if (Utils.platformSettingCheck(this.app, this.plugin.settings.summaryNoteBtn)) {
+			buttonListEl.appendChild(
+				this.plugin.gui.makeSummaryNoteButton(
+					this.makeSummaryBtnHandler.bind(this),
+					summaryMd,
+					tags
+				)
+			);
+		}
+		if (Utils.platformSettingCheck(this.app, this.plugin.settings.bakeSummaryBtn)) {
+			buttonListEl.appendChild(
+				this.plugin.gui.makeBakeButton(
+					this.bakeSummaryBtnHandler.bind(this),
+					summaryMd,
+					summaryContainer,
+					sourcePath
+				)
+			);
+		}
+		if (Utils.platformSettingCheck(this.app, this.plugin.settings.summaryRefreshBtn)) {
+			buttonListEl.appendChild(this.plugin.gui.makeSummaryRefreshButton(summaryContainer));
+		}
+
+		return buttonListEl.children.length > 0 ? buttonListEl : null;
 	}
 
 	private decorateRenderedSummaryParagraph(
 		paragraphEl: HTMLElement,
 		buttonContainer: HTMLDivElement
 	): void {
-		// Keep this order: render markdown first, then replace the rendered strong
-		// link with the title wrapper and append the action buttons.
+		// Keep this order: render markdown first, then move the rendered link and
+		// action buttons into a header row above the summary body.
+		const headerEl = createEl('div');
+		headerEl.setAttribute('class', 'tagsummary-item-header');
+
 		const titleEl = createEl('span');
 		titleEl.setAttribute('class', 'tagsummary-item-title');
 
 		const strongEl = paragraphEl.querySelector('strong');
-		if (strongEl) titleEl.appendChild(strongEl.cloneNode(true));
+		if (strongEl) {
+			titleEl.appendChild(strongEl.cloneNode(true));
+			headerEl.appendChild(titleEl);
+			headerEl.appendChild(buttonContainer);
+			const bodyContainer = strongEl.parentElement;
+			if (bodyContainer && bodyContainer != paragraphEl) {
+				paragraphEl.insertBefore(headerEl, bodyContainer);
+				this.removeRenderedTitleFromBody(strongEl);
+			} else {
+				strongEl.replaceWith(headerEl);
+				this.removeLeadingBreakAfterItemHeader(headerEl);
+			}
+			this.appendItemDivider(paragraphEl);
+			return;
+		}
 
-		paragraphEl.appendChild(buttonContainer);
-		if (strongEl) strongEl.replaceWith(titleEl);
+		headerEl.appendChild(buttonContainer);
+		paragraphEl.prepend(headerEl);
+		this.appendItemDivider(paragraphEl);
+	}
+
+	private appendItemDivider(paragraphEl: HTMLElement): void {
+		const dividerEl = createEl('div');
+		dividerEl.setAttribute('class', 'tagsummary-item-divider');
+		paragraphEl.appendChild(dividerEl);
+	}
+
+	private removeRenderedTitleFromBody(titleEl: HTMLElement): void {
+		const nextSibling = titleEl.nextSibling;
+		titleEl.remove();
+		this.removeLeadingBreakFromNode(nextSibling);
+	}
+
+	private removeLeadingBreakAfterItemHeader(headerEl: HTMLElement): void {
+		this.removeLeadingBreakFromNode(headerEl.nextSibling);
+	}
+
+	private removeLeadingBreakFromNode(startNode: ChildNode | null): void {
+		let sibling = startNode;
+		while (sibling && sibling.nodeType == Node.TEXT_NODE && sibling.textContent?.trim() == '') {
+			const nextSibling = sibling.nextSibling;
+			sibling.remove();
+			sibling = nextSibling;
+		}
+
+		if (sibling instanceof HTMLBRElement) {
+			sibling.remove();
+		}
 	}
 
 	static getTagsToCheckFromEl (

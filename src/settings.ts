@@ -104,77 +104,86 @@ export class TBSettingsTab extends PluginSettingTab {
             )
         );
 
-        containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.mobile });
-
-        new Setting(containerEl)
-            .setName(SETTINGS_TEXT.mobileNotices.name)
-            .setDesc(SETTINGS_TEXT.mobileNotices.desc)
-            .addToggle((toggle) =>
-                toggle
-                .setValue(this.plugin.settings.mobileNotices)
-                .onChange(async (value) => {
-                    this.plugin.settings.mobileNotices = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        new Setting (containerEl)
-            .setName(SETTINGS_TEXT.mobileDoubleTapTag.name)
-            .setDesc(SETTINGS_TEXT.mobileDoubleTapTag.desc)
-            .addDropdown((opt) =>
-                opt
-                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
-                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
-                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
-                .addOption('native', SETTINGS_TEXT.tagActionOptions.native)
-                .setValue(this.plugin.settings.mobileDoubleTapTag)
-                .onChange(async (value) => {
-                    this.plugin.settings.mobileDoubleTapTag = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        new Setting (containerEl)
-            .setName(SETTINGS_TEXT.mobileLongPressTag.name)
-            .setDesc(SETTINGS_TEXT.mobileLongPressTag.desc)
-            .addDropdown((opt) =>
-                opt
-                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
-                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
-                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
-                .setValue(this.plugin.settings.mobileLongPressTag)
-                .onChange(async (value) => {
-                    this.plugin.settings.mobileLongPressTag = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        new Setting (containerEl)
-            .setName(SETTINGS_TEXT.mobileTripleTapText.name)
-            .setDesc(SETTINGS_TEXT.mobileTripleTapText.desc)
-            .addToggle((toggle) =>
-                toggle
-                .setValue(this.plugin.settings.mobileTripleTapText)
-                .onChange(async (value) => {
-                    this.plugin.settings.mobileTripleTapText = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
         containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.tagSummaries });
 
-        new Setting(containerEl)
-            .setName(SETTINGS_TEXT.showSummaryButtons.name)
-            .setDesc(SETTINGS_TEXT.showSummaryButtons.desc)
-            .addToggle((toggle) =>
-                toggle
-                .setValue(this.plugin.settings.showSummaryButtons)
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.showSummaryTags.name)
+            .setDesc(SETTINGS_TEXT.showSummaryTags.desc)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.showSummaryTags)
                 .onChange(async (value) => {
-                    this.plugin.settings.showSummaryButtons = value;
+                    this.plugin.settings.showSummaryTags = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        containerEl.createEl("h5", { text: SETTINGS_TEXT.sections.tagSummaryControls });
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryActionButtons.refresh)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.summaryRefreshBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.summaryRefreshBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryActionButtons.copySummary)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.copySummaryBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.copySummaryBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryActionButtons.createNote)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.summaryNoteBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.summaryNoteBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryActionButtons.flatten)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.bakeSummaryBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.bakeSummaryBtn = value;
                     await this.plugin.saveSettings();
                 }
             )
@@ -273,6 +282,67 @@ export class TBSettingsTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.copyToNoteBtn)
                 .onChange(async (value) => {
                     this.plugin.settings.copyToNoteBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.mobile });
+
+        new Setting(containerEl)
+            .setName(SETTINGS_TEXT.mobileNotices.name)
+            .setDesc(SETTINGS_TEXT.mobileNotices.desc)
+            .addToggle((toggle) =>
+                toggle
+                .setValue(this.plugin.settings.mobileNotices)
+                .onChange(async (value) => {
+                    this.plugin.settings.mobileNotices = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.mobileDoubleTapTag.name)
+            .setDesc(SETTINGS_TEXT.mobileDoubleTapTag.desc)
+            .addDropdown((opt) =>
+                opt
+                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
+                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
+                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
+                .addOption('native', SETTINGS_TEXT.tagActionOptions.native)
+                .setValue(this.plugin.settings.mobileDoubleTapTag)
+                .onChange(async (value) => {
+                    this.plugin.settings.mobileDoubleTapTag = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.mobileLongPressTag.name)
+            .setDesc(SETTINGS_TEXT.mobileLongPressTag.desc)
+            .addDropdown((opt) =>
+                opt
+                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
+                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
+                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
+                .setValue(this.plugin.settings.mobileLongPressTag)
+                .onChange(async (value) => {
+                    this.plugin.settings.mobileLongPressTag = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.mobileTripleTapText.name)
+            .setDesc(SETTINGS_TEXT.mobileTripleTapText.desc)
+            .addToggle((toggle) =>
+                toggle
+                .setValue(this.plugin.settings.mobileTripleTapText)
+                .onChange(async (value) => {
+                    this.plugin.settings.mobileTripleTapText = value;
                     await this.plugin.saveSettings();
                 }
             )

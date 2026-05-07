@@ -90,7 +90,8 @@ var SETTINGS_TEXT = {
     desktop: "Desktop",
     mobile: "Mobile",
     tagSummaries: "Tag Summaries",
-    tagSummaryItems: "Tag Summaries Items",
+    tagSummaryControls: "Tag Summary Buttons",
+    tagSummaryItems: "Tag Summary Item Buttons",
     support: "Support a buddy"
   },
   recentTags: {
@@ -129,9 +130,15 @@ var SETTINGS_TEXT = {
     name: "TRIPLE-TAP non-tag, non-link text to add a tag:",
     desc: "Toggle OFF to disable triple-tap."
   },
-  showSummaryButtons: {
-    name: "Show tag summary buttons",
-    desc: "Toggle OFF to hide these buttons."
+  showSummaryTags: {
+    name: "Summary tags:",
+    desc: "Show or hide the query tags above summaries."
+  },
+  summaryActionButtons: {
+    refresh: "Refresh summary button:",
+    copySummary: "Copy summary button:",
+    createNote: "Create summary note button:",
+    flatten: "Flatten summary button:"
   },
   summaryButtons: {
     removeTag: "Remove tag button:",
@@ -684,44 +691,44 @@ var TBSettingsTab = class extends import_obsidian2.PluginSettingTab {
         }
       )
     );
-    containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.mobile });
-    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileNotices.name).setDesc(SETTINGS_TEXT.mobileNotices.desc).addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.mobileNotices).onChange(
-        async (value) => {
-          this.plugin.settings.mobileNotices = value;
-          await this.plugin.saveSettings();
-        }
-      )
-    );
-    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileDoubleTapTag.name).setDesc(SETTINGS_TEXT.mobileDoubleTapTag.desc).addDropdown(
-      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).addOption("native", SETTINGS_TEXT.tagActionOptions.native).setValue(this.plugin.settings.mobileDoubleTapTag).onChange(
-        async (value) => {
-          this.plugin.settings.mobileDoubleTapTag = value;
-          await this.plugin.saveSettings();
-        }
-      )
-    );
-    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileLongPressTag.name).setDesc(SETTINGS_TEXT.mobileLongPressTag.desc).addDropdown(
-      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).setValue(this.plugin.settings.mobileLongPressTag).onChange(
-        async (value) => {
-          this.plugin.settings.mobileLongPressTag = value;
-          await this.plugin.saveSettings();
-        }
-      )
-    );
-    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileTripleTapText.name).setDesc(SETTINGS_TEXT.mobileTripleTapText.desc).addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.mobileTripleTapText).onChange(
-        async (value) => {
-          this.plugin.settings.mobileTripleTapText = value;
-          await this.plugin.saveSettings();
-        }
-      )
-    );
     containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.tagSummaries });
-    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.showSummaryButtons.name).setDesc(SETTINGS_TEXT.showSummaryButtons.desc).addToggle(
-      (toggle) => toggle.setValue(this.plugin.settings.showSummaryButtons).onChange(
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.showSummaryTags.name).setDesc(SETTINGS_TEXT.showSummaryTags.desc).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.showSummaryTags).onChange(
         async (value) => {
-          this.plugin.settings.showSummaryButtons = value;
+          this.plugin.settings.showSummaryTags = value;
+          await this.plugin.saveSettings();
+        }
+      )
+    );
+    containerEl.createEl("h5", { text: SETTINGS_TEXT.sections.tagSummaryControls });
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryActionButtons.refresh).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.summaryRefreshBtn).onChange(
+        async (value) => {
+          this.plugin.settings.summaryRefreshBtn = value;
+          await this.plugin.saveSettings();
+        }
+      )
+    );
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryActionButtons.copySummary).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.copySummaryBtn).onChange(
+        async (value) => {
+          this.plugin.settings.copySummaryBtn = value;
+          await this.plugin.saveSettings();
+        }
+      )
+    );
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryActionButtons.createNote).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.summaryNoteBtn).onChange(
+        async (value) => {
+          this.plugin.settings.summaryNoteBtn = value;
+          await this.plugin.saveSettings();
+        }
+      )
+    );
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.summaryActionButtons.flatten).addDropdown(
+      (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.bakeSummaryBtn).onChange(
+        async (value) => {
+          this.plugin.settings.bakeSummaryBtn = value;
           await this.plugin.saveSettings();
         }
       )
@@ -771,6 +778,39 @@ var TBSettingsTab = class extends import_obsidian2.PluginSettingTab {
       (opt) => opt.addOption("always", SETTINGS_TEXT.summaryButtonVisibility.always).addOption("desktop", SETTINGS_TEXT.summaryButtonVisibility.desktop).addOption("mobile", SETTINGS_TEXT.summaryButtonVisibility.mobile).addOption("hide", SETTINGS_TEXT.summaryButtonVisibility.hide).setValue(this.plugin.settings.copyToNoteBtn).onChange(
         async (value) => {
           this.plugin.settings.copyToNoteBtn = value;
+          await this.plugin.saveSettings();
+        }
+      )
+    );
+    containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.mobile });
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileNotices.name).setDesc(SETTINGS_TEXT.mobileNotices.desc).addToggle(
+      (toggle) => toggle.setValue(this.plugin.settings.mobileNotices).onChange(
+        async (value) => {
+          this.plugin.settings.mobileNotices = value;
+          await this.plugin.saveSettings();
+        }
+      )
+    );
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileDoubleTapTag.name).setDesc(SETTINGS_TEXT.mobileDoubleTapTag.desc).addDropdown(
+      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).addOption("native", SETTINGS_TEXT.tagActionOptions.native).setValue(this.plugin.settings.mobileDoubleTapTag).onChange(
+        async (value) => {
+          this.plugin.settings.mobileDoubleTapTag = value;
+          await this.plugin.saveSettings();
+        }
+      )
+    );
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileLongPressTag.name).setDesc(SETTINGS_TEXT.mobileLongPressTag.desc).addDropdown(
+      (opt) => opt.addOption("remove", SETTINGS_TEXT.tagActionOptions.remove).addOption("hash", SETTINGS_TEXT.tagActionOptions.hash).addOption("edit", SETTINGS_TEXT.tagActionOptions.edit).setValue(this.plugin.settings.mobileLongPressTag).onChange(
+        async (value) => {
+          this.plugin.settings.mobileLongPressTag = value;
+          await this.plugin.saveSettings();
+        }
+      )
+    );
+    new import_obsidian2.Setting(containerEl).setName(SETTINGS_TEXT.mobileTripleTapText.name).setDesc(SETTINGS_TEXT.mobileTripleTapText.desc).addToggle(
+      (toggle) => toggle.setValue(this.plugin.settings.mobileTripleTapText).onChange(
+        async (value) => {
+          this.plugin.settings.mobileTripleTapText = value;
           await this.plugin.saveSettings();
         }
       )
@@ -1146,6 +1186,7 @@ var GUI = class {
   }
   makeCopyToSection(clickFn, content, sections, tags, filePath, paragraphEl, summaryEl) {
     const copyToEl = createEl("span");
+    copyToEl.setAttribute("class", "tagsummary-copy-to-controls");
     const selectEl = createEl("span");
     let dropdown = new import_obsidian6.DropdownComponent(selectEl);
     sections.forEach((sec) => {
@@ -1472,11 +1513,6 @@ var TagSummary = class _TagSummary {
     const fileName = filePath + newNoteObj.fileName;
     const file = this.app.vault.getAbstractFileByPath(fileName);
     let notice;
-    if (!code) {
-      tags.forEach((tag) => {
-        fileContent = replaceTextInString(tag, fileContent, tag.substring(1), true);
-      });
-    }
     if (file instanceof import_obsidian7.TFile && !incrementFile) {
       notice = new import_obsidian7.Notice(NOTICE_TEXT.noteAlreadyExistsOverwrite, 8e3);
       this.plugin.registerDomEvent(notice.noticeEl, "click", async (e) => {
@@ -1570,6 +1606,7 @@ var TagSummary = class _TagSummary {
     element.replaceWith(container);
   }
   async create(element, tags, include, exclude, sections, max, fileCtx, mdSource) {
+    var _a;
     const activeFile = this.app.workspace.getActiveFile();
     const validTags = tags.concat(include);
     const tempComponent = new TempComponent();
@@ -1652,46 +1689,15 @@ var TagSummary = class _TagSummary {
           );
         }
         const mdParagraph = paragraph;
-        paragraph = this.buildSummaryDisplayMarkdown(linkInfo.summaryLink, paragraph);
-        summary += paragraph + "\n";
+        const displayParagraph = this.buildSummaryDisplayMarkdown(linkInfo.summaryLink, mdParagraph);
+        summary += displayParagraph + "\n";
         paragraphEl.setAttribute("md-source", mdParagraph);
-        await import_obsidian7.MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponent);
+        await import_obsidian7.MarkdownRenderer.render(this.app, displayParagraph, paragraphEl, "", tempComponent);
         this.decorateRenderedSummaryParagraph(paragraphEl, buttonContainer);
         summaryContainer.appendChild(paragraphEl);
       }
     }
     if (summary != "") {
-      setTimeout(async () => {
-        var _a;
-        if (this.plugin.settings.showSummaryButtons) {
-          summaryContainer.appendChild(
-            this.plugin.gui.makeSummaryRefreshButton(
-              summaryContainer
-            )
-          );
-          summaryContainer.appendChild(
-            this.plugin.gui.makeCopySummaryButton(
-              summary
-            )
-          );
-          summaryContainer.appendChild(
-            this.plugin.gui.makeSummaryNoteButton(
-              this.makeSummaryBtnHandler.bind(this),
-              summary,
-              tags
-            )
-          );
-          summaryContainer.appendChild(
-            this.plugin.gui.makeBakeButton(
-              this.bakeSummaryBtnHandler.bind(this),
-              summary,
-              summaryContainer,
-              (_a = activeFile == null ? void 0 : activeFile.path) != null ? _a : fileCtx
-            )
-          );
-          summaryContainer.appendChild(createEl("br"));
-        }
-      }, 0);
       _TagSummary.writeCodeBlockAttrs(summaryContainer, {
         tags,
         include,
@@ -1700,6 +1706,17 @@ var TagSummary = class _TagSummary {
         max,
         mdSource
       });
+      const summaryHeader = this.createSummaryHeader(
+        tags,
+        include,
+        exclude,
+        summary,
+        summaryContainer,
+        (_a = activeFile == null ? void 0 : activeFile.path) != null ? _a : fileCtx
+      );
+      if (summaryHeader) {
+        summaryContainer.insertBefore(summaryHeader, summaryContainer.firstChild);
+      }
       element.replaceWith(summaryContainer);
     } else {
       this.createEmpty(
@@ -1861,17 +1878,161 @@ var TagSummary = class _TagSummary {
     };
   }
   buildSummaryDisplayMarkdown(link, sourceParagraph) {
-    return "**" + link + "**\n" + sourceParagraph;
+    return "**" + link + "**\n" + this.compactLeadingTagLines(sourceParagraph);
+  }
+  compactLeadingTagLines(sourceParagraph) {
+    const lines = sourceParagraph.split("\n");
+    const tagLines = [];
+    let bodyLineIndex = 0;
+    while (bodyLineIndex < lines.length && this.isTagOnlySummaryLine(lines[bodyLineIndex])) {
+      tagLines.push(lines[bodyLineIndex].trim());
+      bodyLineIndex++;
+    }
+    if (tagLines.length <= 0 || bodyLineIndex >= lines.length || lines[bodyLineIndex].trim() == "" || lines[bodyLineIndex].match(/^#{1,6}\s/)) {
+      return sourceParagraph;
+    }
+    const compactedLine = tagLines.join(" ") + " " + lines[bodyLineIndex].trimStart();
+    return [compactedLine, ...lines.slice(bodyLineIndex + 1)].join("\n");
+  }
+  isTagOnlySummaryLine(line) {
+    const tokens = line.trim().split(/\s+/).filter((token) => token.length > 0);
+    return tokens.length > 0 && tokens.every((token) => token.match(/^#[^\s#.,;!?:]+$/) != null);
+  }
+  createSummaryHeader(tags, include, exclude, summaryMd, summaryContainer, sourcePath) {
+    const outputSummaryMd = this.buildSummaryOutputMarkdown(summaryMd, tags.concat(include));
+    const tagListEl = platformSettingCheck(this.app, this.plugin.settings.showSummaryTags) ? this.createSummaryTagList(tags, include, exclude) : null;
+    const buttonListEl = this.createSummaryActionButtons(outputSummaryMd, summaryContainer, sourcePath, tags);
+    if (!tagListEl && !buttonListEl)
+      return null;
+    const headerEl = createEl("div");
+    headerEl.setAttribute("class", "tagsummary-header");
+    if (tagListEl)
+      headerEl.appendChild(tagListEl);
+    if (buttonListEl)
+      headerEl.appendChild(buttonListEl);
+    return headerEl;
+  }
+  createSummaryTagList(tags, include, exclude) {
+    const queryTags = this.getSummaryHeaderTags(tags, include, exclude);
+    if (queryTags.length <= 0)
+      return null;
+    const tagListEl = createEl("span");
+    tagListEl.setAttribute("class", "tagsummary-query-tags");
+    queryTags.forEach((queryTag) => {
+      const tagEl = createEl("span");
+      tagEl.setAttribute("class", "tagsummary-query-tag tagsummary-query-tag-" + queryTag.kind);
+      tagEl.setAttribute("title", queryTag.tag);
+      tagEl.setText(queryTag.tag);
+      tagListEl.appendChild(tagEl);
+    });
+    return tagListEl;
+  }
+  getSummaryHeaderTags(tags, include, exclude) {
+    const uniqueTags = /* @__PURE__ */ new Map();
+    const addTags = (values, kind) => {
+      values.forEach((tag) => {
+        if (!uniqueTags.has(tag))
+          uniqueTags.set(tag, { tag, kind });
+      });
+    };
+    addTags(tags, "tag");
+    addTags(include, "include");
+    addTags(exclude, "exclude");
+    return Array.from(uniqueTags.values());
+  }
+  buildSummaryOutputMarkdown(summaryMd, tagsToRemove) {
+    let outputMd = summaryMd;
+    tagsToRemove.forEach((tag) => {
+      outputMd = this.removeTagFromSummaryOutput(outputMd, tag);
+    });
+    return this.normalizeSummaryOutputSpacing(outputMd.replace(/[^\S\r\n]+(?=\r?\n|$)/g, ""));
+  }
+  removeTagFromSummaryOutput(summaryMd, tag) {
+    const tagText = escapeRegExp(tag);
+    return summaryMd.replace(new RegExp(`(^|\\r?\\n)([^\\S\\r\\n]*)${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, "gi"), "$1$2").replace(new RegExp(`([^\\S\\r\\n])${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, "gi"), "$1").replace(new RegExp(`^${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, "i"), "");
+  }
+  normalizeSummaryOutputSpacing(summaryMd) {
+    return summaryMd.replace(/(\*\*\[\[[^\n]+\]\]\*\*)[^\S\r\n]*(?:\r?\n){2,}([^\r\n])/g, "$1\n$2");
+  }
+  createSummaryActionButtons(summaryMd, summaryContainer, sourcePath, tags) {
+    const buttonListEl = createEl("span");
+    buttonListEl.setAttribute("class", "tagsummary-summary-buttons");
+    if (platformSettingCheck(this.app, this.plugin.settings.copySummaryBtn)) {
+      buttonListEl.appendChild(this.plugin.gui.makeCopySummaryButton(summaryMd));
+    }
+    if (platformSettingCheck(this.app, this.plugin.settings.summaryNoteBtn)) {
+      buttonListEl.appendChild(
+        this.plugin.gui.makeSummaryNoteButton(
+          this.makeSummaryBtnHandler.bind(this),
+          summaryMd,
+          tags
+        )
+      );
+    }
+    if (platformSettingCheck(this.app, this.plugin.settings.bakeSummaryBtn)) {
+      buttonListEl.appendChild(
+        this.plugin.gui.makeBakeButton(
+          this.bakeSummaryBtnHandler.bind(this),
+          summaryMd,
+          summaryContainer,
+          sourcePath
+        )
+      );
+    }
+    if (platformSettingCheck(this.app, this.plugin.settings.summaryRefreshBtn)) {
+      buttonListEl.appendChild(this.plugin.gui.makeSummaryRefreshButton(summaryContainer));
+    }
+    return buttonListEl.children.length > 0 ? buttonListEl : null;
   }
   decorateRenderedSummaryParagraph(paragraphEl, buttonContainer) {
+    const headerEl = createEl("div");
+    headerEl.setAttribute("class", "tagsummary-item-header");
     const titleEl = createEl("span");
     titleEl.setAttribute("class", "tagsummary-item-title");
     const strongEl = paragraphEl.querySelector("strong");
-    if (strongEl)
+    if (strongEl) {
       titleEl.appendChild(strongEl.cloneNode(true));
-    paragraphEl.appendChild(buttonContainer);
-    if (strongEl)
-      strongEl.replaceWith(titleEl);
+      headerEl.appendChild(titleEl);
+      headerEl.appendChild(buttonContainer);
+      const bodyContainer = strongEl.parentElement;
+      if (bodyContainer && bodyContainer != paragraphEl) {
+        paragraphEl.insertBefore(headerEl, bodyContainer);
+        this.removeRenderedTitleFromBody(strongEl);
+      } else {
+        strongEl.replaceWith(headerEl);
+        this.removeLeadingBreakAfterItemHeader(headerEl);
+      }
+      this.appendItemDivider(paragraphEl);
+      return;
+    }
+    headerEl.appendChild(buttonContainer);
+    paragraphEl.prepend(headerEl);
+    this.appendItemDivider(paragraphEl);
+  }
+  appendItemDivider(paragraphEl) {
+    const dividerEl = createEl("div");
+    dividerEl.setAttribute("class", "tagsummary-item-divider");
+    paragraphEl.appendChild(dividerEl);
+  }
+  removeRenderedTitleFromBody(titleEl) {
+    const nextSibling = titleEl.nextSibling;
+    titleEl.remove();
+    this.removeLeadingBreakFromNode(nextSibling);
+  }
+  removeLeadingBreakAfterItemHeader(headerEl) {
+    this.removeLeadingBreakFromNode(headerEl.nextSibling);
+  }
+  removeLeadingBreakFromNode(startNode) {
+    var _a;
+    let sibling = startNode;
+    while (sibling && sibling.nodeType == Node.TEXT_NODE && ((_a = sibling.textContent) == null ? void 0 : _a.trim()) == "") {
+      const nextSibling = sibling.nextSibling;
+      sibling.remove();
+      sibling = nextSibling;
+    }
+    if (sibling instanceof HTMLBRElement) {
+      sibling.remove();
+    }
   }
   static getTagsToCheckFromEl(tagSummaryEl) {
     const attrs = _TagSummary.readCodeBlockAttrs(tagSummaryEl);
@@ -2882,7 +3043,11 @@ var DEFAULT_SETTINGS = {
   mobileNotices: true,
   recentlyAddedTags: "",
   lockRecentTags: false,
-  showSummaryButtons: false,
+  showSummaryTags: "always",
+  summaryRefreshBtn: "always",
+  copySummaryBtn: "hide",
+  summaryNoteBtn: "hide",
+  bakeSummaryBtn: "hide",
   debugMode: false
 };
 var TagBuddy = class extends import_obsidian10.Plugin {
@@ -3135,7 +3300,12 @@ var TagBuddy = class extends import_obsidian10.Plugin {
     }
   }
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loadedSettings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    if (typeof loadedSettings.showSummaryTags === "boolean") {
+      loadedSettings.showSummaryTags = loadedSettings.showSummaryTags ? "always" : "hide";
+    }
+    delete loadedSettings.showSummaryButtons;
+    this.settings = loadedSettings;
   }
   async saveSettings() {
     await this.saveData(this.settings);
