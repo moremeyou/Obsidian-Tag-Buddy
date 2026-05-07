@@ -99,9 +99,9 @@ Obsidian approved December 6th, 2023! 🤘
 
 
 ## ✅ To Do
-- [x] ON-GOING: Refactoring and cleanup 👨🏻‍💻
-- [ ] Add ‘exclude folder‘ parameter to summary code block
-- [ ] Anchor link to tagged paragraph
+- [x] ~~ON-GOING: Refactoring and cleanup 👨🏻‍💻~~
+- [x] ~~Add ‘exclude folder‘ parameter to summary code block~~
+- [x] ~~Anchor link to tagged paragraph~~
 - [x] ~~Edit tag modal “Just this instance”~~
 - [x] ~~Mobile bugs with new settings~~
 - [x] ~~Refactor settings~~
