@@ -107,7 +107,7 @@ Prefer small, verified changes:
 - Rebuild and verify the fork after each meaningful change.
 - Document any recurring operational lesson here.
 
-## Current Cleanup Checkpoint
+## Current Cleanup Checkpoints
 
 Latest verified fork state after the Reading Mode editor cleanup and tag-sync safety pass:
 
@@ -116,3 +116,12 @@ Latest verified fork state after the Reading Mode editor cleanup and tag-sync sa
 - When comparing rendered `.tag` elements to markdown source positions, skip source tags in contexts Obsidian does not expose as editable body tags for that rendered view, such as frontmatter/properties. Full source scans used for note/vault-wide edits can still include those tags when appropriate.
 - For out-of-sync warnings that happen only on app startup or only with a specific long note, first check whether active-file processing is using `renderer.sections`, whether a scoped container path bypasses it, and whether a `tag-summary` block at the top is still rendering.
 - Test notes added for this checkpoint live in `/Users/davidfasullo/Desktop/dBrain/Tag Buddy/Testing 2026/`: `TB Test 13 - Reading Mode Editor Full Pass.md`, `TB Test 14 - Frontmatter Tag Sync.md`, and `TB Test 15 - Startup Summary Sync.md`.
+
+Latest verified fork state after the tag-summary cosmetic/layout pass:
+
+- Summary item rendering in `src/TagSummary.ts` still renders markdown first, then decorates the rendered DOM. Preserve that order; it keeps Obsidian-rendered links/tags intact before Tag Buddy moves the note link and item controls into the item header row.
+- Summary item `md-source` must remain the original source paragraph, even when the displayed/exported paragraph is compacted. Tag edit/remove safety and source mapping depend on the untouched `md-source` value.
+- Whole-summary copy, create-note, and flatten actions use cleaned export markdown: queried `tags` and `include` tags are removed from output bodies, leading tag-only lines can compact onto the following body line, and link/body line breaks must be preserved.
+- Summary header controls support platform-specific visibility for query tags and each whole-summary button. The default is query tags plus refresh only; user settings in the fork vault can still show all buttons.
+- Item controls use the `.tagsummary-copy-to-controls` wrapper inside `.tagsummary-buttons` so copy/move/dropdown spacing remains consistent for every visible button combination.
+- Test notes added for this checkpoint live in `/Users/davidfasullo/Desktop/dBrain/Tag Buddy/Testing 2026/`: `TB Test 16 - Summary Header Controls.md`, `TB Test 17 - Summary Output Cleanup.md`, and `TB Test 18 - Summary Leading Tag Lines.md`.

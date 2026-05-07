@@ -117,6 +117,10 @@ Obsidian approved December 6th, 2023! 🤘
 	- [x] ~~Add to section functionality checks for selected text~~
 	- [x] ~~Add only link to section~~
 	- [x] ~~Copy and move to section now buttons (not mod keys)~~
+	- [x] ~~Show summary query tags and summary-level buttons in a configurable header~~
+	- [x] ~~Place summary item links and item controls on the same line~~
+	- [x] ~~Clean copied, flattened, and new-note summary output~~
+	- [x] ~~Compact leading tag-only lines in summaries~~
 - [x] ~~Edit tag text modal (options for this note, across vault)~~
 	- [x] ~~rename~~
 	- [x] ~~remove hash~~
