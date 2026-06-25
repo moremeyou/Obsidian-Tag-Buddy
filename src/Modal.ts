@@ -1,7 +1,12 @@
-import { App, FuzzySuggestModal, SuggestModal, Modal, Setting, Notice, TFile, renderResults, prepareFuzzySearch, FuzzyMatch, fuzzySearch, prepareQuery } from "obsidian";
+import { App, FuzzySuggestModal, Notice } from "obsidian";
 import TagBuddy from "main";
 import * as Utils from './utils';
+import { NOTICE_TEXT } from './userText';
 
+interface ModalLocation {
+    x: number;
+    y: number;
+}
 
 export class TagSelector extends FuzzySuggestModal<string> {
     plugin: TagBuddy
@@ -10,12 +15,12 @@ export class TagSelector extends FuzzySuggestModal<string> {
     tag: string
     inputListener: EventListener
     tagCache: string[]
-    location: Object;
+    location: ModalLocation | null = null;
     height = 215;
     noSelection = false;
-    
-    
-    constructor (app: App, plugin: TagBuddy, event:Event, onChooseItemCallback: (result: string) => void){
+
+
+    constructor (app: App, plugin: TagBuddy, event: MouseEvent | TouchEvent, onChooseItemCallback: (result: string) => void){
         super(app)
         this.app = app;
         this.plugin = plugin
@@ -23,25 +28,27 @@ export class TagSelector extends FuzzySuggestModal<string> {
         this.onChooseItemCallback = onChooseItemCallback
         this.inputListener = this.listenInput.bind(this)
         this.tagCache = []
-        if (event != null) this.location = {x: event.pageX, y: event.pageY}
+        if (event instanceof MouseEvent) this.location = {x: event.pageX, y: event.pageY}
         //this.limit = 10
         //this.emptyStateText = 'Add new tag'
         // to add a brand new tag we'd either need to:
         // - SHIFT already works. but for mobile?
         // - have another button on far right on input to add (for mobile)
-        // this selector is also where we can add an edit icon next to each tag. 
+        // this selector is also where we can add an edit icon next to each tag.
         // clicking this would bring up the edit modal
-       
+
     }
 
     onOpen() {
         this.setPlaceholder("")
         this.inputEl.addEventListener('keyup', this.inputListener)
         if (!this.app.isMobile) {
-            this.resultContainerEl.parentNode.style.width = '200px';
+            const modalEl = this.resultContainerEl.parentElement;
+            if (!modalEl || !this.location) return;
+            modalEl.style.width = '200px';
             this.resultContainerEl.style.height = '215px';
-            this.resultContainerEl.parentNode.style.left = `${this.location.x}px`;
-            this.resultContainerEl.parentNode.style.top = `${this.location.y}px`;
+            modalEl.style.left = `${this.location.x}px`;
+            modalEl.style.top = `${this.location.y}px`;
         } else {
             setTimeout(()=>{ this.inputEl.focus() }, 500); // not working?
         }
@@ -53,7 +60,8 @@ export class TagSelector extends FuzzySuggestModal<string> {
         super.onClose()
     }
 
-    listenInput(event: KeyboardEvent){
+    listenInput(event: Event){
+        const keyboardEvent = event as KeyboardEvent;
         this.noSelection = false;
         if (!this.app.isMobile) {
             const itemsHeight = this.getSuggestions(this.inputEl.value).length * 42;
@@ -61,22 +69,22 @@ export class TagSelector extends FuzzySuggestModal<string> {
             this.resultContainerEl.style.height = `${height}px`;
         }
 
-        if (event.key == "Enter" && !this.noSelection) {
+        if (keyboardEvent.key == "Enter" && !this.noSelection) {
             const text = this.inputEl.value.trim();
-            const pattern = /(?=[^\d\s]+)[a-zA-Z0-9_\-\/]+/g
-            if (pattern.test(text)) {
+            const normalizedTag = Utils.normalizeTagInput(text, false);
+            if (normalizedTag) {
                 this.close();
-                this.onChooseItem(this.inputEl.value);
+                this.onChooseItem(normalizedTag);
             } else {
-                new Notice('Invalid tag.');
+                new Notice(NOTICE_TEXT.invalidTag);
             }
         }
     }
 
     /*getSuggestions(query: string) : string[]{
         const filteredTags = Utils.getTagsFromApp(
-            this.app, 
-            this.plugin.getRecentTags()).filter(tag => 
+            this.app,
+            this.plugin.getRecentTags()).filter(tag =>
             //tag.toLowerCase().includes(query.toLowerCase())
             query == '' ? true : tag.toLowerCase() == query.toLowerCase()
         );
@@ -95,10 +103,10 @@ export class TagSelector extends FuzzySuggestModal<string> {
 
     getItems(): string[] {
        const filteredTags = Utils.getTagsFromApp(
-            this.app, 
+            this.app,
             this.plugin.getRecentTags()
         );
-        
+
         return filteredTags;
     }
 
@@ -115,4 +123,3 @@ export class TagSelector extends FuzzySuggestModal<string> {
         }
     }
 }
-

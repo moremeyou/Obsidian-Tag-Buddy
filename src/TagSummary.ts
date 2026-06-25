@@ -1,898 +1,607 @@
-import { App, MarkdownRenderer, CachedMetadata, MarkdownPostProcessorContext, DropdownComponent, Component, TFile, getAllTags, MarkdownView, Notice, Plugin } from 'obsidian';
+import { App, MarkdownRenderer, MarkdownPostProcessorContext, DropdownComponent, Component, TFile, getAllTags, Notice } from 'obsidian';
 import TagBuddy from "main";
 import * as Utils from './utils';
+import {
+	TAG_SUMMARY_BLOCK_SPLIT_PATTERN,
+	TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN,
+	TAG_SUMMARY_INCLUDE_PREFIX_PATTERN,
+	TAG_SUMMARY_MAX_LINE_PATTERN,
+	TAG_SUMMARY_SECTIONS_PREFIX_PATTERN,
+	TAG_SUMMARY_TAG_TOKEN_PATTERN,
+	TAG_SUMMARY_TAGS_PREFIX_PATTERN,
+	createTagSummaryBlockLinkPattern,
+	createTagSummaryMatchedTagPattern,
+	createTagSummaryParagraphTagPattern,
+	createTagSummarySectionsLinePattern,
+	createTagSummaryTagListLinePattern,
+} from './tagPatterns';
+import type { TagSummaryTagListField } from './tagPatterns';
+import {
+	NOTICE_TEXT,
+	copiedToSection,
+	copiedToSectionCannotUpdateSource,
+	copiedToSectionInNote,
+	sectionNotFoundPastingTop,
+	tagSummaryEmptyHtml,
+} from './userText';
+
+const SUMMARY_CODEBLOCK_ATTRS = {
+	tags: 'codeblock-tags',
+	include: 'codeblock-tags-include',
+	exclude: 'codeblock-tags-exclude',
+	sections: 'codeblock-sections',
+	max: 'codeblock-max',
+	code: 'codeblock-code',
+} as const;
+
+interface SummaryCodeBlockAttrs {
+	tags: string[];
+	include: string[];
+	exclude: string[];
+	sections: string[];
+	max: number;
+	mdSource: string;
+}
+
+interface SummaryItemLinkInfo {
+	summaryLink: string;
+	sourcePath: string;
+}
+
+type SummaryCopyMode = 'link' | 'copy' | 'move' | 'note';
 
 export class TagSummary {
-	app: App; 
+	app: App;
 	plugin: TagBuddy;
-	selectedBlocks: Number[];
-	blocks: String[];
-	private static fileSummaries: Map<TFile, Set<HTMLElement>> = new Map();
+	selectedBlocks: number[];
 
 	constructor(
-		app: App, 
-		plugin: TagBuddy) {
-
+		app: App,
+		plugin: TagBuddy
+	) {
 		this.app = app;
 		this.plugin = plugin;
 	}
 
 	async bakeSummaryBtnHandler (
-		summaryMd: string, 
-		summaryEl:HTMLElement, 
-		filePath:string
+		summaryMd: string,
+		summaryEl: HTMLElement,
+		filePath: string
 	) {
-		const mdSource = summaryEl.getAttribute(
-			'codeblock-code'
-		);
-		
+		const mdSource = summaryEl.getAttribute(SUMMARY_CODEBLOCK_ATTRS.code);
+
 		if (mdSource) {
 			const file = await this.app.vault.getAbstractFileByPath(filePath);
+			if (!(file instanceof TFile)) {
+				new Notice(NOTICE_TEXT.cannotIdentifySourceNoteForSummary);
+				return;
+			}
 			const fileContent = await this.app.vault.read(file);
 			const newFileContent = Utils.replaceTextInString (
-				mdSource, 
-				fileContent, 
+				mdSource,
+				fileContent,
 				summaryMd
-			)
-			this.app.vault.modify(file, newFileContent);
+			);
+			await this.app.vault.modify(file, newFileContent);
 
-			const notice = new Notice ('Tag summary flattened to active note.');
+			new Notice(NOTICE_TEXT.tagSummaryFlattenedToActiveNote);
 		} else {
-			new Notice ('⚠️ Tag Buddy: Can\t find code block source. This is a BUG. 🪲');
+			new Notice(NOTICE_TEXT.cannotFindSummaryCodeBlockSourceBug);
 		}
 	}
 
-	/*public static addSummary(file: TFile, summary: HTMLElement): void {
-        if (!this.fileSummaries.has(file)) {
-            this.fileSummaries.set(file, new Set([summary]));
-        } else {
-            const summaries = this.fileSummaries.get(file);
-            summaries?.add(summary);
-        }
-    }
-
-    // Method to retrieve an array of unique summary elements for a given file
-    public static getSummariesByFile(file: TFile): HTMLElement[] {
-        const summaries = this.fileSummaries.get(file);
-        return summaries ? Array.from(summaries) : [];
-    }*/
-
-	copyBtnHandler (e, content):void {
-
-		//e.stopPropagation();
-
-		const selection = window.getSelection().toString();
-		let notice;
+	copyBtnHandler (e: Event, content: string): void {
+		const selection = window.getSelection()?.toString() ?? '';
 
 		if (selection != '') {
 			navigator.clipboard.writeText(selection);
-			notice = new Notice ('Selection copied to clipboard.');
+			new Notice(NOTICE_TEXT.selectionCopiedToClipboard);
 		} else {
 			navigator.clipboard.writeText(content);
-			notice = new Notice ('Tagged paragraph copied to clipboard.');
+			new Notice(NOTICE_TEXT.taggedParagraphCopiedToClipboard);
 		}
-
-		//navigator.clipboard.writeText(content);
-		//const notice = new Notice ('Tag Buddy: Copied to clipboard.');
-
 	}
 
-	removeTagBtnHandler (e, paragraphEl, tag):void {
+	async removeTagBtnHandler (e: Event, paragraphEl: HTMLElement, tag: string): Promise<void> {
+		if (!tag) {
+			new Notice(NOTICE_TEXT.cannotIdentifyTagSummaryItem);
+			return;
+		}
 		const tagEl = Utils.getTagElement(paragraphEl, tag);
-		this.plugin.tagEditor.edit(tagEl);
-		setTimeout(async () => { 
-			this.update(summaryEl); 
-    	}, 800);
+		const summaryEl = paragraphEl.closest('.tag-summary-block') as HTMLElement | null;
+		if (!tagEl || !summaryEl) {
+			new Notice(NOTICE_TEXT.cannotIdentifyTagSummaryItem);
+			return;
+		}
+		await this.plugin.tagEditor.edit(tagEl, e, paragraphEl, 'remove', '');
+		setTimeout(async () => {
+			this.update(summaryEl);
+		}, 800);
 	}
 
 	async copyToBtnHandler (
-		e: Event, 
-		mode: String,
+		e: Event,
+		mode: SummaryCopyMode,
 		dropdown: DropdownComponent,
-		paragraphEl: HTMLElement, 
+		paragraphEl: HTMLElement,
 		summaryEl: HTMLElement,
-		content: string,  
-		tags: Array, 
+		content: string,
+		tags: string[],
 		filePath: string,
-		selectedFile: TFile
-	) {
-		let newContent
-		const selection = window.getSelection().toString();
-		
-		if (selection == '') newContent = content;
-		else newContent = selection;
+		selectedFile: TFile | null = null
+	): Promise<void> {
+		const section = dropdown.getValue();
+		const selection = window.getSelection()?.toString() ?? '';
+		const newContent = this.buildCopyToContent(mode, content, selection, tags, filePath);
 		let notice;
-				
-		if (mode == 'link') {
-		
-			const fileName = filePath.split('/').pop().replace(/\.md$/, '');
-			newContent = '[[' + filePath + '|' + fileName + ']]';
-		
-		} 
-
-		if (mode != 'link' && !selection) {
-			tags.forEach((tag, i) => {
-				// make this a setting. we'll default to always for now
-				newContent = Utils.removeTagFromString(newContent, tag).trim();
-			});
-		}
-
-//console.log(dropdown.getValue())
 
 		const copySuccess = await this.copyTextToSection(
-			//this.plugin.settings.taggedParagraphCopyPrefix + 
-			newContent, 
-			dropdown.getValue(), 
+			newContent,
+			section,
 			filePath,
-			(mode!='link'),
+			mode != 'link',
 			selectedFile
 		);
 
 		if (copySuccess) {
-
 			if (mode == 'note') {
+				if (!selectedFile) {
+					new Notice(NOTICE_TEXT.cannotIdentifyDestinationNote);
+					return;
+				}
 
 				notice = new Notice(
-					'Copied to section: ' + dropdown.getValue() + ' in ' + selectedFile.name + ' 🔗',
-					5000);
-				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-					this.app.workspace.openLinkText(selectedFile.path+'#'+dropdown.getValue(), '');
- 				});
+					copiedToSectionInNote(section, selectedFile.name),
+					5000
+				);
+				this.registerNoticeLinkToSection(notice, selectedFile.path, section);
 
 			} else if (mode == 'move' && !selection) {
-
-
 				const file = await this.app.vault.getAbstractFileByPath(filePath.split('#')[0]);
-//console.log("---->", filePath, file)
+				if (!(file instanceof TFile)) {
+					new Notice(NOTICE_TEXT.cannotIdentifySummaryItemSourceShort);
+					return;
+				}
+
 				let fileContent = await this.app.vault.read(file);
 				fileContent = fileContent.trim();
 				const newFileContent = Utils.replaceTextInString(
-					content.trim(), 
-					fileContent, 
-					newContent).trim();
+					content.trim(),
+					fileContent,
+					newContent
+				).trim();
 				if (fileContent != newFileContent) {
-					// renive the tag before copying
-					this.app.vault.modify(file, newFileContent);
-					
-					const copiedToWhere: String = dropdown.getValue()=='top' ? 'top of note' : dropdown.getValue()=='end' ? 'end of note' : dropdown.getValue()
+					await this.app.vault.modify(file, newFileContent);
+
 					notice = new Notice(
-						//'Moved to section: ' + dropdown.getValue() +
-						//'.\n🔗 Open source note.', 
-						'Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue()=='top' || dropdown.getValue()=='end') ? '' : '🔗'),
-						5000);
+						this.getCopiedToSectionNoticeText(section),
+						5000
+					);
 
-					//this.plugin.gui.removeElementWithAnimation(paragraphEl, () => { 
-	    				setTimeout(async () => { 
-	    					//this.update(summaryEl); 
-	    					//paragraphEl.remove(); 
-	    				}, 100);						
-				    	setTimeout(async () => { 
-				    		//this.plugin.tagProcessor.run(); 
-							this.update(summaryEl); 
-				    	}, 300);
-					//});
+					setTimeout(async () => {
+						this.update(summaryEl);
+					}, 300);
 
-					if (dropdown.getValue() != 'top' || dropdown.getValue() != 'end') {
-
-						this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-							//this.app.workspace.openLinkText(filePath, '');
-							this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
-		 				});
-					} 
+					this.registerNoticeLinkToActiveSection(notice, section);
 
 				} else {
-					new Notice ('Copied to section: ' + dropdown.getValue() 
-						+ '.\nCan\'t update source file.');
+					new Notice(copiedToSectionCannotUpdateSource(section));
 				}
 
 			} else if (mode == 'copy' || mode == 'link') {
-				notice = new Notice ('Copied to section: ' + dropdown.getValue() + '. ' + ((dropdown.getValue()=='top' || dropdown.getValue()=='end') ? '' : '🔗'));
-				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-					this.app.workspace.openLinkText(this.app.workspace.getActiveFile().path+'#'+dropdown.getValue(), '');
-					});
+				notice = new Notice (this.getCopiedToSectionNoticeText(section));
+				this.registerNoticeLinkToActiveSection(notice, section);
 			}
 		}
-			
 	}
 
 	async makeSummaryBtnHandler (
-		summaryMd: String, 
-		tags: Array,
-		code: Boolean = false,
-		incrementFile: Boolean = false
-	) {
-
-//new Notice ('makeSummaryBtnHandler', 10000)
-
-		// try to abstract the handlers from their functions
-		//const newNoteObj = this.fileObjFromTags(tags);
+		summaryMd: string,
+		tags: string[],
+		code: boolean = false,
+		incrementFile: boolean = false
+	): Promise<void> {
 		const newNoteObj = Utils.fileObjFromTags(tags);
 		let fileContent = code ? summaryMd : '## ' + newNoteObj.title + '\n\n' + summaryMd;
-		const view = await this.app.workspace.getActiveViewOfType(MarkdownView);
-		//const fileName = this.getActiveFileFolder()+newNoteObj.fileName;
-		// const fileName = Utils.getActiveFileFolder(view)+newNoteObj.fileName;
-		const filePath = Utils.getActiveFileFolder(this.app.workspace.getActiveFile())
+		const filePath = Utils.getActiveFileFolder(this.app.workspace.getActiveFile()) ?? '';
 		const fileName = filePath + newNoteObj.fileName;
 		const file = this.app.vault.getAbstractFileByPath(fileName);
 		let notice;
 
-		//console.log (newNoteObj.fileName);
-
-		if (!code) {
-			tags.forEach ((tag) => {
-				fileContent = Utils.replaceTextInString (tag, fileContent, tag.substring(1), true)
-			});
-		}
-
 		if (file instanceof TFile && !incrementFile) {
 
-			notice = new Notice ('⚠️ Note already exists.\nClick here to overwrite.', 8000);
-			this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-				this.app.vault.modify(file, fileContent);
-				notice = new Notice ('Note updated.\n🔗 Open note.', 5000);
-				this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+			notice = new Notice(NOTICE_TEXT.noteAlreadyExistsOverwrite, 8000);
+			this.plugin.registerDomEvent(notice.noticeEl, 'click', async (e) => {
+				await this.app.vault.modify(file, fileContent);
+				notice = new Notice(NOTICE_TEXT.noteUpdatedOpen, 5000);
+				this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
 					this.app.workspace.openLinkText(fileName, '');
 				});
 			});
 
-		/*} else if ((file instanceof TFile) && incrementFile) {
-
-			const baseName = file.name.replace(/\.md$/, "");
-			const extension = ".md";
-			const regex = /(\d+)$/;
-			const match = baseName.match(regex);
-			let incrementedFileName;
-			let suffix = 1; 
-			if (match) {
-			    suffix = parseInt(match[1], 10) + 1;
-			    // If there's a match, you need to remove the matched number from the baseName before appending the incremented number
-			    const numberLength = match[1].length;
-			    const baseNameWithoutNumber = baseName.slice(0, -numberLength);
-			    incrementedFileName = baseNameWithoutNumber + ' ' + suffix + extension;
-			    console.log(suffix, filePath + incrementedFileName);
-			} else {
-			    // If there's no number at the end, the approach remains the same
-			    incrementedFileName = baseName + ' ' + suffix + extension;
-			    console.log(suffix, filePath + incrementedFileName);
-			}
-			this.app.vault.create(filePath+incrementedFileName, fileContent);
-			const notice = new Notice ('Note created. 📜\n🔗 Open note.');
-			this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
-				this.app.workspace.openLinkText(newNoteObj.fileName, '');
-			});
-			*/
-
 		} else if (!file) {
-
-			this.app.vault.create(fileName, fileContent);
-			const notice = new Notice ('Summary note created. 📜\n🔗 Open note.');
-			this.plugin.registerDomEvent(notice.noticeEl, 'click', (e) => {
+			await this.app.vault.create(fileName, fileContent);
+			const notice = new Notice(NOTICE_TEXT.summaryNoteCreatedOpen);
+			this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
 				this.app.workspace.openLinkText(newNoteObj.fileName, '');
 			});
-
-
 		}
 	}
 
-	createCodeBlock (tagsArray: String[], pos: String) {
-		//console.log(summaryPos)
-		const codeBlockString = 
+	async createCodeBlock (tagsArray: string[], pos: string): Promise<void> {
+		const codeBlockString =
 			'```tag-summary\n' +
 			'tags: ' + tagsArray.join(' ') + '\n' +
 			'```';
 
 		if (pos == 'note') {
-
-			this.makeSummaryBtnHandler (codeBlockString, tagsArray, true);
-
+			await this.makeSummaryBtnHandler (codeBlockString, tagsArray, true);
 		} else {
-
-			this.copyTextToSection(
-			    codeBlockString,
-			    pos, 
-			    '',
-			    false
-		    )
+			await this.copyTextToSection(
+				codeBlockString,
+				pos,
+				'',
+				false
+			);
 		}
-
 	}
 
 	async codeBlockProcessor (
-		source: string, 
-		el:HTMLElement, 
-		ctx
-	): void {
-		
-		// Initialize tag list
-		let tags: string[] = Array();
-		let include: string[] = Array();
-		let exclude: string[] = Array();
-		let sections: string[] = Array();
-		let max: number = 50;
-		const maxPattern = /^\s*max:\s*(\d+)\s*$/;
-		let match;
+		source: string,
+		el: HTMLElement,
+		ctx: MarkdownPostProcessorContext
+	): Promise<void> {
+		let tags: string[] = [];
+		let include: string[] = [];
+		let exclude: string[] = [];
+		let sections: string[] = [];
+		let max = 50;
 
-		// Process rows inside codeblock
-		const rows = source.split("\n").filter((row) => row.length > 0);
+		// Parse tag-summary directive rows; invalid directive rows are ignored.
+		const rows = source.split('\n').filter((row) => row.length > 0);
 		rows.forEach((line) => {
-			// Check if the line specifies the tags (OR)
-			if (line.match(/^\s*tags:[\p{L}0-9_\-/# ]+$/gu)) {
-				const content = line.replace(/^\s*tags:/, "").trim();
+			tags = this.parseTagSummaryTagListLine(line, 'tags') ?? tags;
+			include = this.parseTagSummaryTagListLine(line, 'include') ?? include;
+			exclude = this.parseTagSummaryTagListLine(line, 'exclude') ?? exclude;
 
-				// Get the list of valid tags and assign them to the tags variable
-				let list = content.split(/\s+/).map((tag) => tag.trim());
-				list = list.filter((tag) => {
-					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
-						return true;
-					} else {
-						return false;
-					}
-				});
-				tags = list;
+			if (line.match(createTagSummarySectionsLinePattern())) {
+				const content = line.replace(TAG_SUMMARY_SECTIONS_PREFIX_PATTERN, '').trim();
+				sections = content.split(',').map((sec) => sec.trim());
 			}
 
-			// Check if the line specifies the tags to include (AND)
-			if (line.match(/^\s*include:[\p{L}0-9_\-/# ]+$/gu)) {
-				const content = line.replace(/^\s*include:/, "").trim();
-
-				// Get the list of valid tags and assign them to the include variable
-				let list = content.split(/\s+/).map((tag) => tag.trim());
-				list = list.filter((tag) => {
-					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
-						return true;
-					} else {
-						return false;
-					}
-				});
-				include = list;
-			}
-
-			// Check if the line specifies the tags to exclude (NOT)
-			if (line.match(/^\s*exclude:[\p{L}0-9_\-/# ]+$/gu)) {
-				const content = line.replace(/^\s*exclude:/, "").trim();
-
-				// Get the list of valid tags and assign them to the exclude variable
-				let list = content.split(/\s+/).map((tag) => tag.trim());
-				list = list.filter((tag) => {
-					if (tag.match(/^#[\p{L}]+[^#]*$/u)) {
-						return true;
-					} else {
-						return false;
-					}
-				});
-				exclude = list;
-			}
-
-			// Check if the line specifies sections of a note
-			if (line.match(/^\s*sections:[\p{L}0-9_\-/#, ]+$/gu)) {
-				const content = line.replace(/^\s*sections:/, "").trim();
-				// Get the list of sections and assign them to the sections variable
-				let list = content.split(',').map((sec) => sec.trim());
-				sections = list;
-			}
-
-			// Check if the line specifies max number of blocks to display
-			match = line.match(maxPattern);
+			const match = line.match(TAG_SUMMARY_MAX_LINE_PATTERN);
 			if (match) {
-    			max = Math.min(50, Number(match[1]));
+				max = Math.min(50, Number(match[1]));
 			}
 		});
-		const codeBlock = '```tag-summary\n'+source.trim()+'\n```'
-		// Create summary only if the user specified some tags
+
+		const codeBlock = '```tag-summary\n' + source.trim() + '\n```';
 		if (tags.length > 0 || include.length > 0) {
 			await this.create(
-				el, 
-				tags, 
-				include, 
-				exclude, 
-				sections, 
-				max, 
-				ctx.sourcePath, 
+				el,
+				tags,
+				include,
+				exclude,
+				sections,
+				max,
+				ctx.sourcePath,
 				codeBlock
 			);
 		} else {
 			this.createEmpty(
-				el, 
-				tags ? tags : [], 
-				include ? include : [], 
-				exclude ? exclude : [], 
-				sections ? sections : [], 
-				max ? max : [], 
-				ctx.sourcePath ? ctx.sourcePath : '', 
+				el,
+				tags ? tags : [],
+				include ? include : [],
+				exclude ? exclude : [],
+				sections ? sections : [],
+				max,
+				ctx.sourcePath ? ctx.sourcePath : '',
 				codeBlock
 			);
-		} 
-	}; 
+		}
+	}
 
 	createEmpty(
-		element: HTMLElement, 
-		tags: String[], 
-		include: string[], 
-		exclude: string[], 
-		sections: string[], 
-		max: number, 
-		fileCtx: string, 
-		mdSource:string
+		element: HTMLElement,
+		tags: string[],
+		include: string[],
+		exclude: string[],
+		sections: string[],
+		max: number,
+		fileCtx: string,
+		mdSource: string
 	): void {
-
 		const container = createEl('div');
-		const textDiv = createEl("blockquote");
-		textDiv.innerHTML = "There are no notes with tagged paragraphs that match the tags:<br>"
-			+ (tags.length>0 ? tags.join(', ') : "No tags specified.") + "<br>";
-		
-		container.appendChild(textDiv);
-		container.setAttribute(
-			'codeblock-tags', 
-			((tags.length > 0) ? tags.join(',') : '')
-		);
-		container.setAttribute(
-			'codeblock-tags-include', 
-			(include ? include.join(',') : '')
-		);
-		container.setAttribute(
-			'codeblock-tags-exclude', 
-			(exclude ? exclude.join(',') : '')
-		);
-		container.setAttribute(
-			'codeblock-sections', 
-			(sections ? sections.join(',') : '')
-		);
-		container.setAttribute(
-			'codeblock-max', 
-			max
-		);
-		container.setAttribute(
-			'codeblock-code', 
-			mdSource
-		);
+		const textDiv = createEl('blockquote');
+		textDiv.innerHTML = tagSummaryEmptyHtml(tags);
 
-		container.appendChild(this.plugin.gui.makeSummaryRefreshButton(container));;
+		container.appendChild(textDiv);
+		TagSummary.writeCodeBlockAttrs(container, {
+			tags,
+			include,
+			exclude,
+			sections,
+			max,
+			mdSource
+		});
+
+		container.appendChild(this.plugin.gui.makeSummaryRefreshButton(container));
 
 		element.replaceWith(container);
 	}
 
 	async create(
-		element: HTMLElement, 
-		tags: string[], 
-		include: string[], 
-		exclude: string[], 
+		element: HTMLElement,
+		tags: string[],
+		include: string[],
+		exclude: string[],
 		sections: string[],
-		max: number, 
+		max: number,
 		fileCtx: string,
-		mdSource:string
-	): void {
-		
-//console.log('create summary')
-		const activeFile = await this.app.workspace.getActiveFile();
+		mdSource: string
+	): Promise<void> {
+		const activeFile = this.app.workspace.getActiveFile();
 		const validTags = tags.concat(include);
 		const tempComponent = new TempComponent();
 		const summaryContainer = createEl('div');
-		//summaryContainer.appendChild(createEl('hr'));
 		this.selectedBlocks = [];
-		this.blocks = [];
 
 		summaryContainer.setAttribute(
-			'class', 
+			'class',
 			'tag-summary-block'
 		);
-		
-		// Get files
+
 		let listFiles = this.app.vault.getMarkdownFiles();
 
-		// Filter files
 		listFiles = listFiles.filter((file) => {
-			// Remove files that do not contain the tags selected by the user
 			const cache = this.app.metadataCache.getFileCache(file);
-			const tagsInFile = getAllTags(cache);
-			// Remove files where the path includes '_exclude'
-			if (file.path.includes('_exclude')) return false
-			
-			// Remove the file if it's the same file as this summary
-			if (activeFile) if (activeFile.path == file.path) return false;
+			const tagsInFile = cache ? getAllTags(cache) : null;
+			if (file.path.includes('_exclude')) return false;
+			if (activeFile && activeFile.path == file.path) return false;
 
 			if (validTags.some((value) => tagsInFile?.includes(value))) {
 				return true;
 			}
 			return false;
-        });
-
-		// Sort files alphabetically
-		// make this a property of the code block. but default to modified date
-		/*listFiles = listFiles.sort((file1, file2) => {
-			if (file1.path < file2.path) {
-				return -1;
-			} else if (file1.path > file2.path) {
-				return 1;
-			} else {
-				return 0;
-			}
-		});*/
- 
-
-		listFiles = listFiles.sort((file1, file2) => {
-		    // Since mtime is a Unix timestamp in milliseconds, we can directly subtract them
-		    //console.log(file2.stat.ctime - file1.stat.ctime)
-		    return file2.stat.ctime - file1.stat.ctime;
 		});
 
-		// Get files content
-		let listContents: [TFile, string][] = await this.readFiles(listFiles);
+		listFiles = listFiles.sort((file1, file2) => {
+			return file2.stat.ctime - file1.stat.ctime;
+		});
+
+		const listContents: [TFile, string][] = await this.readFiles(listFiles);
 		let count = 0;
-
-		// Create summary
 		let summary: string = "";
-		listContents.forEach((item) => {
 
-			// Get files name
-			// item[0] is the file, item[1] is the file content
-			const fileName = item[0].name.replace(/.md$/g, "");
+		// Build source paragraphs first; each item is rendered by Obsidian below.
+		for (const item of listContents) {
+			const fileName = item[0].name.replace(/.md$/g, '');
 			const filePath = item[0].path;
-			
-			// Get paragraphs
-			//let listParagraphs: string[] = Array();
-			//const blocks = item[1].split(/\n\s*\n/).filter((row) => row.trim().length > 0);
-			
-			// Update to treat list items as paragraph breaks
-			let listParagraphs: string[] = Array();
+
 			const blocks = item[1]
-			  .split(/(?:\n\s*\n|(?<=^|\n)[*-]\s|(?<=^|\n)\d+\.\s)/)
-			  .filter((row) => row.trim().length > 0);
+				.split(TAG_SUMMARY_BLOCK_SPLIT_PATTERN)
+				.filter((row) => row.trim().length > 0);
 
+			const listParagraphs = blocks.filter((paragraph) => {
+				const listTags = paragraph.match(createTagSummaryParagraphTagPattern());
+				if (!listTags || listTags.length <= 0) return false;
+				if (paragraph.includes("```") || paragraph.includes("---")) return false;
+				return this.isValidText(listTags, tags, include, exclude);
+			});
 
-			// Get list items
-			blocks.forEach((paragraph) => {
-	
-				// Check if the paragraph is another plugin
-				let valid = false;
-				//let listTags = paragraph.match(/#[\p{L}0-9_\-/#]+/gu);
-				let listTags = paragraph.match(/(?<=^|\s)(#[^\s#.,;!?:]+)/g); // revised to not match hash in middle of word
-				
-				if (listTags != null && listTags.length > 0) {
-					if (!paragraph.contains("```") && !paragraph.contains("---")) {
-						valid = this.isValidText(listTags, tags, include, exclude);
-					}
-				}
+			for (let paragraph of listParagraphs) {
+				if (count >= max) break;
+				count++;
 
-				if (valid) listParagraphs.push(paragraph);  
+				paragraph += '\n';
 
-			})
+				const tagSection = this.getMatchedSummaryTag(paragraph, tags);
+				const linkInfo = this.getSummaryItemLinkInfo(paragraph, filePath, fileName);
 
-			// There is also some redundancy here because we are processing a lot of content that we don't need, if a max is set. 
-			// adjust the count check 
-			// Process each block of text
-			listParagraphs.forEach(async(paragraph) => {
-				if (count++ >= max) return;
+				const buttonContainer = createEl('div');
+				buttonContainer.setAttribute('class', 'tagsummary-buttons');
 
-				// Restore newline at the end
-				paragraph += "\n";
-
-				var regex = new RegExp;
-
-				// Check which tag matches in this paragraph.
-				var tagText = new String;
-				var tagSection = null;
-				tags.forEach((tag) => {
-					tagText = tag.replace('#', '\\#');
-					regex = new RegExp(`${tagText}(\\W|$)`, 'g');
-              		if (paragraph.match(regex) != null) { 
-              			tagSection = tag
-              		} 
-            	});
-          		
-          		const buttonContainer = createEl('div');
-          		//const selectContainer = createEl('div');
-          		buttonContainer.setAttribute('class', 'tagsummary-buttons')
-          		const paragraphEl = createEl("blockquote");
+				const paragraphEl = createEl('blockquote');
 				paragraphEl.setAttribute('file-source', filePath);
-
-				paragraphEl.setAttribute('index', count-1);
-
+				paragraphEl.setAttribute('index', String(count - 1));
 				paragraphEl.setAttribute('class', 'tag-summary-paragraph');
 
-				const blockLink = paragraph.match(/\^[\p{L}0-9_\-/^]+/gu); 
-				
-				// Check if there's a header in this paragaph
-				const header = Utils.findClosestHeaderWithLink(paragraph);
-				let headerLink = Utils.removeTextFromString ("#", header.link, true);
-				//headerLink = Utils.removeTextFromString ("@", headerLink, true);
-				headerLink = Utils.removeTextFromString ("[", headerLink, true);
-				headerLink = Utils.removeTextFromString ("]", headerLink, true);
-				//console.log("-------------", headerLink)
-
-
-				let link;
-        		
-        		if (blockLink) link = '[[' + filePath + '#' + blockLink + '|' + fileName + ']]';
-
-        		//else if (header.text != '') link = '[[' + filePath + '#' + header.link + '|' + fileName + ']]';
-        		else if (header.text != '') link = '[[' + filePath + '#' + headerLink + ']]';
-
-        		else link = '[[' + filePath + '|' + fileName + ']]';
-
-    			/*buttonContainer.appendChild(
-					this.plugin.gui.makeBlockSelector(
-						count-1
+				buttonContainer.appendChild(
+					this.plugin.gui.makeCopyToSection(
+						this.copyToBtnHandler.bind(this),
+						paragraph,
+						sections,
+						tags,
+						linkInfo.sourcePath,
+						paragraphEl,
+						summaryContainer
 					)
-				);*/
+				);
 
-				//if (sections.length >= 1) {
-        		/*if (this.plugin.settings.removeTagBtn == 'always' 
-        			|| this.plugin.settings.removeTagBtn == 'desktop' && !this.app.isMobile
-        			|| this.plugin.settings.removeTagBtn == 'mobile' && this.app.isMobile
-        			)
-        			*/
-        		//if (Utils.platformSettingCheck (this.app, this.plugin.settings.removeTagBtn)) {
-
-					buttonContainer.appendChild(
-						this.plugin.gui.makeCopyToSection(
-							this.copyToBtnHandler.bind(this),
-							paragraph, 
-							sections, 
-							tags,
-							(blockLink ? (filePath + '#' + blockLink[0]) : filePath), 
-							paragraphEl, 
-							summaryContainer
-						)
-					);
-				//}
 				if (Utils.platformSettingCheck (this.app, this.plugin.settings.copyToCBBtn)) {
-
 					buttonContainer.appendChild(
 						this.plugin.gui.makeCopyButton(
 							this.copyBtnHandler.bind(this),
 							paragraph.trim()
 						)
 					);
-
 				}
-//console.log(Utils.platformSettingCheck (this.app, this.plugin.settings.removeTagBtn))
-				if (Utils.platformSettingCheck (this.app, this.plugin.settings.removeTagBtn)) {
 
+				if (Utils.platformSettingCheck (this.app, this.plugin.settings.removeTagBtn)) {
 					buttonContainer.appendChild(
 						this.plugin.gui.makeRemoveTagButton(
 							this.removeTagBtnHandler.bind(this),
-							paragraphEl, 
-							tagSection//, 
-							//(blockLink ? (filePath + '#' + blockLink[0]) : filePath)
+							paragraphEl,
+							tagSection ?? ''
 						)
 					);
-
 				}
 
+				const mdParagraph = paragraph;
+				const displayParagraph = this.buildSummaryDisplayMarkdown(linkInfo.summaryLink, mdParagraph);
+				summary += displayParagraph + '\n';
 
-        		const mdParagraph = paragraph;
-        		paragraph = '**' + link + '**\n' + paragraph;
-          		summary += paragraph + '\n'; 
+				paragraphEl.setAttribute('md-source', mdParagraph);
 
-          		paragraphEl.setAttribute('md-source', mdParagraph); 
-          		blocks.push(mdParagraph)
-//console.log(mdParagraph, '\n-----\n', paragraph)
-//console.log(activeFile.path)
+				// Obsidian renders markdown/tags/links first; Tag Buddy decorates the DOM after.
+				await MarkdownRenderer.render(this.app, displayParagraph, paragraphEl, '', tempComponent);
+				this.decorateRenderedSummaryParagraph(paragraphEl, buttonContainer);
 
+				summaryContainer.appendChild(paragraphEl);
+			}
+		}
 
-
-/*const el = document.createElement("div") // using `createElement` instead of `createEl` to avoid appending to the DOM
-const comp = new Component()
-// @ts-expect-error `obsidian` package not yet updated
-await MarkdownRenderer.render(this.app, "![[example.png]]", el, "", comp)
-comp.load() // loads embeds
-console.log(el.cloneNode(true)) // do something with el
-comp.unload() // when done with it to release resources
-*/
-await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponent)
-
-
-          		/*await MarkdownRenderer.renderMarkdown(
-          			paragraph, 
-          			paragraphEl, 
-          			activeFile.path,
-          			//filePath, //'', 
-          			tempComponent
-      			);*/
-
-//console.log('markdown render summary')
-          		
-          		const titleEl = createEl('span');
-          		titleEl.setAttribute('class', 'tagsummary-item-title');
-
-          		// Not doing this until/when/if we ever clean up all the copyTo methods
-          		// as described in the getSelection method.
-				/*titleEl.appendChild(
-					this.plugin.gui.makeBlockSelector(
-						parseInt (paragraphEl.getAttribute('index'))
-					)
-				);*/
-
-          		titleEl.appendChild(paragraphEl.querySelector('strong').cloneNode(true))
-	//console.log(paragraphEl.outerHTML)
-          		//if (this.plugin.settings.tagSummaryBlockButtons) 
-          			paragraphEl.appendChild(buttonContainer);
-          		paragraphEl.querySelector('strong').replaceWith(titleEl)
-          		//paragraphEl.setAttribute('md-source', mdParagraph)
-
-          		summaryContainer.appendChild(paragraphEl);
-			});
-		});
-	
-		
-		// Add Summary
 		if (summary != '') {
-			setTimeout(async () => { 
-				if (this.plugin.settings.showSummaryButtons) {
-					summaryContainer.appendChild(
-						this.plugin.gui.makeSummaryRefreshButton(
-							summaryContainer
-						)
-					);
-	        		summaryContainer.appendChild(
-	        			this.plugin.gui.makeCopySummaryButton(
-	        				summary
-        				)
-        			);
-	        		summaryContainer.appendChild(
-	        			this.plugin.gui.makeSummaryNoteButton(
-	        				this.makeSummaryBtnHandler.bind(this),
-	        				summary, 
-	        				tags
-        				)
-        			);
-	        		summaryContainer.appendChild(
-	        			this.plugin.gui.makeBakeButton(
-	        				this.bakeSummaryBtnHandler.bind(this),
-	        				summary, 
-	        				summaryContainer, 
-	        				activeFile.path
-        				)
-        			);
-
-	        		summaryContainer.appendChild(createEl('br')); 
-				} 
-				//summaryContainer.appendChild(createEl('hr')); 
-			}, 0);
-			summaryContainer.setAttribute(
-				'codeblock-tags', 
-				tags.join(',')
-			);
-			summaryContainer.setAttribute(
-				'codeblock-tags-include', 
-				((include.length > 0) ? include.join(',') : '')
-			);
-			summaryContainer.setAttribute(
-				'codeblock-tags-exclude', 
-				((exclude.length > 0) ? exclude.join(',') : '')
-			);
-			summaryContainer.setAttribute(
-				'codeblock-sections', 
-				((sections.length > 0) ? sections.join(',') : '')
-			);
-			summaryContainer.setAttribute(
-				'codeblock-max', 
-				max
-			);
-			summaryContainer.setAttribute(
-				'codeblock-code', 
+			TagSummary.writeCodeBlockAttrs(summaryContainer, {
+				tags,
+				include,
+				exclude,
+				sections,
+				max,
 				mdSource
+			});
+
+			const summaryHeader = this.createSummaryHeader(
+				tags,
+				include,
+				exclude,
+				summary,
+				summaryContainer,
+				activeFile?.path ?? fileCtx
 			);
+			if (summaryHeader) {
+				summaryContainer.insertBefore(summaryHeader, summaryContainer.firstChild);
+			}
 
 			element.replaceWith(summaryContainer);
 		} else {
 			this.createEmpty(
-				element, 
-				tags ? tags : [], 
-				include ? include : [], 
-				exclude ? exclude : [], 
-				sections ? sections : [], 
-				max ? max : [], 
-				'', 
+				element,
+				tags ? tags : [],
+				include ? include : [],
+				exclude ? exclude : [],
+				sections ? sections : [],
+				max,
+				'',
 				mdSource
 			);
 		}
 	}
 
 	update (
-		summaryEl:HTMLElement
+		summaryEl: HTMLElement
 	): void {
-//console.log('>>>> Update')
-		const tagsStr = summaryEl.getAttribute(
-			'codeblock-tags'
-		);
-		const tags = tagsStr ? tagsStr.split(',') : [];
-
-		const tagsIncludeStr = summaryEl.getAttribute(
-			'codeblock-tags-include'
-		);
-		const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
-
-		const tagsExcludeStr = summaryEl.getAttribute(
-			'codeblock-tags-exclude'
-		);
-		const tagsExclude = tagsExcludeStr ? tagsExcludeStr.split(',') : [];
-
-		const sectionsStr = summaryEl.getAttribute(
-			'codeblock-sections'
-			);
-		const sections = sectionsStr ? sectionsStr.split(',') : [];
-
-		const max = Number(summaryEl.getAttribute(
-			'codeblock-max'
-		));
-
-		const mdSource = summaryEl.getAttribute(
-			'codeblock-code'
-		);
+		const attrs = TagSummary.readCodeBlockAttrs(summaryEl);
 
 		this.create(
-			summaryEl, 
-			tags, 
-			tagsInclude, 
-			tagsExclude, 
-			sections, 
-			max, 
-			'', 
-			mdSource);
+			summaryEl,
+			attrs.tags,
+			attrs.include,
+			attrs.exclude,
+			attrs.sections,
+			attrs.max,
+			'',
+			attrs.mdSource
+		);
 	}
 
-
-	// Not factored yet
 	async copyTextToSection(
-	    text: string, 
-	    section: string, 
-	    filePath: string,
-	    addLink: Boolean = true,
-	    selectedFile: TFile,
-	    detectPrefix: Boolean = true)
-	:Promise<boolean>{
+		text: string,
+		section: string,
+		filePath: string,
+		addLink: boolean = true,
+		selectedFile: TFile | null = null,
+		detectPrefix: boolean = true
+	): Promise<boolean> {
+		const file = selectedFile ? selectedFile : (await this.app.workspace.getActiveFile());
+		if (!file) {
+			new Notice(NOTICE_TEXT.cannotIdentifyDestinationNote);
+			return false;
+		}
 
-	    const file = selectedFile ? selectedFile : (await this.app.workspace.getActiveFile());
-	    let fileContent = await this.app.vault.read(file);
-	    const fileContentLines: string[] = Utils.getLinesInString(fileContent);
-	    const mdHeadings = Utils.getMarkdownHeadings(fileContentLines);
-	    let targetLine;
+		let fileContent = await this.app.vault.read(file);
+		const fileContentLines: string[] = Utils.getLinesInString(fileContent);
+		const mdHeadings = Utils.getMarkdownHeadings(fileContentLines);
+		let targetLine = fileContentLines.length - 1;
 
-	    //if (mdHeadings.length <= 0 || section == 'end' || section == 'top' || section == 'note' || section == 'newNote') {
-    	if (mdHeadings.length <= 0 || section == 'end' || section == 'top') {
+		if (mdHeadings.length <= 0 || section == 'end' || section == 'top') {
+			if (section == 'top') {
+				targetLine = Utils.findFirstLineAfterFrontMatter(fileContent);
+				if (targetLine == 0) fileContent = '\n' + fileContent;
+			} else if (section == 'end') {
+				targetLine = fileContentLines.length - 1;
+			}
+		} else if (mdHeadings.length > 0) {
+			const headingObj = mdHeadings.find(heading => heading.text.trim() === section);
+			if (headingObj) {
+				targetLine = headingObj.line;
+			} else {
+				new Notice(sectionNotFoundPastingTop(section));
+				targetLine = Utils.findFirstLineAfterFrontMatter(fileContent);
+				if (targetLine == 0) fileContent = '\n' + fileContent;
+			}
+		}
 
-	    	if (section == 'top') {	    	
-		    	targetLine = Utils.findFirstLineAfterFrontMatter(fileContent)
-		    	if (targetLine == 0) fileContent = '\n' + fileContent
-				//console.log(targetLine)
-    		/*} else if (section == 'newNote') {
-		    	this.makeSummaryBtnHandler (text, [], true, true);
-		    	return true;
-		    	*/
-		    //} else if (section == 'end' || mdHeadings.length <= 0 || section == 'note') {
-	    	} else if (section == 'end') {
-		    	targetLine = fileContentLines.length - 1;
-		    //} else if (mdHeadings.length <= 0) {
-		    }
-	    } else if (mdHeadings.length > 0) { // if there are any headings
-	        const headingObj = mdHeadings.find(heading => heading.text.trim() === section);
-	        if (headingObj) {
-	        	targetLine = headingObj.line;
-	        } else {
-	            new Notice (`${section} not found.`);
-	            return false;
-	        }
-	    }
+		const linePrefix: string = detectPrefix ? Utils.getListTypeFromLineNumber(fileContent, targetLine + 1) : '';
+		let finalText = linePrefix + text;
+		if (addLink) finalText += ` [[${filePath}|🔗]]`;
 
-	    const linePrefix: String = detectPrefix ? Utils.getListTypeFromLineNumber(fileContent, targetLine+1) : '';
-        let finalText;
-        if (addLink) finalText = linePrefix + text + ` [[${filePath}|🔗]]`;
-        else finalText = linePrefix + text;
-        //let newContent = this.insertTextAfterLine(text, fileContent, headingObj.line);
-        let newContent = Utils.insertTextAfterLine(finalText, fileContent, targetLine);
-        await this.app.vault.modify(file, newContent);
-        return true;
+		const newContent = Utils.insertTextAfterLine(finalText, fileContent, targetLine);
+		await this.app.vault.modify(file, newContent);
+		return true;
+	}
+
+	private buildCopyToContent(
+		mode: SummaryCopyMode,
+		content: string,
+		selection: string,
+		tags: string[],
+		filePath: string
+	): string {
+		if (mode == 'link') {
+			const fileName = filePath.split('/').pop()?.replace(/\.md$/, '') ?? filePath.replace(/\.md$/, '');
+			return '[[' + filePath + '|' + fileName + ']]';
+		}
+
+		let newContent = selection == '' ? content : selection;
+		if (!selection) {
+			for (const tag of tags) {
+				newContent = Utils.removeTagFromString(newContent, tag).trim();
+			}
+		}
+		return newContent;
+	}
+
+	private getCopiedToSectionNoticeText(section: string): string {
+		return copiedToSection(section, this.canLinkToSection(section));
+	}
+
+	private registerNoticeLinkToActiveSection(notice: Notice, section: string): void {
+		if (!this.canLinkToSection(section)) return;
+
+		this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
+			const activeFile = this.app.workspace.getActiveFile();
+			if (activeFile) this.app.workspace.openLinkText(activeFile.path + '#' + section, '');
+		});
+	}
+
+	private registerNoticeLinkToSection(notice: Notice, filePath: string, section: string): void {
+		this.plugin.registerDomEvent(notice.noticeEl, 'click', () => {
+			this.app.workspace.openLinkText(filePath + '#' + section, '');
+		});
+	}
+
+	private canLinkToSection(section: string): boolean {
+		return section != 'top' && section != 'end';
 	}
 
 	async readFiles(
 		listFiles: TFile[]
 	): Promise<[TFile, string][]> {
-		
-		let list: [TFile, string][] = [];
+		const list: [TFile, string][] = [];
 		for (let t = 0; t < listFiles.length; t += 1) {
 			const file = listFiles[t];
-			let content = await this.app.vault.cachedRead(file);
+			const content = await this.app.vault.cachedRead(file);
 			list.push([file, content]);
 		}
 
@@ -900,79 +609,369 @@ await MarkdownRenderer.render(this.app, paragraph, paragraphEl, "", tempComponen
 	}
 
 	isValidText(
-	    listTags: string[], 
-	    tags: string[], 
-	    include: string[], 
-	    exclude: string[]
+		listTags: string[],
+		tags: string[],
+		include: string[],
+		exclude: string[]
 	): boolean {
+		let valid = true;
 
-	    let valid = true;
+		// Query tags are OR, include tags are AND, exclude tags are NOT.
+		if (tags.length > 0) {
+			valid = valid && tags.some((value) => listTags.includes(value));
+		}
+		if (include.length > 0) {
+			valid = valid && include.every((value) => listTags.includes(value));
+		}
+		if (valid && exclude.length > 0) {
+			valid = !exclude.some((value) => listTags.includes(value));
+		}
+		return valid;
+	}
 
-	    // Check OR (tags)
-	    if (tags.length > 0) {
-	        valid = valid && tags.some((value) => listTags.includes(value));
-	    }
-	    // Check AND (include)
-	    if (include.length > 0) {
-	        valid = valid && include.every((value) => listTags.includes(value));
-	    }
-	    // Check NOT (exclude)
-	    if (valid && exclude.length > 0) {
-	        valid = !exclude.some((value) => listTags.includes(value));
-	    }
-	    return valid;       
+	private parseTagSummaryTagListLine(
+		line: string,
+		field: TagSummaryTagListField
+	): string[] | null {
+		if (!line.match(createTagSummaryTagListLinePattern(field))) {
+			return null;
+		}
+
+		const prefixPattern = field == 'tags'
+			? TAG_SUMMARY_TAGS_PREFIX_PATTERN
+			: field == 'include'
+				? TAG_SUMMARY_INCLUDE_PREFIX_PATTERN
+				: TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN;
+
+		const content = line.replace(prefixPattern, '').trim();
+		return content
+			.split(/\s+/)
+			.map((tag) => tag.trim())
+			.filter((tag) => tag.match(TAG_SUMMARY_TAG_TOKEN_PATTERN) != null);
+	}
+
+	private getMatchedSummaryTag(paragraph: string, tags: string[]): string | null {
+		let matchedTag: string | null = null;
+		for (const tag of tags) {
+			if (paragraph.match(createTagSummaryMatchedTagPattern(tag)) != null) {
+				matchedTag = tag;
+			}
+		}
+		return matchedTag;
+	}
+
+	private getSummaryItemLinkInfo(
+		paragraph: string,
+		filePath: string,
+		fileName: string
+	): SummaryItemLinkInfo {
+		const blockLink = paragraph.match(createTagSummaryBlockLinkPattern());
+
+		if (blockLink) {
+			return {
+				summaryLink: '[[' + filePath + '#' + blockLink[0] + '|' + fileName + ']]',
+				sourcePath: filePath + '#' + blockLink[0],
+			};
+		}
+
+		// Prefer the closest header link when there is no block id.
+		const header = Utils.findClosestHeaderWithLink(paragraph);
+		let headerLink = Utils.removeTextFromString('#', header.link, true);
+		headerLink = Utils.removeTextFromString('[', headerLink, true);
+		headerLink = Utils.removeTextFromString(']', headerLink, true);
+
+		if (header.text != '') {
+			return {
+				summaryLink: '[[' + filePath + '#' + headerLink + ']]',
+				sourcePath: filePath,
+			};
+		}
+
+		return {
+			summaryLink: '[[' + filePath + '|' + fileName + ']]',
+			sourcePath: filePath,
+		};
+	}
+
+	private buildSummaryDisplayMarkdown(link: string, sourceParagraph: string): string {
+		return '**' + link + '**\n' + this.compactLeadingTagLines(sourceParagraph);
+	}
+
+	private compactLeadingTagLines(sourceParagraph: string): string {
+		const lines = sourceParagraph.split('\n');
+		const tagLines: string[] = [];
+		let bodyLineIndex = 0;
+
+		while (
+			bodyLineIndex < lines.length
+			&& this.isTagOnlySummaryLine(lines[bodyLineIndex])
+		) {
+			tagLines.push(lines[bodyLineIndex].trim());
+			bodyLineIndex++;
+		}
+
+		if (
+			tagLines.length <= 0
+			|| bodyLineIndex >= lines.length
+			|| lines[bodyLineIndex].trim() == ''
+			|| lines[bodyLineIndex].match(/^#{1,6}\s/)
+		) {
+			return sourceParagraph;
+		}
+
+		const compactedLine = tagLines.join(' ') + ' ' + lines[bodyLineIndex].trimStart();
+		return [compactedLine, ...lines.slice(bodyLineIndex + 1)].join('\n');
+	}
+
+	private isTagOnlySummaryLine(line: string): boolean {
+		const tokens = line.trim().split(/\s+/).filter((token) => token.length > 0);
+		return tokens.length > 0 && tokens.every((token) => token.match(/^#[^\s#.,;!?:]+$/) != null);
+	}
+
+	private createSummaryHeader(
+		tags: string[],
+		include: string[],
+		exclude: string[],
+		summaryMd: string,
+		summaryContainer: HTMLElement,
+		sourcePath: string
+	): HTMLElement | null {
+		const outputSummaryMd = this.buildSummaryOutputMarkdown(summaryMd, tags.concat(include));
+		const tagListEl = Utils.platformSettingCheck(this.app, this.plugin.settings.showSummaryTags)
+			? this.createSummaryTagList(tags, include, exclude)
+			: null;
+		const buttonListEl = this.createSummaryActionButtons(outputSummaryMd, summaryContainer, sourcePath, tags);
+
+		if (!tagListEl && !buttonListEl) return null;
+
+		const headerEl = createEl('div');
+		headerEl.setAttribute('class', 'tagsummary-header');
+		if (tagListEl) headerEl.appendChild(tagListEl);
+		if (buttonListEl) headerEl.appendChild(buttonListEl);
+		return headerEl;
+	}
+
+	private createSummaryTagList(
+		tags: string[],
+		include: string[],
+		exclude: string[]
+	): HTMLElement | null {
+		const queryTags = this.getSummaryHeaderTags(tags, include, exclude);
+		if (queryTags.length <= 0) return null;
+
+		const tagListEl = createEl('span');
+		tagListEl.setAttribute('class', 'tagsummary-query-tags');
+
+		queryTags.forEach((queryTag) => {
+			const tagEl = createEl('span');
+			tagEl.setAttribute('class', 'tagsummary-query-tag tagsummary-query-tag-' + queryTag.kind);
+			tagEl.setAttribute('title', queryTag.tag);
+			tagEl.setText(queryTag.tag);
+			tagListEl.appendChild(tagEl);
+		});
+
+		return tagListEl;
+	}
+
+	private getSummaryHeaderTags(
+		tags: string[],
+		include: string[],
+		exclude: string[]
+	): { tag: string; kind: string }[] {
+		const uniqueTags = new Map<string, { tag: string; kind: string }>();
+		const addTags = (values: string[], kind: string) => {
+			values.forEach((tag) => {
+				if (!uniqueTags.has(tag)) uniqueTags.set(tag, { tag, kind });
+			});
+		};
+
+		addTags(tags, 'tag');
+		addTags(include, 'include');
+		addTags(exclude, 'exclude');
+		return Array.from(uniqueTags.values());
+	}
+
+	private buildSummaryOutputMarkdown(summaryMd: string, tagsToRemove: string[]): string {
+		let outputMd = summaryMd;
+		tagsToRemove.forEach((tag) => {
+			outputMd = this.removeTagFromSummaryOutput(outputMd, tag);
+		});
+		return this.normalizeSummaryOutputSpacing(outputMd.replace(/[^\S\r\n]+(?=\r?\n|$)/g, ''));
+	}
+
+	private removeTagFromSummaryOutput(summaryMd: string, tag: string): string {
+		const tagText = Utils.escapeRegExp(tag);
+		return summaryMd
+			.replace(new RegExp(`(^|\\r?\\n)([^\\S\\r\\n]*)${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, 'gi'), '$1$2')
+			.replace(new RegExp(`([^\\S\\r\\n])${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, 'gi'), '$1')
+			.replace(new RegExp(`^${tagText}(?!\\w|\\/)[^\\S\\r\\n]?`, 'i'), '');
+	}
+
+	private normalizeSummaryOutputSpacing(summaryMd: string): string {
+		return summaryMd.replace(/(\*\*\[\[[^\n]+\]\]\*\*)[^\S\r\n]*(?:\r?\n){2,}([^\r\n])/g, '$1\n$2');
+	}
+
+	private createSummaryActionButtons(
+		summaryMd: string,
+		summaryContainer: HTMLElement,
+		sourcePath: string,
+		tags: string[]
+	): HTMLElement | null {
+		const buttonListEl = createEl('span');
+		buttonListEl.setAttribute('class', 'tagsummary-summary-buttons');
+
+		if (Utils.platformSettingCheck(this.app, this.plugin.settings.copySummaryBtn)) {
+			buttonListEl.appendChild(this.plugin.gui.makeCopySummaryButton(summaryMd));
+		}
+		if (Utils.platformSettingCheck(this.app, this.plugin.settings.summaryNoteBtn)) {
+			buttonListEl.appendChild(
+				this.plugin.gui.makeSummaryNoteButton(
+					this.makeSummaryBtnHandler.bind(this),
+					summaryMd,
+					tags
+				)
+			);
+		}
+		if (Utils.platformSettingCheck(this.app, this.plugin.settings.bakeSummaryBtn)) {
+			buttonListEl.appendChild(
+				this.plugin.gui.makeBakeButton(
+					this.bakeSummaryBtnHandler.bind(this),
+					summaryMd,
+					summaryContainer,
+					sourcePath
+				)
+			);
+		}
+		if (Utils.platformSettingCheck(this.app, this.plugin.settings.summaryRefreshBtn)) {
+			buttonListEl.appendChild(this.plugin.gui.makeSummaryRefreshButton(summaryContainer));
+		}
+
+		return buttonListEl.children.length > 0 ? buttonListEl : null;
+	}
+
+	private decorateRenderedSummaryParagraph(
+		paragraphEl: HTMLElement,
+		buttonContainer: HTMLDivElement
+	): void {
+		// Keep this order: render markdown first, then move the rendered link and
+		// action buttons into a header row above the summary body.
+		const headerEl = createEl('div');
+		headerEl.setAttribute('class', 'tagsummary-item-header');
+
+		const titleEl = createEl('span');
+		titleEl.setAttribute('class', 'tagsummary-item-title');
+
+		const strongEl = paragraphEl.querySelector('strong');
+		if (strongEl) {
+			titleEl.appendChild(strongEl.cloneNode(true));
+			headerEl.appendChild(titleEl);
+			headerEl.appendChild(buttonContainer);
+			const bodyContainer = strongEl.parentElement;
+			if (bodyContainer && bodyContainer != paragraphEl) {
+				paragraphEl.insertBefore(headerEl, bodyContainer);
+				this.removeRenderedTitleFromBody(strongEl);
+			} else {
+				strongEl.replaceWith(headerEl);
+				this.removeLeadingBreakAfterItemHeader(headerEl);
+			}
+			this.appendItemDivider(paragraphEl);
+			return;
+		}
+
+		headerEl.appendChild(buttonContainer);
+		paragraphEl.prepend(headerEl);
+		this.appendItemDivider(paragraphEl);
+	}
+
+	private appendItemDivider(paragraphEl: HTMLElement): void {
+		const dividerEl = createEl('div');
+		dividerEl.setAttribute('class', 'tagsummary-item-divider');
+		paragraphEl.appendChild(dividerEl);
+	}
+
+	private removeRenderedTitleFromBody(titleEl: HTMLElement): void {
+		const nextSibling = titleEl.nextSibling;
+		titleEl.remove();
+		this.removeLeadingBreakFromNode(nextSibling);
+	}
+
+	private removeLeadingBreakAfterItemHeader(headerEl: HTMLElement): void {
+		this.removeLeadingBreakFromNode(headerEl.nextSibling);
+	}
+
+	private removeLeadingBreakFromNode(startNode: ChildNode | null): void {
+		let sibling = startNode;
+		while (sibling && sibling.nodeType == Node.TEXT_NODE && sibling.textContent?.trim() == '') {
+			const nextSibling = sibling.nextSibling;
+			sibling.remove();
+			sibling = nextSibling;
+		}
+
+		if (sibling instanceof HTMLBRElement) {
+			sibling.remove();
+		}
 	}
 
 	static getTagsToCheckFromEl (
 		tagSummaryEl: HTMLElement
-	): Array {
-		const tagsStr = tagSummaryEl.getAttribute('codeblock-tags');
-		const tags = tagsStr ? tagsStr.split(',') : [];
-		const tagsIncludeStr = tagSummaryEl.getAttribute('codeblock-tags-include');
-		const tagsInclude = tagsIncludeStr ? tagsIncludeStr.split(',') : [];
-		return tags.concat(tagsInclude);
+	): string[] {
+		const attrs = TagSummary.readCodeBlockAttrs(tagSummaryEl);
+		return attrs.tags.concat(attrs.include);
 	}
 
 	async getFile (
 		el: HTMLElement
-	):TFile {
-		const filePath = el.getAttribute('file-source'); 
-		const file = await this.app.vault.getAbstractFileByPath(filePath);
-		return file;
+	): Promise<TFile | null> {
+		const filePath = el.getAttribute('file-source');
+		if (!filePath) return null;
+		const file = this.app.vault.getAbstractFileByPath(filePath);
+		return file instanceof TFile ? file : null;
 	}
 
 	updateSelection (
-		index: Number, 
-		bool: Boolean
+		index: number,
+		bool: boolean
 	): void {
-
-		// If isSelected is true, add the index if it's not already in the array
 		if (bool) {
-		    if (!this.selectedBlocks.includes(index)) {
-		        this.selectedBlocks.push(index);
-		    }
+			if (!this.selectedBlocks.includes(index)) {
+				this.selectedBlocks.push(index);
+			}
 		} else {
-		    // If isSelected is false, remove the index from the array
-		    this.selectedBlocks = this.selectedBlocks.filter(itemIndex => itemIndex !== index);
+			this.selectedBlocks = this.selectedBlocks.filter(itemIndex => itemIndex !== index);
 		}
-
-//console.log(this.selectedBlocks)
-
 	}
 
 
-	getSelectedMarkdownBlocks (): String[] {
-		
-		// This is too messy with current implmentation.
-		// To make this work, we need to break out all the copyTo, getPrefix, addLink, etc methods/props
-		// we need to be building the content as we select.
+	getSelectedMarkdownBlocks (): string[] {
+		// Bulk selection is parked until copy/move/share paths use one content builder.
+		return [];
+	}
 
-		// move: I don't think we can remove in bulk? maybe just do it without motion.
-		// bake should be easy
-		// copy, easy
-		// new note
-		// copy to: easy, but need to add the bullet to each
-		// i guess link is the same easy
+	private static writeCodeBlockAttrs(
+		element: HTMLElement,
+		attrs: SummaryCodeBlockAttrs
+	): void {
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.tags, attrs.tags.join(','));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.include, attrs.include.join(','));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.exclude, attrs.exclude.join(','));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.sections, attrs.sections.join(','));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.max, String(attrs.max));
+		element.setAttribute(SUMMARY_CODEBLOCK_ATTRS.code, attrs.mdSource);
+	}
+
+	private static readCodeBlockAttrs(element: HTMLElement): SummaryCodeBlockAttrs {
+		return {
+			tags: TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.tags)),
+			include: TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.include)),
+			exclude: TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.exclude)),
+			sections: TagSummary.splitCodeBlockAttrList(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.sections)),
+			max: Number(element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.max)),
+			mdSource: element.getAttribute(SUMMARY_CODEBLOCK_ATTRS.code) ?? '',
+		};
+	}
+
+	private static splitCodeBlockAttrList(value: string | null): string[] {
+		return value ? value.split(',') : [];
 	}
 
 }

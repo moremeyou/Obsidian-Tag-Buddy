@@ -85,9 +85,13 @@
 
 .tagsummary-button {
 
-   width: 25px !important;
+   width: 22px !important;
+   min-width: 22px !important;
 
-   max-height: 25px !important;
+   height: 22px !important;
+   min-height: 22px !important;
+   max-height: 22px !important;
+   line-height: 22px !important;
    border: none !important;
    box-shadow: none !important;
    outline: none !important;
@@ -98,13 +102,63 @@
    display: inline-flex !important;
    align-items: center !important;
    justify-content: center !important;
-   --icon-size: var(--icon-size-l) !important;
+   --icon-size: var(--icon-size-m) !important;
    color: var(--link-color) !important;
    background-color: var(--background-primary) !important;
    opacity: 0.5;
+   overflow: visible !important;
 }
 .tagsummary-button:hover {
     opacity: 1;
+}
+
+.tagsummary-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    border: 2px solid var(--link-color);
+    border-color: color-mix(in srgb, var(--link-color) 55%, transparent);
+    border-radius: 5px;
+    margin: 0px 0px 10px 0px;
+    padding: 6px 8px;
+}
+
+.tagsummary-query-tags {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex: 0 1 auto;
+    gap: 6px;
+    min-width: 0;
+}
+
+.tagsummary-query-tag {
+    color: var(--link-color);
+    padding: 0px;
+    font-size: var(--font-ui-medium);
+    line-height: 1.5;
+    opacity: 0.85;
+}
+
+.tagsummary-query-tag-exclude {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+.tagsummary-summary-buttons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex: 0 0 auto;
+}
+
+.tagsummary-header .tagsummary-button {
+    margin: 0px 5px !important;
+    background-color: transparent !important;
 }
 
 .tagsummary-checkbox {
@@ -145,27 +199,102 @@
     opacity: 1;
 }
 
+.tagsummary-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 5px 0px 1px 0px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
 .tagsummary-item-title {
-    margin: 5px 0px
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 25px;
+    line-height: 22px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tagsummary-item-title strong,
+.tagsummary-item-title a {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tagsummary-item-title strong {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-width: 0;
+}
+
+.tagsummary-item-title a {
+    display: block;
+    line-height: 22px;
 }
 
 .tagsummary-buttons {
-    /*float: right;*/
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    margin-left: auto;
     text-align: right !important;
+}
+
+.tagsummary-buttons .tagsummary-button,
+.tagsummary-buttons .tagsummary-dropdown {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+}
+
+.tagsummary-copy-to-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tagsummary-copy-to-controls .tagsummary-button,
+.tagsummary-copy-to-controls .tagsummary-dropdown {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+}
+
+.tagsummary-item-divider {
+     border-top: 1px solid var(--background-secondary);
+     margin: 5px 0px 0px 0px;
 }
 
 /*.tag-summary-paragraph {*/
 blockquote.tag-summary-paragraph {
      border-left: none; /*2px solid var(--link-color);*/
-     /*border-top: 1px solid var(--link-color);*/
-     border-bottom: 1px solid var(--background-secondary);
-     /*padding-top: 5px;*/
+     border-top: none;
+     border-bottom: none;
+     padding-top: 5px;
      padding-bottom: 5px;
      padding-left: 0px;
+     padding-right: 0px;
     /*transition: height 0.3s, opacity 0.3s;
     /*transition: height 0.3s ease, margin 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
     overflow: hidden;*/
 }
+
+blockquote.tag-summary-paragraph .tagsummary-item-header + p {
+     margin-top: 3px;
+     margin-bottom: 0px;
+}
+
 /*
 .custom-blockquote {
     border-left: 2px solid #ff4500;
@@ -186,18 +315,62 @@ blockquote.tag-summary-paragraph {
    only screen and (min-width: 481px) and (max-width: 1024px) and (orientation: landscape) {
    
    .tagsummary-button {
-       display: inline-block !important;
+       display: inline-flex !important;
+       align-items: center !important;
+       justify-content: center !important;
        font-size: 12px !important;
-       padding: 5px 5px;
+       padding: 0px !important;
        box-shadow: none;  /* remove shadows if they look off */
        border-radius: 5px;
        color: var(--link-color) !important;
-       max-height: 25px !important;
-       min-width: 25px !important;
+       width: 22px !important;
+       height: 22px !important;
+       min-width: 22px !important;
+       min-height: 22px !important;
+       max-height: 22px !important;
+       line-height: 22px !important;
        white-space: nowrap;
        /*text-align: left !important;*/
-       overflow: hidden;
+       overflow: visible !important;
        background-color: var(--background-primary) !important;
+       --icon-size: var(--icon-size-s) !important;
+   }
+
+   .tagsummary-header {
+       gap: 4px 8px;
+       padding: 5px 6px;
+   }
+
+   .tagsummary-query-tag {
+       font-size: var(--font-ui-small);
+       line-height: 1.45;
+       display: inline-block;
+       max-width: min(36vw, 14ch);
+       overflow: hidden;
+       text-overflow: ellipsis;
+       vertical-align: bottom;
+       white-space: nowrap;
+   }
+
+   .tagsummary-header .tagsummary-button {
+       width: 22px !important;
+       height: 22px !important;
+       min-width: 22px !important;
+       min-height: 22px !important;
+       max-height: 22px !important;
+       line-height: 22px !important;
+       padding: 0px !important;
+       margin: 0px 5px !important;
+       background-color: transparent !important;
+   }
+
+   .tagsummary-item-header {
+       gap: 8px;
+   }
+
+   .tagsummary-item-title {
+       flex: 0 1 10ch;
+       max-width: 10ch;
    }
 
    .tagsummary-dropdown {

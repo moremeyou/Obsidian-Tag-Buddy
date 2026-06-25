@@ -1,5 +1,7 @@
 import TagBuddy from "main";
 import { App, PluginSettingTab, Setting } from "obsidian";
+import * as Utils from './utils';
+import { SETTINGS_TEXT } from './userText';
 
 export class TBSettingsTab extends PluginSettingTab {
     plugin: TagBuddy;
@@ -8,44 +10,38 @@ export class TBSettingsTab extends PluginSettingTab {
         super(app, plugin);
         this.plugin = plugin;
     }
-    
+
     display(): void {
         let { containerEl } = this;
-        containerEl.empty(); 
+        containerEl.empty();
 
-
-        function isValidTag(tag) {
-            const tagPattern = /^#[\w]+$/;
-            return tagPattern.test(tag);
-        }
-
-        function filterAndJoinTags(tagsString) {
-            const tagsArray = tagsString.split(", ");
-            const validTags = tagsArray.filter(isValidTag);
+        function filterAndJoinTags(tagsString: string): string {
+            const tagsArray = tagsString.split(",");
+            const validTags = tagsArray
+                .map((tag: string) => Utils.normalizeTagInput(tag, true))
+                .filter((tag: string | null): tag is string => tag != null);
             return validTags.join(", ");
         }
 
-        ////////////////////////////////////////////////////////////////////////////////
-        containerEl.createEl("h3", { text: "General" });
-        ////////////////////////////////////////////////////////////////////////////////
+        containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.general });
 
         // Adding will always limit to 3. But if they edit it here, it can be any length.
         new Setting(containerEl)
-        .setName("Recent tags")
-        .setDesc("The most recent tags added via Tag Buddy are stored here. These will show up first in the list when adding.")
+        .setName(SETTINGS_TEXT.recentTags.name)
+        .setDesc(SETTINGS_TEXT.recentTags.desc)
         .addText((text) => {
             text
             .setPlaceholder(this.plugin.settings.recentlyAddedTags)
             .setValue(this.plugin.settings.recentlyAddedTags)
             .onChange(async (value) => {
-                this.plugin.settings.recentlyAddedTags = filterAndJoinTags(value); //value;
+                this.plugin.settings.recentlyAddedTags = filterAndJoinTags(value);
                 await this.plugin.saveSettings();
             });
         });
 
         new Setting(containerEl)
-        .setName("Lock recent tags")
-        .setDesc("Toggle ON to lock the recent tags list. Recent tags will not be updated. Instead, the tags above will act like a favorites list.")
+        .setName(SETTINGS_TEXT.lockRecentTags.name)
+        .setDesc(SETTINGS_TEXT.lockRecentTags.desc)
         .addToggle((toggle) =>
             toggle
             .setValue(this.plugin.settings.lockRecentTags)
@@ -55,19 +51,17 @@ export class TBSettingsTab extends PluginSettingTab {
             })
         );
 
-        ////////////////////////////////////////////////////////////////////////////////
-        containerEl.createEl("h3", { text: "Desktop" });
-        ////////////////////////////////////////////////////////////////////////////////
+        containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.desktop });
 
         new Setting (containerEl)
-            .setName("Action when clicking a tag:")
-            .setDesc("What should happen when you click a tag?")
+            .setName(SETTINGS_TEXT.desktopClickTag.name)
+            .setDesc(SETTINGS_TEXT.desktopClickTag.desc)
             .addDropdown((opt) =>
                 opt
-                .addOption('remove', "Remove tag")
-                .addOption('hash', "Remove hash")
-                .addOption('edit', "Edit tag")
-                .addOption('native', "Search tag")
+                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
+                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
+                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
+                .addOption('native', SETTINGS_TEXT.tagActionOptions.native)
                 .setValue(this.plugin.settings.desktopClickTag)
                 .onChange(async (value) => {
                     this.plugin.settings.desktopClickTag = value;
@@ -77,14 +71,14 @@ export class TBSettingsTab extends PluginSettingTab {
         );
 
         new Setting (containerEl)
-            .setName("Action when clicking a tag with CMD/CTRL modifier key:")
-            .setDesc("What should happen when you click a tag while holding the CMD or CTRL key?")
+            .setName(SETTINGS_TEXT.desktopCmdClickTag.name)
+            .setDesc(SETTINGS_TEXT.desktopCmdClickTag.desc)
             .addDropdown((opt) =>
                 opt
-                .addOption('remove', "Remove tag")
-                .addOption('hash', "Remove hash")
-                .addOption('edit', "Edit tag")
-                .addOption('native', "Search tag")
+                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
+                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
+                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
+                .addOption('native', SETTINGS_TEXT.tagActionOptions.native)
                 .setValue(this.plugin.settings.desktopCMDClickTag)
                 .onChange(async (value) => {
                     this.plugin.settings.desktopCMDClickTag = value;
@@ -94,14 +88,14 @@ export class TBSettingsTab extends PluginSettingTab {
         );
 
         new Setting (containerEl)
-            .setName("Action when clicking a tag with OPT/ALT modifier key:")
-            .setDesc("What should happen when you click a tag while holding the OPT or ALT key?")
+            .setName(SETTINGS_TEXT.desktopOptClickTag.name)
+            .setDesc(SETTINGS_TEXT.desktopOptClickTag.desc)
             .addDropdown((opt) =>
                 opt
-                .addOption('remove', "Remove tag")
-                .addOption('hash', "Remove hash")
-                .addOption('edit', "Edit tag")
-                .addOption('native', "Search tag")
+                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
+                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
+                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
+                .addOption('native', SETTINGS_TEXT.tagActionOptions.native)
                 .setValue(this.plugin.settings.desktopOPTClickTag)
                 .onChange(async (value) => {
                     this.plugin.settings.desktopOPTClickTag = value;
@@ -110,13 +104,194 @@ export class TBSettingsTab extends PluginSettingTab {
             )
         );
 
-        ////////////////////////////////////////////////////////////////////////////////
-        containerEl.createEl("h3", { text: "Mobile" });
-        ////////////////////////////////////////////////////////////////////////////////
+        containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.tagSummaries });
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.showSummaryTags.name)
+            .setDesc(SETTINGS_TEXT.showSummaryTags.desc)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.showSummaryTags)
+                .onChange(async (value) => {
+                    this.plugin.settings.showSummaryTags = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        containerEl.createEl("h5", { text: SETTINGS_TEXT.sections.tagSummaryControls });
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryActionButtons.refresh)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.summaryRefreshBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.summaryRefreshBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryActionButtons.copySummary)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.copySummaryBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.copySummaryBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryActionButtons.createNote)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.summaryNoteBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.summaryNoteBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryActionButtons.flatten)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.bakeSummaryBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.bakeSummaryBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        containerEl.createEl("h5", { text: SETTINGS_TEXT.sections.tagSummaryItems });
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryButtons.removeTag)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.removeTagBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.removeTagBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryButtons.copyToClipboard)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.copyToCBBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.copyToCBBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryButtons.moveToSection)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.moveToSectionBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.moveToSectionBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryButtons.copyToSection)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.copyToSectionBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.copyToSectionBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryButtons.copyLinkToSection)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.copyLinkToSectionBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.copyLinkToSectionBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        new Setting (containerEl)
+            .setName(SETTINGS_TEXT.summaryButtons.copyToNote)
+            .addDropdown((opt) =>
+                opt
+                .addOption('always', SETTINGS_TEXT.summaryButtonVisibility.always)
+                .addOption('desktop', SETTINGS_TEXT.summaryButtonVisibility.desktop)
+                .addOption('mobile', SETTINGS_TEXT.summaryButtonVisibility.mobile)
+                .addOption('hide', SETTINGS_TEXT.summaryButtonVisibility.hide)
+                .setValue(this.plugin.settings.copyToNoteBtn)
+                .onChange(async (value) => {
+                    this.plugin.settings.copyToNoteBtn = value;
+                    await this.plugin.saveSettings();
+                }
+            )
+        );
+
+        containerEl.createEl("h3", { text: SETTINGS_TEXT.sections.mobile });
 
         new Setting(containerEl)
-            .setName("Show mobile notices")
-            .setDesc("Toggle OFF to hide notices.")
+            .setName(SETTINGS_TEXT.mobileNotices.name)
+            .setDesc(SETTINGS_TEXT.mobileNotices.desc)
             .addToggle((toggle) =>
                 toggle
                 .setValue(this.plugin.settings.mobileNotices)
@@ -128,14 +303,14 @@ export class TBSettingsTab extends PluginSettingTab {
         );
 
         new Setting (containerEl)
-            .setName("Action when DOUBLE-TAPPING a tag:")
-            .setDesc("What should happen when you DOUBLE-TAP a tag?")
+            .setName(SETTINGS_TEXT.mobileDoubleTapTag.name)
+            .setDesc(SETTINGS_TEXT.mobileDoubleTapTag.desc)
             .addDropdown((opt) =>
                 opt
-                .addOption('remove', "Remove tag")
-                .addOption('hash', "Remove hash")
-                .addOption('edit', "Edit tag")
-                .addOption('native', "Search tag")
+                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
+                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
+                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
+                .addOption('native', SETTINGS_TEXT.tagActionOptions.native)
                 .setValue(this.plugin.settings.mobileDoubleTapTag)
                 .onChange(async (value) => {
                     this.plugin.settings.mobileDoubleTapTag = value;
@@ -145,13 +320,13 @@ export class TBSettingsTab extends PluginSettingTab {
         );
 
         new Setting (containerEl)
-            .setName("Action when LONG-PRESSING a tag:")
-            .setDesc("What should happen when you LONG-PRESS a tag?")
+            .setName(SETTINGS_TEXT.mobileLongPressTag.name)
+            .setDesc(SETTINGS_TEXT.mobileLongPressTag.desc)
             .addDropdown((opt) =>
                 opt
-                .addOption('remove', "Remove tag")
-                .addOption('hash', "Remove hash")
-                .addOption('edit', "Edit tag")
+                .addOption('remove', SETTINGS_TEXT.tagActionOptions.remove)
+                .addOption('hash', SETTINGS_TEXT.tagActionOptions.hash)
+                .addOption('edit', SETTINGS_TEXT.tagActionOptions.edit)
                 .setValue(this.plugin.settings.mobileLongPressTag)
                 .onChange(async (value) => {
                     this.plugin.settings.mobileLongPressTag = value;
@@ -161,8 +336,8 @@ export class TBSettingsTab extends PluginSettingTab {
         );
 
         new Setting (containerEl)
-            .setName("TRIPLE-TAP non-tag, non-link text to add a tag:")
-            .setDesc("Toggle OFF to disable triple-tap.")
+            .setName(SETTINGS_TEXT.mobileTripleTapText.name)
+            .setDesc(SETTINGS_TEXT.mobileTripleTapText.desc)
             .addToggle((toggle) =>
                 toggle
                 .setValue(this.plugin.settings.mobileTripleTapText)
@@ -173,215 +348,23 @@ export class TBSettingsTab extends PluginSettingTab {
             )
         );
 
-        ////////////////////////////////////////////////////////////////////////////////
-        containerEl.createEl("h3", { text: "Tag Summaries" });
-        ////////////////////////////////////////////////////////////////////////////////
-
-        new Setting(containerEl)
-            .setName("Show tag summary buttons")
-            .setDesc("Toggle OFF to hide these buttons.")
-            .addToggle((toggle) =>
-                toggle
-                .setValue(this.plugin.settings.showSummaryButtons)
-                .onChange(async (value) => {
-                    this.plugin.settings.showSummaryButtons = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        containerEl.createEl("h5", { text: "Tag Summaries Items" });
-
-        // show button : both, desktop only, mobile only, none
-        new Setting (containerEl)
-            .setName("Remove tag button:")
-            //.setDesc("What should happen when you click a tag while holding the OPT or ALT key?")
-            .addDropdown((opt) =>
-                opt
-                .addOption('always', "Desktop and mobile")
-                .addOption('desktop', "Only desktop")
-                .addOption('mobile', "Only mobile")
-                .addOption('hide', "Hide")
-                .setValue(this.plugin.settings.removeTagBtn)
-                .onChange(async (value) => {
-                    this.plugin.settings.removeTagBtn = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        new Setting (containerEl)
-            .setName("Copy to clipboard button:")
-            //.setDesc("What should happen when you click a tag while holding the OPT or ALT key?")
-            .addDropdown((opt) =>
-                opt
-                .addOption('always', "Desktop and mobile")
-                .addOption('desktop', "Only desktop")
-                .addOption('mobile', "Only mobile")
-                .addOption('hide', "Hide")
-                .setValue(this.plugin.settings.copyToCBBtn)
-                .onChange(async (value) => {
-                    this.plugin.settings.copyToCBBtn = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        new Setting (containerEl)
-            .setName("Move to section button:")
-            //.setDesc("What should happen when you click a tag while holding the OPT or ALT key?")
-            .addDropdown((opt) =>
-                opt
-                .addOption('always', "Desktop and mobile")
-                .addOption('desktop', "Only desktop")
-                .addOption('mobile', "Only mobile")
-                .addOption('hide', "Hide")
-                .setValue(this.plugin.settings.moveToSectionBtn)
-                .onChange(async (value) => {
-                    this.plugin.settings.moveToSectionBtn = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        new Setting (containerEl)
-            .setName("Copy to section button:")
-            //.setDesc("What should happen when you click a tag while holding the OPT or ALT key?")
-            .addDropdown((opt) =>
-                opt
-                .addOption('always', "Desktop and mobile")
-                .addOption('desktop', "Only desktop")
-                .addOption('mobile', "Only mobile")
-                .addOption('hide', "Hide")
-                .setValue(this.plugin.settings.copyToSectionBtn)
-                .onChange(async (value) => {
-                    this.plugin.settings.copyToSectionBtn = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        new Setting (containerEl)
-            .setName("Copy link to section button:")
-            //.setDesc("What should happen when you click a tag while holding the OPT or ALT key?")
-            .addDropdown((opt) =>
-                opt
-                .addOption('always', "Desktop and mobile")
-                .addOption('desktop', "Only desktop")
-                .addOption('mobile', "Only mobile")
-                .addOption('hide', "Hide")
-                .setValue(this.plugin.settings.copyLinkToSectionBtn)
-                .onChange(async (value) => {
-                    this.plugin.settings.copyLinkToSectionBtn = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        new Setting (containerEl)
-            .setName("Copy to note button:")
-            //.setDesc("What should happen when you click a tag while holding the OPT or ALT key?")
-            .addDropdown((opt) =>
-                opt
-                .addOption('always', "Desktop and mobile")
-                .addOption('desktop', "Only desktop")
-                .addOption('mobile', "Only mobile")
-                .addOption('hide', "Hide")
-                .setValue(this.plugin.settings.copyToNoteBtn)
-                .onChange(async (value) => {
-                    this.plugin.settings.copyToNoteBtn = value;
-                    await this.plugin.saveSettings();
-                }
-            )
-        );
-
-        // if any of the other buttons are shown, we show the drop down
-            // do this in the tag summary
-
-
-
-        /*
-        new Setting(containerEl)
-        .setName("Override native tag search on click")
-        .setDesc("Toggle OFF to use CTRL/CMD+CLICK to remove tag.")
-        .addToggle((toggle) =>
-            toggle
-            .setValue(this.plugin.settings.removeOnClick)
-            .onChange(async (value) => {
-                this.plugin.settings.removeOnClick = value;
-                await this.plugin.saveSettings();
-            })
-        );
-
-        new Setting(containerEl)
-        .setName("Convert to tag text (removes #)")
-        .setDesc("Toggle OFF to use OPT/ALT+CLICK to perform native tag search.")
-        .addToggle((toggle) =>
-            toggle
-            .setValue(this.plugin.settings.optToConvert)
-            .onChange(async (value) => {
-                this.plugin.settings.optToConvert = value;
-                await this.plugin.saveSettings();
-            })
-        );
-
-        new Setting(containerEl)
-        .setName("Remove nested tags first")
-        .setDesc("Toggle OFF to use SHIFT+CLICK to remove nested tags first.")
-        .addToggle((toggle) =>
-            toggle
-            .setValue(this.plugin.settings.removeChildTagsFirst)
-            .onChange(async (value) => {
-                this.plugin.settings.removeChildTagsFirst = value;
-                await this.plugin.saveSettings();
-            })
-        );
-
-        new Setting(containerEl)
-        .setName("Mobile tag search")
-        .setDesc("Toggle ON to restore mobile native tag search on tap. Tag removal will then use LONG PRESS.")
-        .addToggle((toggle) =>
-            toggle
-            .setValue(this.plugin.settings.mobileTagSearch)
-            .onChange(async (value) => {
-                this.plugin.settings.mobileTagSearch = value;
-                await this.plugin.saveSettings();
-            })
-        );
-
-        
-
-        new Setting(containerEl)
-        .setName("Show tag summary paragraph buttons")
-        .setDesc("Show buttons below each tagged paragraph that let you copy, remove, and move the paragraph.")
-        .addToggle((toggle) =>
-            toggle
-            .setValue(this.plugin.settings.tagSummaryBlockButtons)
-            .onChange(async (value) => {
-                this.plugin.settings.tagSummaryBlockButtons = value;
-                await this.plugin.saveSettings();
-            })
-        );
-        */
-
         containerEl.createEl('hr');
-        containerEl.createEl("h1", { text: "Support a buddy" });
+        containerEl.createEl("h1", { text: SETTINGS_TEXT.sections.support });
         const donateLink = containerEl.createEl('a');
         donateLink.setAttribute('href', 'https://www.buymeacoffee.com/moremeyou');
         const donateButton = createEl('img');
         donateButton.setAttribute('src', 'https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png');
-        donateButton.setAttribute('alt', 'Buy Me A Coffee');
-        donateButton.style = 'height: 40px !important;width: 150px !important;'
+        donateButton.setAttribute('alt', SETTINGS_TEXT.donateAlt);
+        donateButton.style.cssText = 'height: 40px !important;width: 150px !important;'
         donateLink.appendChild(donateButton)
-        //.innerHTML = `<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;" ></a>`;
 
         containerEl.createEl('br');
         containerEl.createEl('br');
         containerEl.createEl('br');
 
         new Setting(containerEl)
-        .setName("Debug mode")
-        .setDesc("Output to console.")
+        .setName(SETTINGS_TEXT.debugMode.name)
+        .setDesc(SETTINGS_TEXT.debugMode.desc)
         .addToggle((toggle) =>
             toggle
             .setValue(this.plugin.settings.debugMode)
@@ -392,4 +375,3 @@ export class TBSettingsTab extends PluginSettingTab {
         );
     }
 }
-

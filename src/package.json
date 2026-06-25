@@ -1,26 +1,28 @@
 {
 	"name": "TagBuddy",
-	"version": "0.6.8.2",
+	"version": "0.6.9",
 	"description": "Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
+		"build:artifact": "node esbuild.config.mjs production",
+		"deploy:fork2026": "npm run build:artifact && node scripts/deploy-fork2026.mjs",
+		"verify:fork2026": "node scripts/deploy-fork2026.mjs --verify-only"
 	},
 	"keywords": [],
 	"author": "David Fasullo",
 	"license": "MIT",
 	"devDependencies": {
-		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "^6.7.3",
-		"@typescript-eslint/parser": "^6.7.3",
-		"builtin-modules": "3.3.0",
-		"esbuild": "^0.19.5",
-		"eslint": "^8.52.0",
-		"obsidian": "^1.4.11",
-		"tslib": "2.4.0",
-		"typescript": "4.7.4"
+		"@types/node": "^24.12.2",
+		"@typescript-eslint/eslint-plugin": "^8.59.1",
+		"@typescript-eslint/parser": "^8.59.1",
+		"builtin-modules": "^5.1.0",
+		"esbuild": "^0.28.0",
+		"eslint": "^10.2.1",
+		"obsidian": "^1.12.3",
+		"tslib": "^2.8.1",
+		"typescript": "^6.0.3"
 	},
 	"dependencies": {
 		"yarn": "^1.22.19"
