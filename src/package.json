@@ -1,6 +1,6 @@
 {
-	"name": "tag-buddy-fork2026",
-	"version": "0.6.8.2",
+	"name": "TagBuddy",
+	"version": "0.6.9",
 	"description": "Add, edit and remove tags in reading mode. Copy, move or edit tagged blocks in reading and edit mode.",
 	"main": "main.js",
 	"scripts": {
@@ -8,8 +8,7 @@
 		"build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
 		"build:artifact": "node esbuild.config.mjs production",
 		"deploy:fork2026": "npm run build:artifact && node scripts/deploy-fork2026.mjs",
-		"verify:fork2026": "node scripts/deploy-fork2026.mjs --verify-only",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"verify:fork2026": "node scripts/deploy-fork2026.mjs --verify-only"
 	},
 	"keywords": [],
 	"author": "David Fasullo",
