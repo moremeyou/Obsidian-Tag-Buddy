@@ -586,12 +586,6 @@ export function countOccurrences(
     return count;
 }
 
-export function outerHTMLToElement(outerHTML: string): HTMLElement | null {
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = outerHTML;
-  return tempDiv.firstChild as HTMLElement;
-}
-
 export function escapeRegExp(
     string: string
 ):string {

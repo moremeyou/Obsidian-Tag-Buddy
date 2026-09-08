@@ -279,8 +279,8 @@ function tagNoteEditingErrorBackup(errorMessage, backupFileName) {
 function tagNoteEditingErrorClipboard(errorMessage) {
   return "\u26A0\uFE0F Tag/note editing error: " + errorMessage + "\nNote content copied to clipboard.";
 }
-function tagSummaryEmptyHtml(tags) {
-  return TAG_SUMMARY_TEXT.emptyNoMatchesPrefix + (tags.length > 0 ? tags.join(", ") : TAG_SUMMARY_TEXT.noTagsSpecified) + "<br>";
+function tagSummaryEmptyText(tags) {
+  return TAG_SUMMARY_TEXT.emptyNoMatchesPrefix + (tags.length > 0 ? tags.join(", ") : TAG_SUMMARY_TEXT.noTagsSpecified);
 }
 function isCanvasTagContext(target) {
   return Boolean(target.closest(".canvas, .canvas-wrapper, .canvas-node, .canvas-node-content"));
@@ -297,7 +297,7 @@ var TAG_SUMMARY_INCLUDE_PREFIX_PATTERN = /^\s*include:/;
 var TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN = /^\s*exclude:/;
 var TAG_SUMMARY_SECTIONS_PREFIX_PATTERN = /^\s*sections?:/;
 var TAG_SUMMARY_TAG_TOKEN_PATTERN = /^#[\p{L}]+[^#]*$/u;
-var TAG_SUMMARY_BLOCK_SPLIT_PATTERN = /(?:\n\s*\n|(?<=^|\n)[*-]\s|(?<=^|\n)\d+\.\s)/;
+var TAG_SUMMARY_BLOCK_SPLIT_PATTERN = /(?:\n\s*\n|^[*-]\s|^\d+\.\s)/m;
 function createTagSummaryTagListLinePattern(field) {
   return new RegExp(String.raw`^\s*${field}:[\p{L}0-9_\-/# ]+$`, "gu");
 }
@@ -305,7 +305,20 @@ function createTagSummarySectionsLinePattern() {
   return /^\s*sections?:[\p{L}0-9_\-/#, ]+$/gu;
 }
 function createTagSummaryParagraphTagPattern() {
-  return /(?<=^|\s)(#[^\s#.,;!?:]+)/g;
+  return /(^|\s)(#[^\s#.,;!?:]+)/g;
+}
+function findTagSummaryParagraphTags(source) {
+  const matches = [];
+  const pattern = createTagSummaryParagraphTagPattern();
+  let match;
+  while ((match = pattern.exec(source)) !== null) {
+    const boundary = match[1];
+    matches.push({
+      value: match[2],
+      index: match.index + boundary.length
+    });
+  }
+  return matches;
 }
 function createTagSummaryMatchedTagPattern(tag) {
   const tagText = tag.replace("#", "\\#");
@@ -315,7 +328,18 @@ function createTagSummaryBlockLinkPattern() {
   return /\^[\p{L}0-9_\-/^]+/gu;
 }
 function createMarkdownTagOrCodeFencePattern() {
-  return /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g;
+  return /(^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(^|[^`])(```)(?!`)/g;
+}
+function normalizeMarkdownTagOrCodeFenceMatch(match) {
+  var _a, _b;
+  const tagBoundary = match[1];
+  const fenceBoundary = match[3];
+  const boundary = (_a = tagBoundary != null ? tagBoundary : fenceBoundary) != null ? _a : "";
+  const value = (_b = match[2]) != null ? _b : match[4];
+  return {
+    value,
+    index: match.index + boundary.length
+  };
 }
 
 // utils.ts
@@ -343,8 +367,7 @@ function platformSettingCheckMultiple(app2, values) {
 }
 function isWordNearEnd(str, word, charDistance = 0) {
   const lastIndex = str.lastIndexOf(word);
-  if (lastIndex === -1)
-    return false;
+  if (lastIndex === -1) return false;
   const wordEndIndex = lastIndex + word.length;
   const distanceToEnd = str.length - wordEndIndex;
   return distanceToEnd === 0 || distanceToEnd <= charDistance;
@@ -499,12 +522,10 @@ function replaceTextInString(replaceText, sourceText, newText, all = false) {
   return sourceText.trim().replace(regex, newText.trim()).trim();
 }
 function truncateStringAtWord(str, maxChars = 16) {
-  if (str.length <= maxChars)
-    return str;
+  if (str.length <= maxChars) return str;
   let truncated = str.substr(0, maxChars);
   const lastSpace = truncated.lastIndexOf(" ");
-  if (lastSpace > 0)
-    truncated = truncated.substr(0, lastSpace);
+  if (lastSpace > 0) truncated = truncated.substr(0, lastSpace);
   return truncated;
 }
 function contentChangedTooMuch(original, modified, tag, buffer = 5) {
@@ -535,8 +556,7 @@ function fileObjFromTags(tags) {
   };
 }
 function getActiveFileFolder(activeFile) {
-  if (!activeFile)
-    return null;
+  if (!activeFile) return null;
   let folderPath;
   if (activeFile.path.includes("\\") || activeFile.path.includes("/")) {
     const pathSeparator = activeFile.path.includes("\\") ? "\\" : "/";
@@ -586,10 +606,8 @@ async function validateFilePath(filePath) {
 }
 function ctrlCmdKey(event) {
   const isMac = import_obsidian.Platform.isMacOS;
-  if (isMac)
-    return event.metaKey;
-  else
-    return event.ctrlKey;
+  if (isMac) return event.metaKey;
+  else return event.ctrlKey;
 }
 function tagsInString(string, tag) {
   let regex;
@@ -613,8 +631,7 @@ function escapeRegExp(string) {
 }
 async function getEmbedFile(el) {
   let filePath = el.getAttribute("src");
-  if (!filePath)
-    return null;
+  if (!filePath) return null;
   const linkArray = filePath.split("#");
   filePath = linkArray[0].trim() + ".md";
   const file = await validateFilePath(filePath);
@@ -626,11 +643,9 @@ function isTagValid(tag, fullTag = false) {
 }
 function normalizeTagInput(tag, includeHash = true) {
   const trimmedTag = tag == null ? void 0 : tag.toString().trim();
-  if (!trimmedTag)
-    return null;
+  if (!trimmedTag) return null;
   const tagText = trimmedTag.startsWith("#") ? trimmedTag.substring(1) : trimmedTag;
-  if (!isTagValid(tagText, false))
-    return null;
+  if (!isTagValid(tagText, false)) return null;
   return includeHash ? "#" + tagText : tagText;
 }
 function extractValidTags(tagsString) {
@@ -853,16 +868,14 @@ var TagSelector = class extends import_obsidian3.FuzzySuggestModal {
     this.onChooseItemCallback = onChooseItemCallback;
     this.inputListener = this.listenInput.bind(this);
     this.tagCache = [];
-    if (event instanceof MouseEvent)
-      this.location = { x: event.pageX, y: event.pageY };
+    if (event instanceof MouseEvent) this.location = { x: event.pageX, y: event.pageY };
   }
   onOpen() {
     this.setPlaceholder("");
     this.inputEl.addEventListener("keyup", this.inputListener);
     if (!this.app.isMobile) {
       const modalEl = this.resultContainerEl.parentElement;
-      if (!modalEl || !this.location)
-        return;
+      if (!modalEl || !this.location) return;
       modalEl.style.width = "200px";
       this.resultContainerEl.style.height = "215px";
       modalEl.style.left = `${this.location.x}px`;
@@ -1003,12 +1016,9 @@ var TBTagEditorModal = class extends import_obsidian4.Modal {
     } else if (action == "rename" && !isValidTag) {
       new import_obsidian4.Notice(NOTICE_TEXT.invalidTagFormat);
     } else {
-      if (action == "rename" && normalizedNewName)
-        newName = normalizedNewName;
-      else if (action == "lower")
-        newName = this.settings.originalTag.toLowerCase();
-      else if (action == "totext")
-        newName = this.settings.originalTag.substring(1);
+      if (action == "rename" && normalizedNewName) newName = normalizedNewName;
+      else if (action == "lower") newName = this.settings.originalTag.toLowerCase();
+      else if (action == "totext") newName = this.settings.originalTag.substring(1);
       const batchAction = this.settings.batchAction == "instance" ? this.settings.originalIndex : this.settings.batchAction;
       await this.plugin.tagEditor.renameTag(
         this.settings.originalTag,
@@ -1263,14 +1273,10 @@ var GUI = class {
   }
   makeCopyToButton(clickFn, mode, dropdown, paragraphEl, summaryEl, content, tags, filePath) {
     let buttonLabel = "copy";
-    if (mode == "link")
-      buttonLabel = "link";
-    else if (mode == "copy")
-      buttonLabel = "copy-plus";
-    else if (mode == "move")
-      buttonLabel = "replace";
-    else if (mode == "note")
-      buttonLabel = "file-plus-2";
+    if (mode == "link") buttonLabel = "link";
+    else if (mode == "copy") buttonLabel = "copy-plus";
+    else if (mode == "move") buttonLabel = "replace";
+    else if (mode == "note") buttonLabel = "file-plus-2";
     const button = this.makeButton(buttonLabel, async (e) => {
       e.stopPropagation();
       if (mode == "note") {
@@ -1339,16 +1345,14 @@ var GUI = class {
       pageX = Math.round(touch.pageX);
       pageY = Math.round(touch.pageY);
       range = document.caretRangeFromPoint(pageX, pageY);
-      if (!range)
-        return;
+      if (!range) return;
       nodeType = range.startContainer.nodeType;
     } else {
       const mouseEvent = event;
       pageX = mouseEvent.pageX;
       pageY = mouseEvent.pageY;
       range = document.caretRangeFromPoint(pageX, pageY);
-      if (!range)
-        return;
+      if (!range) return;
       nodeType = range.startContainer.nodeType;
     }
     if (mode == "preview") {
@@ -1592,7 +1596,8 @@ var TagSummary = class _TagSummary {
   createEmpty(element, tags, include, exclude, sections, max, fileCtx, mdSource) {
     const container = createEl("div");
     const textDiv = createEl("blockquote");
-    textDiv.innerHTML = tagSummaryEmptyHtml(tags);
+    textDiv.setText(tagSummaryEmptyText(tags));
+    textDiv.createEl("br");
     container.appendChild(textDiv);
     _TagSummary.writeCodeBlockAttrs(container, {
       tags,
@@ -1620,10 +1625,8 @@ var TagSummary = class _TagSummary {
     listFiles = listFiles.filter((file) => {
       const cache = this.app.metadataCache.getFileCache(file);
       const tagsInFile = cache ? (0, import_obsidian7.getAllTags)(cache) : null;
-      if (file.path.includes("_exclude"))
-        return false;
-      if (activeFile && activeFile.path == file.path)
-        return false;
+      if (file.path.includes("_exclude")) return false;
+      if (activeFile && activeFile.path == file.path) return false;
       if (validTags.some((value) => tagsInFile == null ? void 0 : tagsInFile.includes(value))) {
         return true;
       }
@@ -1640,16 +1643,13 @@ var TagSummary = class _TagSummary {
       const filePath = item[0].path;
       const blocks = item[1].split(TAG_SUMMARY_BLOCK_SPLIT_PATTERN).filter((row) => row.trim().length > 0);
       const listParagraphs = blocks.filter((paragraph) => {
-        const listTags = paragraph.match(createTagSummaryParagraphTagPattern());
-        if (!listTags || listTags.length <= 0)
-          return false;
-        if (paragraph.includes("```") || paragraph.includes("---"))
-          return false;
+        const listTags = findTagSummaryParagraphTags(paragraph).map((match) => match.value);
+        if (!listTags || listTags.length <= 0) return false;
+        if (paragraph.includes("```") || paragraph.includes("---")) return false;
         return this.isValidText(listTags, tags, include, exclude);
       });
       for (let paragraph of listParagraphs) {
-        if (count >= max)
-          break;
+        if (count >= max) break;
         count++;
         paragraph += "\n";
         const tagSection = this.getMatchedSummaryTag(paragraph, tags);
@@ -1757,8 +1757,7 @@ var TagSummary = class _TagSummary {
     if (mdHeadings.length <= 0 || section == "end" || section == "top") {
       if (section == "top") {
         targetLine = findFirstLineAfterFrontMatter(fileContent);
-        if (targetLine == 0)
-          fileContent = "\n" + fileContent;
+        if (targetLine == 0) fileContent = "\n" + fileContent;
       } else if (section == "end") {
         targetLine = fileContentLines.length - 1;
       }
@@ -1769,14 +1768,12 @@ var TagSummary = class _TagSummary {
       } else {
         new import_obsidian7.Notice(sectionNotFoundPastingTop(section));
         targetLine = findFirstLineAfterFrontMatter(fileContent);
-        if (targetLine == 0)
-          fileContent = "\n" + fileContent;
+        if (targetLine == 0) fileContent = "\n" + fileContent;
       }
     }
     const linePrefix = detectPrefix ? getListTypeFromLineNumber(fileContent, targetLine + 1) : "";
     let finalText = linePrefix + text;
-    if (addLink)
-      finalText += ` [[${filePath}|\u{1F517}]]`;
+    if (addLink) finalText += ` [[${filePath}|\u{1F517}]]`;
     const newContent = insertTextAfterLine(finalText, fileContent, targetLine);
     await this.app.vault.modify(file, newContent);
     return true;
@@ -1799,12 +1796,10 @@ var TagSummary = class _TagSummary {
     return copiedToSection(section, this.canLinkToSection(section));
   }
   registerNoticeLinkToActiveSection(notice, section) {
-    if (!this.canLinkToSection(section))
-      return;
+    if (!this.canLinkToSection(section)) return;
     this.plugin.registerDomEvent(notice.noticeEl, "click", () => {
       const activeFile = this.app.workspace.getActiveFile();
-      if (activeFile)
-        this.app.workspace.openLinkText(activeFile.path + "#" + section, "");
+      if (activeFile) this.app.workspace.openLinkText(activeFile.path + "#" + section, "");
     });
   }
   registerNoticeLinkToSection(notice, filePath, section) {
@@ -1902,20 +1897,16 @@ var TagSummary = class _TagSummary {
     const outputSummaryMd = this.buildSummaryOutputMarkdown(summaryMd, tags.concat(include));
     const tagListEl = platformSettingCheck(this.app, this.plugin.settings.showSummaryTags) ? this.createSummaryTagList(tags, include, exclude) : null;
     const buttonListEl = this.createSummaryActionButtons(outputSummaryMd, summaryContainer, sourcePath, tags);
-    if (!tagListEl && !buttonListEl)
-      return null;
+    if (!tagListEl && !buttonListEl) return null;
     const headerEl = createEl("div");
     headerEl.setAttribute("class", "tagsummary-header");
-    if (tagListEl)
-      headerEl.appendChild(tagListEl);
-    if (buttonListEl)
-      headerEl.appendChild(buttonListEl);
+    if (tagListEl) headerEl.appendChild(tagListEl);
+    if (buttonListEl) headerEl.appendChild(buttonListEl);
     return headerEl;
   }
   createSummaryTagList(tags, include, exclude) {
     const queryTags = this.getSummaryHeaderTags(tags, include, exclude);
-    if (queryTags.length <= 0)
-      return null;
+    if (queryTags.length <= 0) return null;
     const tagListEl = createEl("span");
     tagListEl.setAttribute("class", "tagsummary-query-tags");
     queryTags.forEach((queryTag) => {
@@ -1931,8 +1922,7 @@ var TagSummary = class _TagSummary {
     const uniqueTags = /* @__PURE__ */ new Map();
     const addTags = (values, kind) => {
       values.forEach((tag) => {
-        if (!uniqueTags.has(tag))
-          uniqueTags.set(tag, { tag, kind });
+        if (!uniqueTags.has(tag)) uniqueTags.set(tag, { tag, kind });
       });
     };
     addTags(tags, "tag");
@@ -2040,8 +2030,7 @@ var TagSummary = class _TagSummary {
   }
   async getFile(el) {
     const filePath = el.getAttribute("file-source");
-    if (!filePath)
-      return null;
+    if (!filePath) return null;
     const file = this.app.vault.getAbstractFileByPath(filePath);
     return file instanceof import_obsidian7.TFile ? file : null;
   }
@@ -2109,21 +2098,16 @@ var TagProcessor = class {
     return this.outOfSync;
   }
   markOutOfSync(type) {
-    if (type == "active")
-      this.outOfSync = true;
+    if (type == "active") this.outOfSync = true;
     new import_obsidian8.Notice(markdownRenderedTagsOutOfSync(type), 1e4);
   }
   filterActiveFileTagEls(tags) {
     const filteredTagElements = Array.from(tags).filter((tag) => {
       var _a, _b;
-      if (tag.closest(".frontmatter-section-data"))
-        return false;
-      if ((_a = tag.parentElement) == null ? void 0 : _a.closest(".markdown-embed"))
-        return false;
-      if (tag.closest(".markdown-embed"))
-        return false;
-      if ((_b = tag.parentElement) == null ? void 0 : _b.closest(".tag-summary-block"))
-        return false;
+      if (tag.closest(".frontmatter-section-data")) return false;
+      if ((_a = tag.parentElement) == null ? void 0 : _a.closest(".markdown-embed")) return false;
+      if (tag.closest(".markdown-embed")) return false;
+      if ((_b = tag.parentElement) == null ? void 0 : _b.closest(".tag-summary-block")) return false;
       return true;
     });
     return filteredTagElements;
@@ -2142,8 +2126,7 @@ var TagProcessor = class {
       nativeEmbedObserver = new MutationObserver((mutationsList) => {
         var _a;
         const target = (_a = mutationsList[0]) == null ? void 0 : _a.target;
-        if (!(target instanceof HTMLElement))
-          return;
+        if (!(target instanceof HTMLElement)) return;
         if (target.querySelectorAll(".tag").length > 0) {
           nativeEmbedObserver.disconnect();
           void this.processNativeEmbed(target);
@@ -2170,26 +2153,22 @@ var TagProcessor = class {
       return null;
     }
     const file = this.app.vault.getAbstractFileByPath(sourcePath);
-    if (!(file instanceof import_obsidian8.TFile))
-      return null;
+    if (!(file instanceof import_obsidian8.TFile)) return null;
     const fileContent = await this.app.vault.read(file);
     const tagElements = this.filterActiveFileTagEls(
       Array.from(container.querySelectorAll(".tag"))
     );
-    if (tagElements.length == 0)
-      return [];
+    if (tagElements.length == 0) return [];
     const markdownTags = this.getMarkdownTags(file, fileContent, false);
     return this.assignMarkdownTags(markdownTags, tagElements, 0, "active");
   }
   async processActiveFileTags(allowMismatchRetry = true) {
     var _a, _b;
-    if (this.plugin.settings.debugMode)
-      console.log("Tag Buddy: processing active file tags");
+    if (this.plugin.settings.debugMode) console.log("Tag Buddy: processing active file tags");
     const view = await this.app.workspace.getActiveViewOfType(import_obsidian8.MarkdownView);
     const mode = view == null ? void 0 : view.getMode();
     if (mode == "preview") {
-      if (!view)
-        return;
+      if (!view) return;
       const activeFile = this.app.workspace.getActiveFile();
       if (!activeFile) {
         this.outOfSync = false;
@@ -2222,8 +2201,7 @@ var TagProcessor = class {
           //startIndex,
           "active"
         );
-        if (assignedTags)
-          this.outOfSync = false;
+        if (assignedTags) this.outOfSync = false;
       } else {
         this.outOfSync = false;
       }
@@ -2242,8 +2220,7 @@ var TagProcessor = class {
     var _a;
     const filePath = paragraphEl.getAttribute("file-source");
     const markdownBlock = (_a = paragraphEl.getAttribute("md-source")) == null ? void 0 : _a.trim();
-    if (!filePath || !markdownBlock)
-      return;
+    if (!filePath || !markdownBlock) return;
     const file = this.app.vault.getAbstractFileByPath(filePath);
     if (!(file instanceof import_obsidian8.TFile)) {
       new import_obsidian8.Notice(NOTICE_TEXT.cannotIdentifySummarySource);
@@ -2273,38 +2250,34 @@ var TagProcessor = class {
     let insideCodeBlock = false;
     let invalidBlockquote = false;
     while ((match = regex.exec(fileContent)) !== null) {
-      const matchedString = match[0].trim();
-      const matchIndex = match.index;
+      const normalizedMatch = normalizeMarkdownTagOrCodeFenceMatch(match);
+      const matchedString = normalizedMatch.value;
+      const matchIndex = normalizedMatch.index;
       if (processedPositions.has(matchIndex)) {
-        if (this.plugin.settings.debugMode)
-          console.log(`Skipping duplicate tag at position ${matchIndex}: ${matchedString}`);
+        if (this.plugin.settings.debugMode) console.log(`Skipping duplicate tag at position ${matchIndex}: ${matchedString}`);
         continue;
       }
       if (matchedString === CODE_FENCE_MARKER) {
         insideCodeBlock = !insideCodeBlock;
-        if (this.plugin.settings.debugMode)
-          console.log(`Toggled insideCodeBlock to ${insideCodeBlock}`);
+        if (this.plugin.settings.debugMode) console.log(`Toggled insideCodeBlock to ${insideCodeBlock}`);
         continue;
       }
       if (insideCodeBlock) {
-        if (this.plugin.settings.debugMode)
-          console.log(`Skipping tag ${matchedString} inside code block.`);
+        if (this.plugin.settings.debugMode) console.log(`Skipping tag ${matchedString} inside code block.`);
         continue;
       }
       const lineStart = fileContent.lastIndexOf("\n", matchIndex) + 1;
       const lineEnd = fileContent.indexOf("\n", matchIndex);
       const line = fileContent.slice(lineStart, lineEnd !== -1 ? lineEnd : void 0);
       if (!includeFrontmatter && this.isIndexInsideRange(matchIndex, frontmatterRange)) {
-        if (this.plugin.settings.debugMode)
-          console.log(`Skipping frontmatter tag ${matchedString}.`);
+        if (this.plugin.settings.debugMode) console.log(`Skipping frontmatter tag ${matchedString}.`);
         continue;
       }
       if (line.trim().startsWith(">")) {
         currentContext = "blockquote";
         if (line.startsWith("> 	") || line.startsWith(">	") || line.includes("(not a tag)")) {
           invalidBlockquote = true;
-          if (this.plugin.settings.debugMode)
-            console.log(`Invalid blockquote triggered at line: ${fileContent.substring(0, matchIndex).split("\n").length}`);
+          if (this.plugin.settings.debugMode) console.log(`Invalid blockquote triggered at line: ${fileContent.substring(0, matchIndex).split("\n").length}`);
         }
       } else if (line.trim().startsWith("-") || NUMBERED_LIST_LINE_PATTERN.test(line.trim())) {
         currentContext = "list";
@@ -2316,11 +2289,9 @@ var TagProcessor = class {
         currentContext = "normal";
         invalidBlockquote = false;
       }
-      if (this.plugin.settings.debugMode)
-        console.log(`Line ${fileContent.substring(0, matchIndex).split("\n").length}: ${currentContext} - ${line.trim()}`);
+      if (this.plugin.settings.debugMode) console.log(`Line ${fileContent.substring(0, matchIndex).split("\n").length}: ${currentContext} - ${line.trim()}`);
       if (invalidBlockquote) {
-        if (this.plugin.settings.debugMode)
-          console.log(`Skipping tag ${matchedString} due to invalid blockquote context.`);
+        if (this.plugin.settings.debugMode) console.log(`Skipping tag ${matchedString} due to invalid blockquote context.`);
         continue;
       }
       const isValid = currentContext !== "indented" && // Exclude lines starting with tabs
@@ -2335,12 +2306,10 @@ var TagProcessor = class {
           line: fileContent.substring(0, matchIndex).split("\n").length
           // Calculate line number
         });
-        if (this.plugin.settings.debugMode)
-          console.log(`Found tag: ${matchedString} in context: ${currentContext}`);
+        if (this.plugin.settings.debugMode) console.log(`Found tag: ${matchedString} in context: ${currentContext}`);
         processedPositions.add(matchIndex);
       } else {
-        if (this.plugin.settings.debugMode)
-          console.log(`Excluded tag: ${matchedString} in invalid context: ${currentContext}`);
+        if (this.plugin.settings.debugMode) console.log(`Excluded tag: ${matchedString} in invalid context: ${currentContext}`);
       }
     }
     return tagPositions;
@@ -2348,8 +2317,7 @@ var TagProcessor = class {
   getFrontmatterRange(fileContent) {
     var _a;
     const lines = fileContent.split("\n");
-    if (((_a = lines[0]) == null ? void 0 : _a.trim()) != "---")
-      return null;
+    if (((_a = lines[0]) == null ? void 0 : _a.trim()) != "---") return null;
     let offset = lines[0].length + 1;
     for (let lineIndex = 1; lineIndex < lines.length; lineIndex += 1) {
       if (lines[lineIndex].trim() == "---") {
@@ -2375,8 +2343,7 @@ var TagProcessor = class {
       }
       if (tagPositions.length != tagElements.length) {
         this.markOutOfSync(type);
-        if (this.plugin.settings.debugMode)
-          this.logDifferences(tagPositions, tagElements);
+        if (this.plugin.settings.debugMode) this.logDifferences(tagPositions, tagElements);
         return null;
       }
     }
@@ -2408,11 +2375,9 @@ var TagProcessor = class {
   }
   async processNativeEmbed(embed, checkDuplicates = false) {
     var _a;
-    if (this.plugin.settings.debugMode)
-      console.log("Tag Buddy: processNativeEmbed");
+    if (this.plugin.settings.debugMode) console.log("Tag Buddy: processNativeEmbed");
     const markdownEmbed = embed.closest(".markdown-embed");
-    if (!markdownEmbed)
-      return;
+    if (!markdownEmbed) return;
     embed = markdownEmbed;
     const sourcePath = embed.getAttribute("src");
     if (sourcePath) {
@@ -2449,8 +2414,7 @@ var TagProcessor = class {
           tempComponent
         );
         const embedContentEl = embed.querySelector(".markdown-embed-content");
-        if (!embedContentEl)
-          return;
+        if (!embedContentEl) return;
         const innerText = embedContentEl.innerText;
         const startIndex = tempContainerHTML.innerText.indexOf(innerText);
         this.assignMarkdownTags(
@@ -2533,8 +2497,7 @@ var ReadingModeTagEditor = class {
         await this.plugin.tagProcessor.processActiveFileTags();
       }
     } catch (error) {
-      if (this.plugin.settings.debugMode)
-        console.warn("Tag Buddy stale tag refresh failed:", error);
+      if (this.plugin.settings.debugMode) console.warn("Tag Buddy stale tag refresh failed:", error);
     } finally {
       new import_obsidian9.Notice(refreshNotice, 5e3);
     }
@@ -2542,8 +2505,7 @@ var ReadingModeTagEditor = class {
   async renameTag(tag, newName, batchAction, filePath = null, tagEl) {
     const activeFile = this.app.workspace.getActiveFile();
     const file = filePath == null ? activeFile : await validateFilePath(filePath);
-    if (!file)
-      return;
+    if (!file) return;
     if (typeof batchAction === "number") {
       const fileContent = await this.app.vault.read(file);
       const newFileContent = this.renameTagInStringByIndex(
@@ -2608,8 +2570,7 @@ var ReadingModeTagEditor = class {
       for (const tagObj of filteredTagObjs) {
         const newIndex = tagObj.index + offset;
         const updatedContent = this.renameTagInStringByIndex(tagObj.tag, newName, newIndex, newFileContent);
-        if (!updatedContent)
-          return;
+        if (!updatedContent) return;
         newFileContent = updatedContent;
         offset += newName.length - tagObj.tag.length;
       }
@@ -2618,8 +2579,7 @@ var ReadingModeTagEditor = class {
   }
   renameTagInStringByIndex(tag, newName, index, fileContent) {
     const tagIndex = this.getValidatedTagIndex(tag, index, fileContent);
-    if (tagIndex == null)
-      return null;
+    if (tagIndex == null) return null;
     const newContent = fileContent.substring(0, tagIndex) + newName + fileContent.substring(tagIndex + tag.length);
     return newContent;
   }
@@ -2685,8 +2645,7 @@ var ReadingModeTagEditor = class {
       new import_obsidian9.Notice(NOTICE_TEXT.cannotFindStableTextPosition);
       return;
     }
-    if (!this.plugin.settings.lockRecentTags)
-      this.plugin.saveRecentTag(tag);
+    if (!this.plugin.settings.lockRecentTags) this.plugin.saveRecentTag(tag);
     const firstMatch = regex.exec(fileContent);
     if (!firstMatch) {
       new import_obsidian9.Notice(NOTICE_TEXT.cannotFindStableTextPosition);
@@ -2711,12 +2670,10 @@ var ReadingModeTagEditor = class {
     await this.app.vault.modify(file, newContent);
     if (contentSourceType == "plugin-summary") {
       const summaryContainer = summaryEl == null ? void 0 : summaryEl.closest(".tag-summary-block");
-      if (summaryContainer)
-        this.plugin.tagSummary.update(summaryContainer);
+      if (summaryContainer) this.plugin.tagSummary.update(summaryContainer);
     } else if (contentSourceType == "native-embed") {
       setTimeout(async () => {
-        if (embedEl)
-          await this.plugin.tagProcessor.processNativeEmbed(embedEl, true);
+        if (embedEl) await this.plugin.tagProcessor.processNativeEmbed(embedEl, true);
       }, 200);
     }
   }
@@ -2736,10 +2693,8 @@ var ReadingModeTagEditor = class {
     }
   }
   buildTagEditContent(tag, beforeTag, afterTag, event, editType) {
-    if (editType == "rename")
-      return "";
-    if (!event)
-      return beforeTag + afterTag;
+    if (editType == "rename") return "";
+    if (!event) return beforeTag + afterTag;
     if (editType == "hash") {
       this.showMobileEditNotice(tagConvertedToText(tag));
       return beforeTag + tag.substring(1) + afterTag;
@@ -2813,8 +2768,7 @@ var ReadingModeTagEditor = class {
   async refreshSummaryAfterTagEdit(tagEl, tag, filePath) {
     const tagParagraphEl = tagEl.closest(".tag-summary-paragraph");
     const tagSummaryBlock = tagEl.closest(".tag-summary-block");
-    if (!tagParagraphEl || !tagSummaryBlock)
-      return;
+    if (!tagParagraphEl || !tagSummaryBlock) return;
     const tagsToCheck = TagSummary.getTagsToCheckFromEl(tagSummaryBlock);
     const tagsInContent = tagsInString(tagParagraphEl.innerText);
     if (!tagsToCheck.includes(tag)) {
@@ -2846,8 +2800,7 @@ var ReadingModeTagEditor = class {
   }
   makeNativeEmbedRefreshAfterModify(tagContainer) {
     return () => setTimeout(async () => {
-      if (tagContainer)
-        await this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);
+      if (tagContainer) await this.plugin.tagProcessor.processNativeEmbed(tagContainer, true);
     }, 200);
   }
   async edit(tagEl, event, _paragraphEl, editType, newName = "") {
@@ -2870,8 +2823,7 @@ var ReadingModeTagEditor = class {
     const tagContainer = this.getTagSourceContainer(tagEl, tagContainerType);
     if (filePath) {
       const file = await validateFilePath(filePath);
-      if (!file)
-        return;
+      if (!file) return;
       let fileContent;
       let fileContentBackup;
       const tag = tagEl.innerText.trim();
@@ -2896,8 +2848,7 @@ var ReadingModeTagEditor = class {
       let refreshAfterModify = () => {
       };
       if (tagContainerType == "plugin-summary") {
-        if (!this.summarySourceMappingIsStable(tagEl, fileContent))
-          return;
+        if (!this.summarySourceMappingIsStable(tagEl, fileContent)) return;
         newContent = this.applySummaryEditSafety(newContent, fileContentBackup, tag, safeToEmptyFile);
         refreshAfterModify = this.makeSummaryRefreshAfterModify(tagEl, tag, filePath);
       } else if (tagContainerType == "native-embed") {
@@ -3093,8 +3044,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
         async () => {
           var _a;
           const mode = (_a = this.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView)) == null ? void 0 : _a.getMode();
-          if (this.settings.debugMode)
-            console.log("Tag Buddy: layout-change:", mode);
+          if (this.settings.debugMode) console.log("Tag Buddy: layout-change:", mode);
           if (mode == "preview") {
             this.tagProcessor.reset();
             this.tagProcessor.debouncedProcessActiveFileTagEls();
@@ -3108,10 +3058,8 @@ var TagBuddy = class extends import_obsidian10.Plugin {
         async () => {
           var _a, _b;
           const activeFile = await this.app.workspace.getActiveFile();
-          if (this.settings.debugMode)
-            console.log("Tag Buddy: last active file:", (_a = this.activeFile) == null ? void 0 : _a.name);
-          if (this.settings.debugMode)
-            console.log("Tag Buddy: file open:", activeFile == null ? void 0 : activeFile.name);
+          if (this.settings.debugMode) console.log("Tag Buddy: last active file:", (_a = this.activeFile) == null ? void 0 : _a.name);
+          if (this.settings.debugMode) console.log("Tag Buddy: file open:", activeFile == null ? void 0 : activeFile.name);
           if ((activeFile == null ? void 0 : activeFile.path) != ((_b = this.activeFile) == null ? void 0 : _b.path)) {
             this.tagProcessor.reset();
             this.activeFile = activeFile;
@@ -3174,8 +3122,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
           this,
           document,
           async (event) => {
-            if (!this.settings.mobileTripleTapText)
-              return;
+            if (!this.settings.mobileTripleTapText) return;
             const view = await this.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView);
             if (view && view.getMode() == "preview" && this.viewContainsEventTarget(view, event)) {
               this.gui.showTagSelector(event);
@@ -3195,8 +3142,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
   async mobileTapHandler(event, setting) {
     const target = this.getEventTargetElement(event);
     const tagEl = target == null ? void 0 : target.closest(".tag");
-    if (!target || !tagEl)
-      return;
+    if (!target || !tagEl) return;
     if (setting == "edit") {
       const view = await this.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView);
       if (view && view.getMode() == "preview" && this.viewContainsEventTarget(view, event)) {
@@ -3210,8 +3156,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
   }
   async onClickEvent(event) {
     const target = this.getEventTargetElement(event);
-    if (!target)
-      return;
+    if (!target) return;
     const view = await this.app.workspace.getActiveViewOfType(import_obsidian10.MarkdownView);
     const modKey = ctrlCmdKey(event) ? "CMD" : event.altKey ? "OPT" : "";
     if (!view && target.matches(".tag")) {
@@ -3230,21 +3175,18 @@ var TagBuddy = class extends import_obsidian10.Plugin {
       if (this.settings.desktopClickTag == "native" && modKey == "" || this.settings.desktopCMDClickTag == "native" && modKey == "CMD" || this.settings.desktopOPTClickTag == "native" && modKey == "OPT") {
         return;
       } else if (this.settings.desktopClickTag == "edit" && modKey == "" || this.settings.desktopCMDClickTag == "edit" && modKey == "CMD" || this.settings.desktopOPTClickTag == "edit" && modKey == "OPT") {
-        if (!target.matches(".tag"))
-          return;
+        if (!target.matches(".tag")) return;
         event.stopPropagation();
         event.preventDefault();
         const tagEl = target.closest(".tag");
-        if (!tagEl)
-          return;
+        if (!tagEl) return;
         this.gui.showTagEditor(tagEl);
         return;
       }
     } else {
       setTimeout(() => {
         const selection = window.getSelection();
-        if (selection)
-          selection.removeAllRanges();
+        if (selection) selection.removeAllRanges();
       }, 400);
       if (this.settings.mobileTagSearch && event.type == "touchend") {
         return;
@@ -3256,17 +3198,13 @@ var TagBuddy = class extends import_obsidian10.Plugin {
         return;
       }
       let editType = "";
-      if (modKey == "")
-        editType = this.settings.desktopClickTag;
-      else if (modKey == "CMD")
-        editType = this.settings.desktopCMDClickTag;
-      else if (modKey == "OPT")
-        editType = this.settings.desktopOPTClickTag;
+      if (modKey == "") editType = this.settings.desktopClickTag;
+      else if (modKey == "CMD") editType = this.settings.desktopCMDClickTag;
+      else if (modKey == "OPT") editType = this.settings.desktopOPTClickTag;
       event.stopPropagation();
       event.preventDefault();
       const clickedTag = target.closest(".tag");
-      if (!clickedTag)
-        return;
+      if (!clickedTag) return;
       let tagFile = clickedTag.getAttribute("file-source");
       if (!tagFile) {
         await this.refreshClickedTagSource(clickedTag);
@@ -3314,8 +3252,7 @@ var TagBuddy = class extends import_obsidian10.Plugin {
     var _a;
     const readingContainer = clickedTag.closest(".markdown-reading-view");
     const sourcePath = (_a = this.app.workspace.getActiveFile()) == null ? void 0 : _a.path;
-    if (!readingContainer || !sourcePath)
-      return;
+    if (!readingContainer || !sourcePath) return;
     await this.tagProcessor.processRenderedTagContainer(readingContainer, sourcePath);
   }
   getTagsFromApp() {

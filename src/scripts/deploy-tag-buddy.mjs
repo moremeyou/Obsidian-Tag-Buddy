@@ -3,7 +3,7 @@ import { copyFile, mkdir, readFile, stat } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const pluginId = "tag-buddy-fork2026";
+const pluginId = "tag-buddy";
 const vaultPath = process.env.OBSIDIAN_VAULT;
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const srcDir = path.resolve(scriptDir, "..");

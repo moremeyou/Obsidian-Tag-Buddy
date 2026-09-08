@@ -265,9 +265,9 @@ export function tagNoteEditingErrorClipboard(errorMessage: string): string {
 	return '⚠️ Tag/note editing error: ' + errorMessage + '\nNote content copied to clipboard.';
 }
 
-export function tagSummaryEmptyHtml(tags: string[]): string {
+export function tagSummaryEmptyText(tags: string[]): string {
 	return TAG_SUMMARY_TEXT.emptyNoMatchesPrefix
-		+ (tags.length > 0 ? tags.join(', ') : TAG_SUMMARY_TEXT.noTagsSpecified) + '<br>';
+		+ (tags.length > 0 ? tags.join(', ') : TAG_SUMMARY_TEXT.noTagsSpecified);
 }
 
 function isCanvasTagContext(target: HTMLElement): boolean {

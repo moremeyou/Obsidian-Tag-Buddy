@@ -11,9 +11,9 @@ import {
 	TAG_SUMMARY_TAGS_PREFIX_PATTERN,
 	createTagSummaryBlockLinkPattern,
 	createTagSummaryMatchedTagPattern,
-	createTagSummaryParagraphTagPattern,
 	createTagSummarySectionsLinePattern,
 	createTagSummaryTagListLinePattern,
+	findTagSummaryParagraphTags,
 } from './tagPatterns';
 import type { TagSummaryTagListField } from './tagPatterns';
 import {
@@ -22,7 +22,7 @@ import {
 	copiedToSectionCannotUpdateSource,
 	copiedToSectionInNote,
 	sectionNotFoundPastingTop,
-	tagSummaryEmptyHtml,
+	tagSummaryEmptyText,
 } from './userText';
 
 const SUMMARY_CODEBLOCK_ATTRS = {
@@ -313,7 +313,8 @@ export class TagSummary {
 	): void {
 		const container = createEl('div');
 		const textDiv = createEl('blockquote');
-		textDiv.innerHTML = tagSummaryEmptyHtml(tags);
+		textDiv.setText(tagSummaryEmptyText(tags));
+		textDiv.createEl('br');
 
 		container.appendChild(textDiv);
 		TagSummary.writeCodeBlockAttrs(container, {
@@ -383,7 +384,7 @@ export class TagSummary {
 				.filter((row) => row.trim().length > 0);
 
 			const listParagraphs = blocks.filter((paragraph) => {
-				const listTags = paragraph.match(createTagSummaryParagraphTagPattern());
+				const listTags = findTagSummaryParagraphTags(paragraph).map((match) => match.value);
 				if (!listTags || listTags.length <= 0) return false;
 				if (paragraph.includes("```") || paragraph.includes("---")) return false;
 				return this.isValidText(listTags, tags, include, exclude);

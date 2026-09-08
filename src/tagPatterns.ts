@@ -23,7 +23,7 @@ export const TAG_SUMMARY_INCLUDE_PREFIX_PATTERN = /^\s*include:/;
 export const TAG_SUMMARY_EXCLUDE_PREFIX_PATTERN = /^\s*exclude:/;
 export const TAG_SUMMARY_SECTIONS_PREFIX_PATTERN = /^\s*sections?:/;
 export const TAG_SUMMARY_TAG_TOKEN_PATTERN = /^#[\p{L}]+[^#]*$/u;
-export const TAG_SUMMARY_BLOCK_SPLIT_PATTERN = /(?:\n\s*\n|(?<=^|\n)[*-]\s|(?<=^|\n)\d+\.\s)/;
+export const TAG_SUMMARY_BLOCK_SPLIT_PATTERN = /(?:\n\s*\n|^[*-]\s|^\d+\.\s)/m;
 
 /*
  * tag-summary code blocks have their own parser. These patterns intentionally
@@ -44,8 +44,29 @@ export function createTagSummarySectionsLinePattern(): RegExp {
  * It works on paragraph candidates gathered from many files, not active rendered
  * tags, so the boundaries are intentionally simpler here.
  */
+export interface IndexedTextMatch {
+	value: string;
+	index: number;
+}
+
 export function createTagSummaryParagraphTagPattern(): RegExp {
-	return /(?<=^|\s)(#[^\s#.,;!?:]+)/g;
+	return /(^|\s)(#[^\s#.,;!?:]+)/g;
+}
+
+export function findTagSummaryParagraphTags(source: string): IndexedTextMatch[] {
+	const matches: IndexedTextMatch[] = [];
+	const pattern = createTagSummaryParagraphTagPattern();
+	let match: RegExpExecArray | null;
+
+	while ((match = pattern.exec(source)) !== null) {
+		const boundary = match[1];
+		matches.push({
+			value: match[2],
+			index: match.index + boundary.length,
+		});
+	}
+
+	return matches;
 }
 
 export function createTagSummaryMatchedTagPattern(tag: string): RegExp {
@@ -74,9 +95,25 @@ export function createTagSummaryBlockLinkPattern(): RegExp {
  *   longer backtick run. The surrounding context logic decides whether later tag
  *   matches are ignored while inside a fenced block.
  *
+ * The pattern consumes the left boundary because JavaScript engines on iOS
+ * before 16.4 do not support lookbehind. normalizeMarkdownTagOrCodeFenceMatch
+ * removes that boundary from the reported value and source index.
+ *
  * Return a new global RegExp each time. Reusing a /g RegExp would leak lastIndex
  * between scans and can silently skip tags.
  */
 export function createMarkdownTagOrCodeFencePattern(): RegExp {
-	return /(?<=^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(?<!`)```(?!`)/g;
+	return /(^|\s)(#(?=[^\s#.'’,;!?:]*[^\d\s#.'’,;!?:])[^\s#.'’,;!?:]+)(?=[.,;!?:'’\s]|$)|(^|[^`])(```)(?!`)/g;
+}
+
+export function normalizeMarkdownTagOrCodeFenceMatch(match: RegExpExecArray): IndexedTextMatch {
+	const tagBoundary = match[1];
+	const fenceBoundary = match[3];
+	const boundary = tagBoundary ?? fenceBoundary ?? '';
+	const value = match[2] ?? match[4];
+
+	return {
+		value,
+		index: match.index + boundary.length,
+	};
 }

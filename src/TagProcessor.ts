@@ -2,7 +2,12 @@ import { App, MarkdownRenderer, debounce, Debouncer, MarkdownPostProcessorContex
 import TagBuddy from "main";
 import * as Utils from './utils';
 import { NOTICE_TEXT, markdownRenderedTagsOutOfSync } from './userText';
-import { CODE_FENCE_MARKER, NUMBERED_LIST_LINE_PATTERN, createMarkdownTagOrCodeFencePattern } from './tagPatterns';
+import {
+	CODE_FENCE_MARKER,
+	NUMBERED_LIST_LINE_PATTERN,
+	createMarkdownTagOrCodeFencePattern,
+	normalizeMarkdownTagOrCodeFenceMatch,
+} from './tagPatterns';
 
 interface MarkdownTagPosition {
 	tag: string;
@@ -271,8 +276,9 @@ export class TagProcessor {
 
     // Match all tags and special contexts in one pass
     while ((match = regex.exec(fileContent)) !== null) {
-        const matchedString = match[0].trim();
-        const matchIndex = match.index;
+		const normalizedMatch = normalizeMarkdownTagOrCodeFenceMatch(match);
+		const matchedString = normalizedMatch.value;
+		const matchIndex = normalizedMatch.index;
 
         // Skip if this position has already been processed
         if (processedPositions.has(matchIndex)) {
